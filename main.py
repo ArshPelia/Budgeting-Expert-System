@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import random, os
+import random, os, calendar, datetime
+from datetime import datetime
 
 headerlist = ['Date', 'Description', 'Withdrawal', 'Deposit', 'Balance']
-spendList = ['Food', 'Groceries', 'Shopping', 'Transportation', 'Travel', 'Entertainment', 'Bills', 'Income', 'Other']
+spendList = ['Food', 'Groceries', 'Shopping', 'Transportation', 'Travel', 'Entertainment', 'Bills', 'Other']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Other']
 global savings_per_week, savings_per_month, savings_per_year
 
@@ -166,14 +167,13 @@ def detect_spikes(df, category):
     if spikes.empty:
         print(f"No Weekly spikes found in the category '{category}'.") 
     else:
-        # print(f"Weekly Spikes found in the category '{category}' in weeks:") 
+        print(f"Weekly Spikes found in the category '{category}' in weeks:", spikes['Week'].tolist()) 
         # print(spikes[['Week']])
-        print(f"Weekly Spikes found in the category '{category}' in weeks:") 
-        spike_Weeks = spikes['Week'].tolist() # convert the dataframe to a list
-        for spike_Week in spike_Weeks: # loop through the list of spike weeks
-            spike_week = category_df[category_df['Week'] == spike_Week].index[0] # get the index of the first row in the category_df that has the spike week
-            first_day_of_week = df[df['Week'] == spike_Week]['Date'].iloc[spike_week] # get the first day of the week that has the spike
-            print(f"Weekly Spike occurred in week: {spike_Week} with first day of the week being {first_day_of_week}") # print the spike week and the first day of the week
+        # spike_Weeks = spikes['Week'].tolist() # convert the dataframe to a list
+        # for spike_Week in spike_Weeks: # loop through the list of spike weeks
+        #     spike_week = category_df[category_df['Week'] == spike_Week].index[0] # get the index of the first row in the category_df that has the spike week
+        #     first_day_of_week = df[df['Week'] == spike_Week]['Date'].iloc[spike_week] # get the first day of the week that has the spike
+        #     print(f"Weekly Spike occurred in week: {spike_Week} with first day of the week being {first_day_of_week}") # print the spike week and the first day of the week
 
 def detect_spikes_by_month(df, category):
     category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
@@ -191,11 +191,13 @@ def detect_spikes_by_month(df, category):
         for spike_month in spike_months:
             spike_week = category_df[category_df['Month'] == spike_month].index[0]
             first_day_of_week = df[df['Month'] == spike_month]['Date'].iloc[spike_week]
-            print(f"Spike occurred in Month: {spike_month} with first day of the week being {first_day_of_week}")
+            # print(f"Monthly Spike occurred in Month: {spike_month} with first day of the week being {first_day_of_week}")
+            first_day_of_week = datetime.strptime(first_day_of_week, '%Y-%m-%d')
+            print('Monthly spike occured in : ' + calendar.month_name[spike_month] + ' of ' + str(first_day_of_week.year))
 
 def wishlist(price, savings = 10):
     # calculate the number of months it will take to save up for an item
-    if(savings_per_week <= 0 & savings_per_month <= 0):
+    if(savings_per_week <= 0 and savings_per_month <= 0):
         print("Your account currently has a negative netflow. You will need to increase your income or decrease your spending to save up for this item.")
         return
     months = price / savings
@@ -203,9 +205,9 @@ def wishlist(price, savings = 10):
 
 def main():
     df = cleanData()
-    calc_week_avgs(df)
-    calc_monthly_avgs(df)
-    wishlist(1000, 10)
+    # calc_week_avgs(df)
+    # calc_monthly_avgs(df)
+    # wishlist(1000, 10)
     # plotIncome(df)
     # plotSpending(df)
     # plot_cashflow(df)
@@ -214,11 +216,11 @@ def main():
     # print(calc_monthly_avgs(df))
     # plot_weekly_avgs(calc_week_avgs(df))
     # plot_montly_avgs(calc_monthly_avgs(df))
-    # for x in spendList:
-    #     detect_spikes(df, x)
-    #     detect_spikes_by_month(df, x)
-    # detect_spikes(df, 'Groceries')
-    # detect_spikes_by_month(df, 'Groceries')
+    for x in spendList:
+        detect_spikes(df, x)
+        detect_spikes_by_month(df, x)
+    detect_spikes(df, 'Groceries')
+    detect_spikes_by_month(df, 'Groceries')
 
 if __name__ == "__main__":
     main()
