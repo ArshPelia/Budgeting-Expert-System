@@ -188,6 +188,7 @@ def detect_spikes_by_month(df, category):
         print(f"Monthly Spikes found in the category '{category}' in months:") 
         # print(spikes[['Month']])
         spike_months = spikes['Month'].tolist()
+        plot_spikes_by_month(df, category)
         for spike_month in spike_months:
             spike_week = category_df[category_df['Month'] == spike_month].index[0]
             first_day_of_week = df[df['Month'] == spike_month]['Date'].iloc[spike_week]
@@ -202,6 +203,25 @@ def wishlist(price, savings = 10):
         return
     months = price / savings
     print(f"It will take {months} months to save up for this item.")
+
+def plot_spikes_by_month(df, category):
+    category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
+    category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Withdrawal column
+    avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
+    category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
+    spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
+
+    # Plot the spikes
+    fig, ax = plt.subplots()
+    ax.plot(category_df['Month'], category_df['Withdrawal'], label='Spending')
+    ax.plot(spikes['Month'], spikes['Withdrawal'], 'ro', label='Spike')
+    ax.axhline(avg_spending, color='black', linestyle='dashed', label='Average Monthly Spending')
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Withdrawal')
+    ax.legend()
+    ax.set_title(f"Spikes in average spending in category '{category}'")
+    plt.show()
+
 
 def main():
     df = cleanData()
@@ -219,8 +239,8 @@ def main():
     for x in spendList:
         detect_spikes(df, x)
         detect_spikes_by_month(df, x)
-    detect_spikes(df, 'Groceries')
-    detect_spikes_by_month(df, 'Groceries')
+
+    # plot_spikes(df, 'Groceries')
 
 if __name__ == "__main__":
     main()
