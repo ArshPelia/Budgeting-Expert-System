@@ -3,11 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random, os
 
+headerlist = ['Date', 'Description', 'Withdrawal', 'Deposit', 'Balance']
+spendList = ['Food', 'Groceries', 'Shopping', 'Transportation', 'Travel', 'Entertainment', 'Bills', 'Income', 'Other']
+incomeList = ['Salary', 'Bonus', 'Interest', 'Other']
+global savings_per_week, savings_per_month, savings_per_year
+
 def cleanData():
     if not os.path.exists('data.csv'): # check if the file exists
-        headerlist = ['Date', 'Description', 'Withdrawal', 'Deposit', 'Balance']
-        spendList = ['Food', 'Groceries', 'Shopping', 'Transportation', 'Travel', 'Entertainment', 'Bills', 'Income', 'Other']
-        incomeList = ['Salary', 'Bonus', 'Interest', 'Other']
         df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
         df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
 
@@ -33,7 +35,7 @@ def cleanData():
         # print(df)
     return df 
 
-def calcSpending(df):
+def plotSpending(df):
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
     df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
     df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
@@ -48,7 +50,7 @@ def calcSpending(df):
     plt.title('Spending by Category')
     plt.show()
 
-def calcIncome(df):
+def plotIncome(df):
     df = df[df['Deposit'] != 0] # filter out all the rows that have 0 in the Deposit column
     df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Deposit column
     df = df.sort_values(by=['Deposit'], ascending=False) # sort the dataframe by Deposit column in descending order
@@ -63,18 +65,18 @@ def calcIncome(df):
     plt.title('Income by Category')
     plt.show()
 
-def cashflow(df):
+def plot_cashflow(df):
     #show cashflow of income vs spending week by week beginning at the first date in the data set and ending at the last date in the data set
-    df = df.groupby(['Date']).sum() # group the dataframe by Date and sum the Deposit and Withdrawal columns
-    df = df.sort_values(by=['Date'], ascending=True) # sort the dataframe by Date column in ascending order
+    df = df.groupby(['Week']).sum() # group the dataframe by Date and sum the Deposit and Withdrawal columns
+    df = df.sort_values(by=['Week'], ascending=True) # sort the dataframe by Date column in ascending order
     df = df.reset_index() # reset the index
     # print(df)
 
     # plot the data
-    plt.figure(figsize=(30, 5))
-    plt.plot(df['Date'], df['Deposit'], label='Income')
-    plt.plot(df['Date'], df['Withdrawal'], label='Spending')
-    plt.xlabel('Date')
+    plt.figure(figsize=(15, 5))
+    plt.plot(df['Week'], df['Deposit'], label='Income')
+    plt.plot(df['Week'], df['Withdrawal'], label='Spending')
+    plt.xlabel('Week')
     plt.ylabel('Amount')
     plt.title('Cashflow')
     plt.legend()
@@ -82,6 +84,17 @@ def cashflow(df):
 
 def calc_week_avgs(df):
     
+    #first find averages for total deposits and withdrawals for each week
+    avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+    avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+
+    print('Average weekly deposits: ', avg_weekly_deposits)
+    print('Average weekly withdrawals: ', avg_weekly_withdrawals)
+    print('Average weekly cashflow: ', avg_weekly_deposits - avg_weekly_withdrawals)
+    global savings_per_week 
+    savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+    print()
+
     # calculate the sum of deposits and withdrawals for each week
     week_sums = df.groupby(['Week', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
     
@@ -97,18 +110,29 @@ def calc_week_avgs(df):
 
 def calc_monthly_avgs(df):
         
-        # calculate the sum of deposits and withdrawals for each month
-        month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
-        
-        # calculate the number of months
-        num_months = month_sums['Month'].nunique()
-        
-        # calculate the average deposits and withdrawals per month
-        month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
-        month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
-        month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
+    #first find averages for total deposits and withdrawals for each week
+    avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+    avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+
+    print('Average monthly deposits: ', avg_monthly_deposits)
+    print('Average monthly withdrawals: ', avg_monthly_withdrawals)
+    print('Average monthly cashflow: ', avg_monthly_deposits - avg_monthly_withdrawals)
+    global savings_per_month
+    savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+    print()
+
+    # calculate the sum of deposits and withdrawals for each month
+    month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
     
-        return month_avgs
+    # calculate the number of months
+    num_months = month_sums['Month'].nunique()
+    
+    # calculate the average deposits and withdrawals per month
+    month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+    month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
+    month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
+
+    return month_avgs
 
 def plot_montly_avgs(month_avgs):
     #plot monthly averages of income and spending by category
@@ -169,12 +193,32 @@ def detect_spikes_by_month(df, category):
             first_day_of_week = df[df['Month'] == spike_month]['Date'].iloc[spike_week]
             print(f"Spike occurred in Month: {spike_month} with first day of the week being {first_day_of_week}")
 
-df = cleanData()
-# calcSpending(df)
-# calcIncome(df)
-# cashflow(df)
-# print(calc_week_avgs(df))
-# plot_weekly_avgs(calc_week_avgs(df))
-# plot_montly_avgs(calc_monthly_avgs(df))
-detect_spikes(df, 'Groceries')
-detect_spikes_by_month(df, 'Groceries')
+def wishlist(price, savings = 10):
+    # calculate the number of months it will take to save up for an item
+    if(savings_per_week <= 0 & savings_per_month <= 0):
+        print("Your account currently has a negative netflow. You will need to increase your income or decrease your spending to save up for this item.")
+        return
+    months = price / savings
+    print(f"It will take {months} months to save up for this item.")
+
+def main():
+    df = cleanData()
+    calc_week_avgs(df)
+    calc_monthly_avgs(df)
+    wishlist(1000, 10)
+    # plotIncome(df)
+    # plotSpending(df)
+    # plot_cashflow(df)
+    # print(calc_week_avgs(df))
+    # print()
+    # print(calc_monthly_avgs(df))
+    # plot_weekly_avgs(calc_week_avgs(df))
+    # plot_montly_avgs(calc_monthly_avgs(df))
+    # for x in spendList:
+    #     detect_spikes(df, x)
+    #     detect_spikes_by_month(df, x)
+    # detect_spikes(df, 'Groceries')
+    # detect_spikes_by_month(df, 'Groceries')
+
+if __name__ == "__main__":
+    main()
