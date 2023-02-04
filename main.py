@@ -19,6 +19,44 @@ debt_list = [
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
+def cleanData():
+    global current_savings, total_deposited, total_spent
+    if not os.path.exists('data.csv'): # check if the file exists
+        df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
+        df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
+
+        # convert the date column to a datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        df['Week'] = df['Date'].dt.week
+        df['Month'] = df['Date'].dt.month
+        df['Year'] = df['Date'].dt.year
+
+        for i in range(len(df)): # iterate through the dataframe
+            if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
+                df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
+            else:
+                df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
+
+        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+
+        df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
+
+        # print(df.columns)
+        # print(df)
+    else:
+        df = pd.read_csv('data.csv')
+        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+
+        total_spent 
+        # print(df)
+    return df 
+
 def spending_habits(df, annual_salary): #function to analyze spending habits by category and create a list of the category and amount spent
     global current_savings, total_deposited, total_spent
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
@@ -87,44 +125,6 @@ def essentialvsNonEssentialSpending(df):
         print('You are spending more on nonessentials than essentials')
         ratio = nonessential_spending / essential_spending
         print('You are spending', ratio, 'times more on nonessentials than essentials')
-
-def cleanData():
-    global current_savings, total_deposited, total_spent
-    if not os.path.exists('data.csv'): # check if the file exists
-        df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
-        df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
-
-        # convert the date column to a datetime format
-        df['Date'] = pd.to_datetime(df['Date'])
-        df['Week'] = df['Date'].dt.week
-        df['Month'] = df['Date'].dt.month
-        df['Year'] = df['Date'].dt.year
-
-        for i in range(len(df)): # iterate through the dataframe
-            if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
-                df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
-            else:
-                df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
-
-        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
-
-        df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
-
-        # print(df.columns)
-        # print(df)
-    else:
-        df = pd.read_csv('data.csv')
-        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
-
-        total_spent 
-        # print(df)
-    return df 
 
 def plotSpending(df):
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
@@ -286,6 +286,7 @@ def detect_spikes_by_month(df, category):
             first_day_of_week = datetime.strptime(first_day_of_week, '%Y-%m-%d')
             print('Monthly spike occured in : ' + calendar.month_name[spike_month] + ' of ' + str(first_day_of_week.year))
 
+#todo: incorporate income  
 def wishlist(price, savings = 10):
     # calculate the number of months it will take to save up for an item
     if(savings_per_week <= 0 and savings_per_month <= 0):
@@ -312,6 +313,7 @@ def plot_spikes_by_month(df, category):
     ax.set_title(f"Spikes in average spending in category '{category}'")
     plt.show()
 
+#todo: refactor to use global variables
 def house_downpayment():
     portion_down_payment = 0.25
     current_savings = 0

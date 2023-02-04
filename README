@@ -1,0 +1,13 @@
+Expert System Components explanation: https://www.youtube.com/watch?v=pba84JejFto
+
+Outline of this Expert System: 
+
+Purpose: Evaluate a user's bank statement to provide Budgeting recommendations
+
+Knowledege Base(KB): set of IF-ELSE parameters that dictate conservative spending habits for Debt analysis, spending habits, income analysis, savings and investements and risk tolerance
+
+Database of Facts(DBF): User's account data which consists of Date,Withdrawal,Deposit,Balance (csv format)
+
+Inference Engine: combines KB + DBF to make recommendations
+
+Explanation Mechanism: Primary UI which shows evidence for its conclusion
