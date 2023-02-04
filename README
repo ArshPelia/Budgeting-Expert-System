@@ -1,4 +1,9 @@
 Expert System Components explanation: https://www.youtube.com/watch?v=pba84JejFto
+Backward & forward Chaining for making inferences: https://www.youtube.com/watch?v=ZhTt-GG7PiQ
+Sample Expert Shells: 
+    https://github.com/mdkearns/expert-system-shell/blob/master/halal-bot.py
+    https://github.com/Moozzaart23/Medical-Expert-System/blob/master/medical_expert_system.py
+    
 
 Outline of this Expert System: 
 

@@ -57,7 +57,7 @@ def cleanData():
         # print(df)
     return df 
 
-def spending_habits(df, annual_salary): #function to analyze spending habits by category and create a list of the category and amount spent
+def spending_habits(df): #function to analyze spending habits by category and create a list of the category and amount spent
     global current_savings, total_deposited, total_spent
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
     df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
@@ -68,10 +68,10 @@ def spending_habits(df, annual_salary): #function to analyze spending habits by 
     spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
 
     # print list of categories and amount spent
-    for i in range(len(spending_dict)):
-        print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
+    # for i in range(len(spending_dict)):
+    #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
     
-    spending_percentages = {row['Category']: row['Amount'] / annual_salary for row in spending_dict} # calculate the percentage of spending for each category
+    spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
 
     if spending_percentages.get('Housing', 0) > 0.4:
         print('You are spending more than 40% of your income on housing')
@@ -367,7 +367,7 @@ def main():
     # essentialvsNonEssentialSpending(df)
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
-    spending_habits(df, total_deposited)
+    spending_habits(df)
 
 if __name__ == "__main__":
     main()
