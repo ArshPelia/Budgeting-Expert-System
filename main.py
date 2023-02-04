@@ -5,9 +5,26 @@ import random, os, calendar, datetime
 from datetime import datetime
 
 headerlist = ['Date', 'Description', 'Withdrawal', 'Deposit', 'Balance']
-spendList = ['Food', 'Groceries', 'Shopping', 'Transportation', 'Travel', 'Entertainment', 'Bills', 'Other']
-incomeList = ['Salary', 'Bonus', 'Interest', 'Other']
-global savings_per_week, savings_per_month, savings_per_year
+spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
+essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportation']
+nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
+
+incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
+
+global savings_per_week, savings_per_month, savings_per_year, yearly_salary, monthly_salary, weekly_salary, return_rate, semi_annual_raise, current_savings
+
+def eval_Spending(df):
+    #compare essential spending to nonessential spending
+    df_Essential = df[df['Category'].isin(essentialList)]
+    df_Nonessential = df[df['Category'].isin(nonessentialList)]
+    essential_spending = df_Essential['Withdrawal'].sum()
+    nonessential_spending = df_Nonessential['Withdrawal'].sum()
+    print('Essential Spending: ', essential_spending)
+    print('Nonessential Spending: ', nonessential_spending)
+    if essential_spending > nonessential_spending:
+        print('You are spending more on essentials than nonessentials')
+    else:
+        print('You are spending more on nonessentials than essentials')
 
 def cleanData():
     if not os.path.exists('data.csv'): # check if the file exists
@@ -23,7 +40,6 @@ def cleanData():
         for i in range(len(df)): # iterate through the dataframe
             if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
                 df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
-            # elif df.at[i, 'Withdrawal'] == 0: # if the Withdrawal column is 0
             else:
                 df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
 
@@ -222,6 +238,37 @@ def plot_spikes_by_month(df, category):
     ax.set_title(f"Spikes in average spending in category '{category}'")
     plt.show()
 
+def house_downpayment():
+    portion_down_payment = 0.25
+    current_savings = 0
+    r = 0.04 # annual return on investment
+    # total_cost = 1000000 
+    semi_annual_raise = 0.07
+
+    annual_salary = input('Enter your annual salary: ')
+    annual_salary = float(annual_salary)
+    portion_saved = input('Enter the percent of your salary to save, as a decimal: ')
+    portion_saved = float(portion_saved)
+    total_cost = input('Enter the cost of your dream home: ')
+    total_cost = float(total_cost)
+    semi_annual_raise = input('Enter the semi_annual_raise percentage: ')
+    semi_annual_raise = float(semi_annual_raise)
+
+    monthly_salary = (annual_salary / 12)
+    dpcost = total_cost * portion_down_payment
+    months = 0
+    # portion_saved = 0.1
+
+    while current_savings < dpcost:
+        months += 1
+        if months % 6 == 0:
+            annual_salary += annual_salary * semi_annual_raise
+            monthly_salary = (annual_salary / 12)
+            # print('ann salary: ' + str(annual_salary))
+        current_savings += current_savings*r/12
+        current_savings += monthly_salary * portion_saved
+
+    print('Number of Months to afford Downpayment: ' + str(months))
 
 def main():
     df = cleanData()
@@ -236,11 +283,13 @@ def main():
     # print(calc_monthly_avgs(df))
     # plot_weekly_avgs(calc_week_avgs(df))
     # plot_montly_avgs(calc_monthly_avgs(df))
-    for x in spendList:
-        detect_spikes(df, x)
-        detect_spikes_by_month(df, x)
+    # for x in spendList:
+    #     detect_spikes(df, x)
+    #     detect_spikes_by_month(df, x)
 
-    # plot_spikes(df, 'Groceries')
+    # plot_spikes_by_month(df, 'Groceries')
+
+    eval_Spending(df)
 
 if __name__ == "__main__":
     main()
