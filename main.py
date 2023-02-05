@@ -388,9 +388,9 @@ def evaluate_savings_and_investment(total_income, savings, investment, emergency
 def main():
     global emergency_fund_goal, retirement_goal, current_savings, total_deposited, total_spent
     df = cleanData()
-    emergency_fund_goal = 10000
-    retirement_goal = 100000
-    print(evaluate_savings_and_investment(total_deposited, current_savings, total_spent, emergency_fund_goal, retirement_goal))
+    # emergency_fund_goal = 10000
+    # retirement_goal = 100000
+    # print(evaluate_savings_and_investment(total_deposited, current_savings, total_spent, emergency_fund_goal, retirement_goal))
 
     # calc_week_avgs(df)
     # calc_monthly_avgs(df)
@@ -411,7 +411,7 @@ def main():
     # essentialvsNonEssentialSpending(df)
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
-    # spending_habits(df)
+    spending_habits(df)
     # r = extract_rules('rules.txt')
 
 

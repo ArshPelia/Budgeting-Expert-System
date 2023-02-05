@@ -34,10 +34,14 @@ Consequence rules: These rules state the consequences of certain conditions.
 Decision rules: These rules help make decisions based on specific conditions. 
     For example, "If spending on housing is greater than 40% of income, then suggest downsizing housing."
 
-Condition-Action rules: These rules state a condition and an action that should be taken if that condition is met. For example, "If spending on dining out is greater than 10% of income, then recommend reducing dining out expenses."
+Condition-Action rules: These rules state a condition and an action that should be taken if that condition is met. 
+    For example, "If spending on dining out is greater than 10% of income, then recommend reducing dining out expenses."
 
-Inference rules: These rules use reasoning to draw conclusions based on available data. For example, "If spending on housing and entertainment are both high, then recommend prioritizing spending on necessities like housing."
+Inference rules: These rules use reasoning to draw conclusions based on available data. 
+    For example, "If spending on housing and entertainment are both high, then recommend prioritizing spending on necessities like housing."
 
-Risk assessment rules: These rules evaluate the risk associated with a particular situation or condition. For example, "If spending on loan repayment is greater than 20% of income, then flag it as a high-risk financial situation."
+Risk assessment rules: These rules evaluate the risk associated with a particular situation or condition. 
+    For example, "If spending on loan repayment is greater than 20% of income, then flag it as a high-risk financial situation."
 
-Resource allocation rules: These rules determine the most efficient allocation of resources. For example, "If spending on groceries is greater than 10% of income, then recommend reducing groceries expenses and redirecting that money towards bills."
+Resource allocation rules: These rules determine the most efficient allocation of resources. 
+    For example, "If spending on groceries is greater than 10% of income, then recommend reducing groceries expenses and redirecting that money towards bills."

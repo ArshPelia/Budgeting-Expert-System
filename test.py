@@ -11,14 +11,80 @@ essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportat
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
-global savings_per_week, savings_per_month, total_deposited, total_spent, return_rate, semi_annual_raise, current_savings
+#declare global variables to be used in the program and amount spent or deposited in each category
+# current_savings = 0
+# total_deposited = 0
+# total_spent = 0
+# SpentDiningOut = 0
+# SpentGroceries = 0
+# SpentShopping = 0
+# SpentTransportation = 0
+# SpentHousing = 0
+# SpentEntertainment = 0
+# SpentBills = 0
+# SpentLoanRepayment = 0
+# DepositedSalary = 0
+# DepositedBonus = 0
+# DepositedInterest = 0
+# DepositedReturnOnInvestment = 0
+# DepositedPersonalSale = 0
 
-debt_list = [
-    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
-    {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 8},
-    {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
-]
+
+class ExpertSystem:
+    def __init__(self, data):
+        self.data = data # data used by the system
+        self.knowledge_base = [] # a list of rules used by the system
+        self.working_memory = [] # a list of facts used by the system
+        self.inferences = [] # a list of inferences made by the system
+        
+    def add_knowledge(self, rule):
+        self.knowledge_base.append(rule) # add a rule to the knowledge base
+        
+    def add_fact(self, fact):
+        self.working_memory.append(fact) # add a fact to the working memory
+    
+    def match_fact(self, fact_name):
+        for fact in self.working_memory:
+            if fact.name == fact_name:
+                return fact
+        return None
+    
+    def run(self):
+        for rule in self.knowledge_base:
+            self.current_premises = []
+            for premise in rule.premises:
+                fact = self.match_fact(premise)
+                if not fact:
+                    break
+                self.current_premises.append(fact)
+            else:
+                if not rule._check_func(self.current_premises):
+                    print(rule.conclusion)            
+    # def make_inferences(self):
+    #     # loop through the knowledge base and make inferences based on the facts in the working memory
+    #     for rule in self.knowledge_base:
+    #         if rule.check(self.working_memory):
+    #             if rule.conclusion not in self.inferences:
+    #                 self.inferences.append(rule.conclusion)
+    #             if rule.conclusion not in self.working_memory:
+    #                 self.working_memory.append(rule.conclusion)
+                
+    # def get_inferences(self):
+    #     return self.inferences # return the list of inferences made by the system
+        
+class Rule:
+    def __init__(self, premises, conclusion, check_func):
+        self.premises = premises
+        self.conclusion = conclusion
+        self._check_func = check_func
+        
+    def check(self, facts):
+        return self._check_func(facts)
+
+class Fact:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
 def cleanData():
     global current_savings, total_deposited, total_spent
@@ -41,7 +107,7 @@ def cleanData():
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+        # print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
 
         df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
 
@@ -52,14 +118,23 @@ def cleanData():
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+        # print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
 
         total_spent 
         # print(df)
     return df 
 
-def spending_habits(df): #function to analyze spending habits by category and create a list of the category and amount spent
-    global current_savings, total_deposited, total_spent
+def create_Facts(df):
+
+    current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+
+    currSaveFact = Fact('current_savings', current_savings)
+    totalDepositedFact = Fact('total_deposited', total_deposited)
+    totalSpentFact = Fact('total_spent', total_spent)
+
+
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
     df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
     df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
@@ -67,57 +142,149 @@ def spending_habits(df): #function to analyze spending habits by category and cr
     df = df[['Category', 'Withdrawal']] # select only the Category and Withdrawal columns
     df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
     spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
-    # print(spending_dict)
 
-    # print list of categories and amount spent
-    # for i in range(len(spending_dict)):
-    #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
+    #create a fact for each category
+    for i in range(len(spending_dict)):
+        globals()[spending_dict[i]['Category']] = Fact(spending_dict[i]['Category'], spending_dict[i]['Amount'])
     
-    spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
+    #create a list of all the facts
+    facts = [currSaveFact, totalDepositedFact, totalSpentFact]
+    for i in range(len(spending_dict)):
+        facts.append(globals()[spending_dict[i]['Category']])
 
-    if spending_percentages.get('Housing', 0) > 0.4:
-        print('You are spending more than 40% of your income on housing')
-    if spending_percentages.get('Transportation', 0) > 0.1:
-        print('You are spending more than 10% of your income on transportation')
-    if spending_percentages.get('Dining Out', 0) > 0.1:
-        print('You are spending more than 10% of your income on dining out')
-    if spending_percentages.get('Shopping', 0) > 0.2:
-        print('You are spending more than 20% of your income on shopping')
-    if spending_percentages.get('Entertainment', 0) > 0.05:
-        print('You are spending more than 5% of your income on entertainment')
-    if spending_percentages.get('Bills', 0) > 0.1:
-        print('You are spending more than 10% of your income on bills')
-    if spending_percentages.get('Loan Repayment', 0) > 0.1:
-        print('You are spending more than 10% of your income on loan repayment')
-    if spending_percentages.get('Groceries', 0) > 0.1:
-        print('You are spending more than 10% of your income on groceries')
-    elif sum(spending_percentages.values()) > 0.7:
-        return ('Overall spending is greater than 70% of your income, consider reducing expenses in all categories.')
-    else:
-        return ('Your spending is within a reasonable range.')
+    #print the facts 
+    # for i in range(len(facts)):
+    #     print(facts[i].name, facts[i].value)
 
-def debt_analysis(debt_list):
-  high_interest_debt = []
-  total_debt = 0
-  
-  for debt in debt_list:
-    total_debt += debt['amount']
-    if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
-      high_interest_debt.append(debt)
-  
-  if high_interest_debt:
-    return ('High-interest debt detected, consider paying off the following debts first:', high_interest_debt)
-  elif total_debt > 0.5 * total_deposited: # if total debt is more than 50% of annual salary
-    return ('Your debt-to-income ratio is high, consider paying off some debt or increasing your income')
-  else:
-    return ('Your debt is manageable')
+    return facts
 
+def add_facts_to_es(es, facts):
+    for i in range(len(facts)):
+        es.add_fact(facts[i])
+
+def create_Rules():
+    entertainment_rule = Rule(["total_deposited", "Entertainment"], "High Spending Alert: Amount spent on entertainment is greater than 10% of income", check_entertainment_expense)
+    housing_rule = Rule(["total_deposited", "Housing"], "High Spending Alert: Amount spent on housing is greater than 30% of income", check_housing_expense)
+    diningout_rule = Rule(["total_deposited", "Dining Out"], "High Spending Alert: Amount spent on dining out is greater than 10% of income", check_diningout_expense)
+    transportation_rule = Rule(["total_deposited", "Transportation"], "High Spending Alert: Amount spent on transportation is greater than 10% of income", check_transportation_expense)
+    shopping_rule = Rule(["total_deposited", "Shopping"], "High Spending Alert: Amount spent on shopping is greater than 10% of income", check_shopping_expense)
+    loanrepay_rule = Rule(["total_deposited", "Loan Repayment"], "High Spending Alert: Amount spent on loan repayments is greater than 10% of income", check_loanrepay_expense)
+    groceries_rule = Rule(["total_deposited", "Groceries"], "High Spending Alert: Amount spent on groceries is greater than 10% of income", check_groceries_expense)
+    Bills_rule = Rule(["total_deposited", "Bills"], "High Spending Alert: Amount spent on bills is greater than 10% of income", check_bills_expense)
+
+    rules = [entertainment_rule, housing_rule, diningout_rule, transportation_rule, loanrepay_rule, groceries_rule, shopping_rule, Bills_rule]
+    # for rule in rules:
+    #     print(rule.premises, rule.conclusion, rule._check_func)
+
+    return rules
+    
+def add_rules_to_es(es, rules):
+    for i in range(len(rules)):
+        es.add_knowledge(rules[i])
+
+def check_entertainment_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Entertainment":
+            entertainment_expense = fact.value
+    return entertainment_expense / income < 0.1
+
+def check_housing_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Housing":
+            houseing_expense = fact.value
+    return houseing_expense / income < 0.1
+
+def check_diningout_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Dining Out":
+            diningout_expense = fact.value
+    return diningout_expense / income < 0.1
+
+def check_transportation_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Transportation":
+            transportation_expense = fact.value
+    return transportation_expense / income < 0.1
+
+def check_shopping_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Shopping":
+            shopping_expense = fact.value
+    return shopping_expense / income < 0.1
+
+def check_loanrepay_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Loan Repayment":
+            loanrepay_expense = fact.value
+    return loanrepay_expense / income < 0.1
+
+def check_groceries_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Groceries":
+            groceries_expense = fact.value
+    return groceries_expense / income < 0.1
+
+def check_bills_expense(facts):
+    for fact in facts:
+        if fact.name == "total_deposited":
+            income = fact.value
+        if fact.name == "Bills":
+            bills_expense = fact.value
+    return bills_expense / income < 0.1
+
+
+# entertainment_rule = Rule(["income", "entertainment_expense"], "High Spending Alert: Amount spent on entertainment is greater than 10% of income", check_entertainment_expense)
+# income_fact = Fact("income", 50000)
+# entertainment_expense_fact = Fact("entertainment_expense", 500)
+
+# es = ExpertSystem(None)
+# es.add_knowledge(entertainment_rule)
+# es.add_fact(income_fact)
+# es.add_fact(entertainment_expense_fact)
+# es.make_inferences()
+# print(es.get_inferences())
 def main():
     df = cleanData()
-    debt_analysis_result = debt_analysis(debt_list)
-    print(debt_analysis_result)
-    spending_habits(df)
+    facts = create_Facts(df)
+    es = ExpertSystem(None)
+    add_facts_to_es(es, facts)
+    # print("Facts in the expert system:")
+    # for i in range(len(es.working_memory)):
+        # print(es.working_memory[i].name, es.working_memory[i].value)
+
+    print('')
+    rules = create_Rules()
+    add_rules_to_es(es, rules)
+    # print("Rules in the expert system:")
+    # for i in range(len(es.knowledge_base)):
+        # print(es.knowledge_base[i].premises, es.knowledge_base[i].conclusion, es.knowledge_base[i]._check_func)
+
+    # es.knowledge_base[2].check(es.working_memory)
+    # es.make_inferences()
+    # print(es.get_inferences())
+    es.run()
+    print('finished')
+
+
+
+
 
 
 if __name__ == "__main__":
-        main()
+    main()
+
+
