@@ -17,7 +17,8 @@ class ExpertSystem:
         self.data = data
         self.rules = []
         self.facts = []
-        self.inferences = []
+        self.budget_violations = []
+        self.budget_infereces = []
 
     def add_fact(self, name, value):
         self.facts.append(Fact(name, value))
@@ -25,24 +26,56 @@ class ExpertSystem:
     def add_budget_rule(self, category, comparison_operator, threshold):
         self.rules.append(BudgetRule(category, comparison_operator, threshold))
 
+    def getFacts(self):
+        return self.facts
+    
+    def getRules(self):
+        return self.rules
+
     def evaluateSpending(self):
         for rule in self.rules:
-            if not rule.check_SpendingPercent(self.facts[0].value): # facts[0] is the spending percentages
-                self.inferences.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
+            if not rule.check_SpendingPercent(self.facts[0].value): # facts[0] is the spending percentages    #         if not rule.check_SpendingPercent(spending_percentages):
+                self.budget_violations.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
 
-        if len(self.inferences) == 0:
-            return 'No violations, Budgeting rules satisfied.'
-    # def evaluateSpending(self, spending_percentages):
-    #     for rule in self.rules:
-    #         if not rule.check_SpendingPercent(spending_percentages):
-    #             # return 'Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold)
-    #             self.inferences.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
-        
-    #     if len(self.inferences) == 0:
-    #         return 'No violations, Budgeting rules satisfied.'
+        # if len(self.budget_violations) == 0:
+        #     return 'No violations, Budgeting rules satisfied.'
     
-    def getInference(self):
-        return self.inferences
+    def getBudgetViolations(self):
+        return self.budget_violations
+    
+    def MakeBudgetInferences(self):
+        if len(self.budget_violations) <= 0:
+            return 'No violations, All Budgeting rules satisfied.'
+        else:
+            for violation in self.budget_violations:
+                # print(violation)
+                if 'Housing' in violation:
+                    self.budget_infereces.append('You are spending too much on Housing. Consider moving to a cheaper location.')
+                elif 'Groceries' in violation:
+                    self.budget_infereces.append('You are spending too much on Groceries. Consider buying in bulk and cooking at home more.')
+                elif 'Entertainment' in violation:
+                    self.budget_infereces.append('You are spending too much on Entertainment. Consider going out less or doing more free activities.')
+                elif 'Transportation' in violation:
+                    self.budget_infereces.append('You are spending too much on Transportation. Consider taking public transportation more often or carpooling.')
+                elif 'Bills' in violation:
+                    self.budget_infereces.append('You are spending too much on Bills. Consider switching to a cheaper internet provider or cutting cable.')
+                elif 'Loan Repayment' in violation:
+                    self.budget_infereces.append('You are spending too much on Loan Repayment. Consider paying off your loans faster or refinancing.')
+                elif 'Dining Out' in violation:
+                    self.budget_infereces.append('You are spending too much on Dining Out. Consider cooking at home more or eating out less.')
+                elif 'Shopping' in violation:
+                    self.budget_infereces.append('You are spending too much on Shopping. Consider buying less or buying used items.')
+                elif 'Essential Costs' in violation:
+                    self.budget_infereces.append('You are spending too much on Essential Costs. Consider cutting back on non-essential costs.')
+                elif 'Non-Essential Costs' in violation:
+                    self.budget_infereces.append('You are spending too much on Non-Essential Costs. Consider cutting back on non-essential costs.')
+                else:
+                    self.budget_infereces.append('You are spending too much on {}'.format(violation.split()[2]))
+            return self.budget_infereces
+    
+    def getBudgetInferences(self):
+        return self.budget_infereces
+
        
 class Fact:
     def __init__(self, name, value):
@@ -145,16 +178,11 @@ def main():
     addRules(expert_system)
     addFacts(expert_system, df)
     expert_system.evaluateSpending()
-
-    #print expert_system.rules
-    # for rule in expert_system.rules:
-    #     print(rule.category, rule.comparison_operator, rule.threshold)
-
-    # spending_percentages = getSpendingPercentages(df)
-    # expert_system.evaluateSpending(spending_percentages)
-    inferences = expert_system.getInference()
-    for inference in inferences:
-        print(inference)
+    budget_violations = expert_system.getBudgetViolations()
+    expert_system.MakeBudgetInferences()
+    budget_inferences = expert_system.getBudgetInferences()
+    for i in budget_inferences:
+        print(i)
 
 if __name__ == "__main__":
     main()
