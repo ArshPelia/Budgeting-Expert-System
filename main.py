@@ -11,7 +11,7 @@ essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportat
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
-global savings_per_week, savings_per_month, total_deposited, total_spent, return_rate, semi_annual_raise, current_savings
+global savings_per_week, savings_per_month, total_deposited, total_spent, return_rate, semi_annual_raise, current_savings, emergency_fund_goal, retirement_goal
 
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
@@ -367,9 +367,31 @@ def extract_rules(file_path):
     print(rules)
     return rules
 
+#todo: need to finish (initialize investment and savings)
+def evaluate_savings_and_investment(total_income, savings, investment, emergency_fund_goal, retirement_goal):
+    savings_percentage = savings / total_income * 100
+    investment_percentage = investment / total_income * 100
+    emergency_fund_achieved = savings >= emergency_fund_goal
+    retirement_goal_achieved = investment >= retirement_goal
+
+    recommendations = []
+    if savings_percentage < 10:
+        recommendations.append("Consider increasing your savings to ensure a secure future.")
+    if not emergency_fund_achieved:
+        recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
+    if not retirement_goal_achieved:
+        recommendations.append("Consider increasing contributions to your retirement account.")
+
+    return recommendations
+
 
 def main():
+    global emergency_fund_goal, retirement_goal, current_savings, total_deposited, total_spent
     df = cleanData()
+    emergency_fund_goal = 10000
+    retirement_goal = 100000
+    print(evaluate_savings_and_investment(total_deposited, current_savings, total_spent, emergency_fund_goal, retirement_goal))
+
     # calc_week_avgs(df)
     # calc_monthly_avgs(df)
     # wishlist(1000, 10)
@@ -390,8 +412,9 @@ def main():
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
     # spending_habits(df)
-    r = extract_rules('rules.txt')
-    s = spending_habits(df)
+    # r = extract_rules('rules.txt')
+
+
 
 if __name__ == "__main__":
     main()
