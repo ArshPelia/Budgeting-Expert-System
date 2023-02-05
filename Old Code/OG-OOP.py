@@ -196,7 +196,8 @@ def check_housing_expense(facts):
             income = fact.value
         if fact.name == "Housing":
             houseing_expense = fact.value
-    return houseing_expense / income < 0.1
+    print('Housing percentage: ',houseing_expense / income)
+    return houseing_expense / income < 0.3
 
 def check_diningout_expense(facts):
     for fact in facts:
