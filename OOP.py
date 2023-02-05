@@ -22,35 +22,40 @@ class ExpertSystem:
     def add_fact(self, name, value):
         self.facts.append(Fact(name, value))
 
-    def add_rule(self, category, comparison_operator, threshold):
-        self.rules.append(Rule(category, comparison_operator, threshold))
-        
-    def evaluateSpending(self, spending_percentages):
+    def add_budget_rule(self, category, comparison_operator, threshold):
+        self.rules.append(BudgetRule(category, comparison_operator, threshold))
+
+    def evaluateSpending(self):
         for rule in self.rules:
-            if not rule.check(spending_percentages):
-                # return 'Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold)
+            if not rule.check_SpendingPercent(self.facts[0].value): # facts[0] is the spending percentages
                 self.inferences.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
-        
+
         if len(self.inferences) == 0:
             return 'No violations, Budgeting rules satisfied.'
+    # def evaluateSpending(self, spending_percentages):
+    #     for rule in self.rules:
+    #         if not rule.check_SpendingPercent(spending_percentages):
+    #             # return 'Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold)
+    #             self.inferences.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
+        
+    #     if len(self.inferences) == 0:
+    #         return 'No violations, Budgeting rules satisfied.'
     
     def getInference(self):
         return self.inferences
-    
-    
+       
 class Fact:
     def __init__(self, name, value):
         self.name = name
         self.value = value
         
-class Rule:
+class BudgetRule:
     def __init__(self, category, comparison_operator, threshold):
         self.category = category
         self.comparison_operator = comparison_operator
         self.threshold = threshold
 
-    def check(self, spending_percentages):
-        # print('Category: ',spending_percentages[self.category], 'threshold: ', self.threshold)
+    def check_SpendingPercent(self, spending_percentages):
         # print('Category: ',self.category, 'threshold: ', self.threshold, 'value: ', spending_percentages[self.category])
         if self.comparison_operator == '<':
             return spending_percentages[self.category] < self.threshold
@@ -98,17 +103,25 @@ def preprocess():
     return df 
 
 def addRules(es):
-    es.add_rule('Entertainment', '<', 0.1)
-    es.add_rule('Housing', '<', 0.3)
-    es.add_rule('Groceries', '<', 0.1)
-    es.add_rule('Dining Out', '<', 0.1)
-    es.add_rule('Shopping', '<', 0.2)
-    es.add_rule('Transportation', '<', 0.1)
-    es.add_rule('Bills', '<', 0.1)
-    es.add_rule('Loan Repayment', '<', 0.1)
+    es.add_budget_rule('Entertainment', '<', 0.1)
+    es.add_budget_rule('Housing', '<', 0.3)
+    es.add_budget_rule('Groceries', '<', 0.1)
+    es.add_budget_rule('Dining Out', '<', 0.1)
+    es.add_budget_rule('Shopping', '<', 0.2)
+    es.add_budget_rule('Transportation', '<', 0.1)
+    es.add_budget_rule('Bills', '<', 0.1)
+    es.add_budget_rule('Loan Repayment', '<', 0.1)
+    es.add_budget_rule('Essential Costs', '<', 0.6)
+    es.add_budget_rule('Non-Essential Costs', '<', 0.4)
+
+def addFacts(es, df):
+    global current_savings, total_deposited, total_spent
+    es.add_fact('Spending Percentages', getSpendingPercentages(df))
+    es.add_fact('Total Deposited', total_deposited)
+    es.add_fact('Total Spent', total_spent)
+    es.add_fact('Current Savings', current_savings)
 
 def getSpendingPercentages(df):
-    # should look like this: spending_percentages = {'Entertainment': 0.12, 'Housing': 0.3}
     spending_percentages = {}
     total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
     total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
@@ -116,30 +129,29 @@ def getSpendingPercentages(df):
         spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_spent
         # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
     # print(spending_percentages)
+    df_Essential = df[df['Category'].isin(essentialList)]
+    df_Nonessential = df[df['Category'].isin(nonessentialList)]
+    essential_spending = df_Essential['Withdrawal'].sum()
+    nonessential_spending = df_Nonessential['Withdrawal'].sum()
+
+    spending_percentages['Essential Costs'] = essential_spending / total_spent
+    spending_percentages['Non-Essential Costs'] = nonessential_spending / total_spent
         
     return spending_percentages
-
-# # Create an instance of the ExpertSystem class
-# expert_system = ExpertSystem(None)
-
-# # Add some rules
-# expert_system.add_rule('Entertainment', '<', 0.1)
-# expert_system.add_rule('Housing', '<', 0.4)
-
-# # Evaluate the spending habits
-# spending_percentages = {'Entertainment': 0.12, 'Housing': 0.3}
-# print(expert_system.evaluateSpending(spending_percentages)) # Budgeting rule violated: Entertainment < 0.1
 
 def main():
     df = preprocess()
     expert_system = ExpertSystem(None)
     addRules(expert_system)
+    addFacts(expert_system, df)
+    expert_system.evaluateSpending()
+
     #print expert_system.rules
     # for rule in expert_system.rules:
     #     print(rule.category, rule.comparison_operator, rule.threshold)
 
-    spending_percentages = getSpendingPercentages(df)
-    expert_system.evaluateSpending(spending_percentages)
+    # spending_percentages = getSpendingPercentages(df)
+    # expert_system.evaluateSpending(spending_percentages)
     inferences = expert_system.getInference()
     for inference in inferences:
         print(inference)
