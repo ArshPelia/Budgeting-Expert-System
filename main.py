@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random, os, calendar, datetime
 from datetime import datetime
+import re
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
 spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
@@ -66,6 +67,7 @@ def spending_habits(df): #function to analyze spending habits by category and cr
     df = df[['Category', 'Withdrawal']] # select only the Category and Withdrawal columns
     df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
     spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
+    # print(spending_dict)
 
     # print list of categories and amount spent
     # for i in range(len(spending_dict)):
@@ -346,6 +348,26 @@ def house_downpayment():
 
     print('Number of Months to afford Downpayment: ' + str(months))
 
+def extract_rules(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    lines = content.splitlines()
+    rules = []
+    for line in lines:
+        m = re.match(r'RULE \d+: If spending on (\w+) is (\w+) than (\d+)% of income', line)
+        if m:
+            condition, operator, threshold = m.groups()
+            rule = {
+                'condition': condition,
+                'operator': operator,
+                'threshold': int(threshold)
+            }
+            rules.append(rule)
+    print(rules)
+    return rules
+
+
 def main():
     df = cleanData()
     # calc_week_avgs(df)
@@ -367,7 +389,9 @@ def main():
     # essentialvsNonEssentialSpending(df)
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
-    spending_habits(df)
+    # spending_habits(df)
+    r = extract_rules('rules.txt')
+    s = spending_habits(df)
 
 if __name__ == "__main__":
     main()

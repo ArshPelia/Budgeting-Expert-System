@@ -1,0 +1,40 @@
+RULE 1: If spending on housing is greater than 40% of income, then flag it as high spending.
+RULE 2: If spending on transportation is greater than 10% of income, then flag it as high spending.
+RULE 3: If spending on dining out is greater than 10% of income, then flag it as high spending.
+RULE 4: If spending on shopping is greater than 20% of income, then flag it as high spending.
+RULE 5: If spending on entertainment is greater than 5% of income, then flag it as high spending.
+RULE 6: If spending on bills is greater than 10% of income, then flag it as high spending.
+RULE 7: If spending on loan repayment is greater than 10% of income, then flag it as high spending.
+RULE 8: If spending on groceries is greater than 10% of income, then flag it as high spending.
+RULE 9: If overall spending is greater than 70% of income, then flag it as high spending.
+
+
+If the sum of all essential expenses (groceries, housing, bills, loan repayment, and transportation) is greater than 60% of the total income, then flag it as high spending.
+
+If the sum of all non-essential expenses (dining out, shopping, and entertainment) is greater than 30% of the total income, then flag it as high spending.
+
+If the salary is less than 60% of the total income, then flag it as low income.
+
+If the salary is less than 20% of the total income and more than 80% of the income comes from other sources (bonus, interest, return on investment, and personal sale), then flag it as unbalanced income.
+
+If the return on investment is greater than 20% of the total income, then flag it as high investment.
+
+If the interest is greater than 10% of the total income, then flag it as high interest.
+
+If the bonus is greater than 15% of the total income, then flag it as high bonus.
+
+If the personal sales are greater than 10% of the total income, then flag it as high personal sales.
+
+Cause-Effect rules: These rules state that certain conditions cause a certain effect. For example, "If spending on housing is greater than 40% of income, then flag it as high spending."
+
+Consequence rules: These rules state the consequences of certain conditions. For example, "If spending on housing is greater than 40% of income, then recommend reducing housing expenses."
+
+Decision rules: These rules help make decisions based on specific conditions. For example, "If spending on housing is greater than 40% of income, then suggest downsizing housing."
+
+Condition-Action rules: These rules state a condition and an action that should be taken if that condition is met. For example, "If spending on dining out is greater than 10% of income, then recommend reducing dining out expenses."
+
+Inference rules: These rules use reasoning to draw conclusions based on available data. For example, "If spending on housing and entertainment are both high, then recommend prioritizing spending on necessities like housing."
+
+Risk assessment rules: These rules evaluate the risk associated with a particular situation or condition. For example, "If spending on loan repayment is greater than 20% of income, then flag it as a high-risk financial situation."
+
+Resource allocation rules: These rules determine the most efficient allocation of resources. For example, "If spending on groceries is greater than 10% of income, then recommend reducing groceries expenses and redirecting that money towards bills."
