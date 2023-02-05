@@ -112,25 +112,8 @@ def debt_analysis(debt_list):
   else:
     return ('Your debt is manageable')
 
-def essentialvsNonEssentialSpending(df):
-    #compare essential spending to nonessential spending
-    df_Essential = df[df['Category'].isin(essentialList)]
-    df_Nonessential = df[df['Category'].isin(nonessentialList)]
-    essential_spending = df_Essential['Withdrawal'].sum()
-    nonessential_spending = df_Nonessential['Withdrawal'].sum()
-    print('Essential Spending: ', essential_spending)
-    print('Nonessential Spending: ', nonessential_spending)
-    if essential_spending > nonessential_spending:
-        ratio = essential_spending / nonessential_spending
-        print('You are spending', ratio, 'times more on essentials than nonessentials')
-    else:
-        print('You are spending more on nonessentials than essentials')
-        ratio = nonessential_spending / essential_spending
-        print('You are spending', ratio, 'times more on nonessentials than essentials')
-
 def main():
     df = cleanData()
-    essentialvsNonEssentialSpending(df)
     debt_analysis_result = debt_analysis(debt_list)
     print(debt_analysis_result)
     spending_habits(df)

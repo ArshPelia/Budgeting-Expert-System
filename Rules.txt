@@ -25,11 +25,14 @@ If the bonus is greater than 15% of the total income, then flag it as high bonus
 
 If the personal sales are greater than 10% of the total income, then flag it as high personal sales.
 
-Cause-Effect rules: These rules state that certain conditions cause a certain effect. For example, "If spending on housing is greater than 40% of income, then flag it as high spending."
+Cause-Effect rules: These rules state that certain conditions cause a certain effect.
+    For example, "If spending on housing is greater than 40% of income, then flag it as high spending."
 
-Consequence rules: These rules state the consequences of certain conditions. For example, "If spending on housing is greater than 40% of income, then recommend reducing housing expenses."
+Consequence rules: These rules state the consequences of certain conditions. 
+    For example, "If spending on housing is greater than 40% of income, then recommend reducing housing expenses."
 
-Decision rules: These rules help make decisions based on specific conditions. For example, "If spending on housing is greater than 40% of income, then suggest downsizing housing."
+Decision rules: These rules help make decisions based on specific conditions. 
+    For example, "If spending on housing is greater than 40% of income, then suggest downsizing housing."
 
 Condition-Action rules: These rules state a condition and an action that should be taken if that condition is met. For example, "If spending on dining out is greater than 10% of income, then recommend reducing dining out expenses."
 
