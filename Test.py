@@ -26,16 +26,20 @@ class ExpertSystem:
         self.debt_list = debt_list
         self.rules = []
         self.facts = []
-        self.spendingInferences = []
-        self.savingsInferences = []
-        self.debtInferences = []
-        self.cashflowInferences = []
+        # self.spendingInferences = []
+        # self.savingsInferences = []
+        # self.debtInferences = []
+        # self.cashflowInferences = []
+        self.inferences = []
 
-    def add_rule(self, type, premise, conclusion):
-        self.rules.append(Rule(type, premise, conclusion))
+    def add_rule(self, type, premise, conclusion, severity):
+        self.rules.append(Rule(type, premise, conclusion, severity))
 
     def get_rules(self):
         return self.rules
+
+    def add_inference(self, type, premise, conclusion, severity):
+        self.inferences.append(Inference(type, premise, conclusion, severity))
 
     def evaluateDebt(self):
         high_interest_debt = []
@@ -55,20 +59,25 @@ class ExpertSystem:
         else:
             self.add_fact('Debt','high_debt_to_MonthlyIncome', False)
 
-    def makeInfereces(self):
+    def makeInferences(self):
         for rule in self.rules:
             if rule.check(self.facts):
                 if rule.type == 'Spending':
-                    self.spendingInferences.append(rule.conclusion)
+                    # self.spendingInferences.append(rule.conclusion)
+                    self.add_inference('Spending', rule.premise, rule.conclusion, rule.severity)
                 elif rule.type == 'Savings':
-                    self.savingsInferences.append(rule.conclusion)
+                    # self.savingsInferences.append(rule.conclusion)
+                    self.add_inference('Savings', rule.premise, rule.conclusion, rule.severity)
                 elif rule.type == 'Debt':
-                    self.debtInferences.append(rule.conclusion)
+                    # self.debtInferences.append(rule.conclusion)
+                    self.add_inference('Debt',  rule.premise, rule.conclusion, rule.severity)
                 elif rule.type == 'Cashflow':
-                    self.cashflowInferences.append(rule.conclusion)    
+                    # self.cashflowInferences.append(rule.conclusion)
+                    self.add_inference('Cashflow',  rule.premise, rule.conclusion, rule.severity)    
 
     def getInferences(self):
-        return self.spendingInferences, self.savingsInferences, self.debtInferences, self.cashflowInferences
+        # return self.spendingInferences, self.savingsInferences, self.debtInferences, self.cashflowInferences
+        return self.inferences
 
     def add_fact(self, type, name, value):
         self.facts.append(Fact(type, name, value))
@@ -86,10 +95,11 @@ class Fact:
         self.value = value
 
 class Rule:
-    def __init__(self, type, premise, conclusion):
+    def __init__(self, type, premise, conclusion, severity):
         self.type = type
         self.premise = premise
         self.conclusion = conclusion
+        self.severity = severity
 
     def check(self, facts):
         for f in facts:
@@ -99,6 +109,19 @@ class Rule:
         # print('premise not in facts')
         return False
 
+    def getConclusion(self):
+        return self.conclusion
+    
+    def getPremises(self):
+        return self.premise
+
+class Inference:
+    def __init__(self, type, premise, conclusion, severity):
+        self.type = type
+        self.premise = premise
+        self.conclusion = conclusion
+        self.severity = severity
+    
     def getConclusion(self):
         return self.conclusion
     
@@ -167,28 +190,28 @@ def preprocess():
 
 def addRules(es):
 
-    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.')
-    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.')
-    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.')
+    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 'high')
+    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 'high')
+    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 'high')
 
 
-    es.add_rule('Spending','Entertainment Spending is too high', 'Lower your Entertainment spending.')
-    es.add_rule('Spending','Housing Spending is too high', 'Lower your Housing spending.')
-    es.add_rule('Spending','Groceries Spending is too high', 'Lower your Groceries spending.')
-    es.add_rule('Spending','Dining Out Spending is too high', 'Lower your Dining Out spending.')
-    es.add_rule('Spending','Shopping Spending is too high', 'Lower your Shopping spending.')
-    es.add_rule('Spending','Transportation Spending is too high', 'Lower your Transportation spending.')
-    es.add_rule('Spending','Bills Spending is too high', 'Lower your Bills spending.')
-    es.add_rule('Spending','Loan Repayment Spending is too high', 'Lower your Loan Repayment spending.')
-    es.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential Costs spending.')
-    es.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Non-Essential Costs spending.')
+    es.add_rule('Spending','Entertainment Spending is too high', 'Lower your Entertainment spending.', 'high')
+    es.add_rule('Spending','Housing Spending is too high', 'Lower your Housing spending.', 'high')
+    es.add_rule('Spending','Groceries Spending is too high', 'Lower your Groceries spending.', 'medium')
+    es.add_rule('Spending','Dining Out Spending is too high', 'Lower your Dining Out spending.', 'high')
+    es.add_rule('Spending','Shopping Spending is too high', 'Lower your Shopping spending.', 'medium')
+    es.add_rule('Spending','Transportation Spending is too high', 'Lower your Transportation spending.', 'low')
+    es.add_rule('Spending','Bills Spending is too high', 'Lower your Bills spending.', 'high')
+    es.add_rule('Spending','Loan Repayment Spending is too high', 'Lower your Loan Repayment spending.', 'high')
+    es.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential Costs spending.', 'low')
+    es.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Non-Essential Costs spending.', 'high')
 
-    es.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.')
-    es.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.')
+    es.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 'high')
+    es.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 'medium')
 
-    es.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.')
-    es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.')
-    es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.')
+    es.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 'medium')
+    es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 'high')
+    es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 'low')
 
 def checkBudget(es, df):
     global current_savings, total_deposited, total_spent
@@ -325,20 +348,14 @@ def main():
     eval_Savings(expert_system, df)
     checkCashflow(expert_system)
     expert_system.evaluateDebt()
-    expert_system.makeInfereces()
-    spendInfer, saveInfer, debtInfer, cashflowInfer = expert_system.getInferences()
-    print('\nSpending Analysis: ')
-    for i in spendInfer:
-        print(i)
-    print('\nSavings Analysis: ')
-    for i in saveInfer:
-        print(i)
-    print('\nDebt Analysis: ')
-    for i in debtInfer:
-        print(i)
-    print('\nCashflow Analysis: ')
-    for i in cashflowInfer:
-        print(i)
+    expert_system.makeInferences()
+    inferences = expert_system.getInferences()
+    #sort inference by severity
+    inferences.sort(key=lambda x: x.severity)
+    print('\nAll Inferences: \n')
+    for i in inferences:
+        print(i.type, 'Inference:', i.premise, '\nRecommendation:', i.conclusion, 'Severity:',i.severity , '\n')
+
 
 if __name__ == "__main__":
     main()
