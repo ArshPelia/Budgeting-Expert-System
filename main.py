@@ -11,17 +11,170 @@ essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportat
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
-global savings_per_week, savings_per_month, total_deposited, total_spent, return_rate, semi_annual_raise, current_savings, emergency_fund_goal, retirement_goal
+global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
 
 debt_list = [
-    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 1},
+    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
+    # {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
-def cleanData():
-    global current_savings, total_deposited, total_spent
+class ExpertSystem:
+    def __init__(self, data, debt_list):
+        self.data = data
+        self.debt_list = debt_list
+        self.budget_rules = []
+        self.facts = []
+        self.budget_violations = []
+        self.budget_infereces = []
+        # self.debt_rules = {
+        #                 "high_income": "Your income is high, consider investing in stocks or real estate.",
+        #                 "low_income": "Your income is low, consider finding a higher paying job or reducing expenses.",
+        #                 "high_expenses": "Your expenses are high, consider reducing expenses or finding a higher paying job.",
+        #                 "manageable_expenses": "Your expenses are manageable.",
+        #                 "high_interest_debt": "High-interest debt detected, consider paying off the debt first.",
+        #                 "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
+        #                 "manageable_debt": "Your debt is manageable."
+        #             }
+        self.debt_rules = []
+        self.debt_violations = []
+
+    def add_debt_rule(self, premise, conclusion):
+        self.debt_rules.append(DebtRule(premise, conclusion))
+
+    def get_debt_rules(self):
+        return self.debt_rules
+
+    def evaluateDebt(self):
+        result = debt_analysis(self.debt_list)
+        # print('result: ', result[0])
+        if result[0].startswith("High-interest"):
+            # return self.debt_rules["high_interest_debt"]
+            # self.debt_violations.append(self.debt_rules["high_interest_debt"])
+            self.add_fact('high_interest_debt', True)
+        if result[0].startswith("Y"): # high debt to income ratio detected
+            # return self.debt_rules["high_debt_to_income"]
+            # self.debt_violations.append(self.debt_rules["high_debt_to_income"])
+            self.add_fact('high_debt_to_income', True)
+        # else:
+        #     # return self.debt_rules["manageable_debt"]
+        #     self.debt_violations.append(self.debt_rules["manageable_debt"])
+
+    def makeDebtInfereces(self):
+        for rule in self.debt_rules:
+            if rule.check(self.facts):
+                self.debt_violations.append(rule.conclusion)        
+
+    def getDebtViolations(self):
+        return self.debt_violations
+
+    def add_fact(self, name, value):
+        self.facts.append(Fact(name, value))
+
+    def add_budget_rule(self, category, comparison_operator, threshold):
+        self.budget_rules.append(BudgetRule(category, comparison_operator, threshold))
+
+    def getFacts(self):
+        return self.facts
+    
+    def getRules(self):
+        return self.budget_rules
+
+    def evaluateSpending(self):
+        for rule in self.budget_rules:
+            if not rule.check_SpendingPercent(self.facts[0].value): # facts[0] is the spending percentages    #         if not rule.check_SpendingPercent(spending_percentages):
+                self.budget_violations.append('Budgeting rule violated: {} {} {}'.format(rule.category, rule.comparison_operator, rule.threshold))
+    
+    def getBudgetViolations(self):
+        return self.budget_violations
+    
+    def MakeBudgetInferences(self):
+        if len(self.budget_violations) <= 0:
+            return 'No violations, All Budgeting rules satisfied.'
+        else:
+            for violation in self.budget_violations:
+                # print(violation)
+                if 'Housing' in violation:
+                    self.budget_infereces.append('You are spending too much on Housing. Consider moving to a cheaper location.')
+                elif 'Groceries' in violation:
+                    self.budget_infereces.append('You are spending too much on Groceries. Consider buying in bulk and cooking at home more.')
+                elif 'Entertainment' in violation:
+                    self.budget_infereces.append('You are spending too much on Entertainment. Consider going out less or doing more free activities.')
+                elif 'Transportation' in violation:
+                    self.budget_infereces.append('You are spending too much on Transportation. Consider taking public transportation more often or carpooling.')
+                elif 'Bills' in violation:
+                    self.budget_infereces.append('You are spending too much on Bills. Consider switching to a cheaper internet provider or cutting cable.')
+                elif 'Loan Repayment' in violation:
+                    self.budget_infereces.append('You are spending too much on Loan Repayment. Consider paying off your loans faster or refinancing.')
+                elif 'Dining Out' in violation:
+                    self.budget_infereces.append('You are spending too much on Dining Out. Consider cooking at home more or eating out less.')
+                elif 'Shopping' in violation:
+                    self.budget_infereces.append('You are spending too much on Shopping. Consider buying less or buying used items.')
+                elif 'Essential Costs' in violation:
+                    self.budget_infereces.append('You are spending too much on Essential Costs. Consider cutting back on non-essential costs.')
+                elif 'Non-Essential Costs' in violation:
+                    self.budget_infereces.append('You are spending too much on Non-Essential Costs. Consider cutting back on non-essential costs.')
+                else:
+                    self.budget_infereces.append('You are spending too much on {}'.format(violation.split()[2]))
+            return self.budget_infereces
+    
+    def getBudgetInferences(self):
+        return self.budget_infereces
+       
+class Fact:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+        
+class BudgetRule:
+    def __init__(self, category, comparison_operator, threshold):
+        self.category = category
+        self.comparison_operator = comparison_operator
+        self.threshold = threshold
+
+    def check_SpendingPercent(self, spending_percentages):
+        # print('Category: ',self.category, 'threshold: ', self.threshold, 'value: ', spending_percentages[self.category])
+        if self.comparison_operator == '<':
+            return spending_percentages[self.category] < self.threshold
+        elif self.comparison_operator == '>':
+            return spending_percentages[self.category] > self.threshold
+        else:
+            return False
+
+class DebtRule:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def check(self, facts):
+        # print('facts: ', facts)
+        # for f in facts:
+        #     print('fact: ', f.name, f.value)
+        # # for premise in self.premises:
+        #     print('premise: ', self.premise)
+        # if self.premise not in facts: # if the premise is not in the facts, return false
+        #     print('premise not in facts')
+        #     return False
+        # print('premise in facts')
+        # return True
+        for f in facts:
+            if self.premise == f.name:
+                # print('premise in facts')
+                return True
+        # print('premise not in facts')
+        return False
+    
+
+    def getConclusion(self):
+        return self.conclusion
+    
+    def getPremises(self):
+        return self.premise
+
+def preprocess():
+    global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+
     if not os.path.exists('data.csv'): # check if the file exists
         df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
         df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
@@ -41,380 +194,127 @@ def cleanData():
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+        
+        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+        
+        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+        
+        monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+        avg_monthly_income = monthly_income / df['Month'].nunique()
+        monthly_income = avg_monthly_income
 
         df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
 
-        # print(df.columns)
-        # print(df)
     else:
         df = pd.read_csv('data.csv')
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        print('total deposited: ', total_deposited, 'total spent: ', total_spent, 'current savings: ', current_savings)
+        
+        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+        
+        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+        
+        monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+        avg_monthly_income = monthly_income / df['Month'].nunique()
+        monthly_income = avg_monthly_income
 
-        total_spent 
-        # print(df)
     return df 
 
-def spending_habits(df): #function to analyze spending habits by category and create a list of the category and amount spent
-    global current_savings, total_deposited, total_spent
-    df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
-    df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
-    df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
-    df = df.reset_index() # reset the index
-    df = df[['Category', 'Withdrawal']] # select only the Category and Withdrawal columns
-    df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
-    spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
-    # print(spending_dict)
-
-    # print list of categories and amount spent
-    # for i in range(len(spending_dict)):
-    #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
-    
-    spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
-
-    if spending_percentages.get('Housing', 0) > 0.4:
-        print('You are spending more than 40% of your income on housing')
-    if spending_percentages.get('Transportation', 0) > 0.1:
-        print('You are spending more than 10% of your income on transportation')
-    if spending_percentages.get('Dining Out', 0) > 0.1:
-        print('You are spending more than 10% of your income on dining out')
-    if spending_percentages.get('Shopping', 0) > 0.2:
-        print('You are spending more than 20% of your income on shopping')
-    if spending_percentages.get('Entertainment', 0) > 0.05:
-        print('You are spending more than 5% of your income on entertainment')
-    if spending_percentages.get('Bills', 0) > 0.1:
-        print('You are spending more than 10% of your income on bills')
-    if spending_percentages.get('Loan Repayment', 0) > 0.1:
-        print('You are spending more than 10% of your income on loan repayment')
-    if spending_percentages.get('Groceries', 0) > 0.1:
-        print('You are spending more than 10% of your income on groceries')
-    elif sum(spending_percentages.values()) > 0.7:
-        return ('Overall spending is greater than 70% of your income, consider reducing expenses in all categories.')
-    else:
-        return ('Your spending is within a reasonable range.')
-
 def debt_analysis(debt_list):
-  high_interest_debt = []
-  total_debt = 0
-  
-  for debt in debt_list:
-    total_debt += debt['amount']
-    if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
-      high_interest_debt.append(debt)
-  
-  if high_interest_debt:
-    return ('High-interest debt detected, consider paying off the following debts first:', high_interest_debt)
-  elif total_debt > 0.5 * total_deposited: # if total debt is more than 50% of annual salary
-    return ('Your debt-to-income ratio is high, consider paying off some debt or increasing your income')
-  else:
-    return ('Your debt is manageable')
+    high_interest_debt = []
+    total_debt = 0
+    
+    for debt in debt_list:
+        total_debt += debt['amount']
+        if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
+            high_interest_debt.append(debt)
+    
+    if high_interest_debt:
+        return ('High-interest debt detected, consider paying off the following debts first:', high_interest_debt)
+    # elif total_debt > 0.5 * total_deposited: # if total debt is more than 50% of annual salary
+    elif total_debt > 0.5 * monthly_income: # if total debt is more than 50% of monthly salary
+        return ('Your debt-to-Monthlyincome ratio is greater than 2:1, consider paying off some debt or increasing your income')
+    else:
+        return ('Your debt is manageable')
 
-def essentialvsNonEssentialSpending(df):
-    #compare essential spending to nonessential spending
+def addRules(es):
+    es.add_budget_rule('Entertainment', '<', 0.1)
+    es.add_budget_rule('Housing', '<', 0.3)
+    es.add_budget_rule('Groceries', '<', 0.1)
+    es.add_budget_rule('Dining Out', '<', 0.1)
+    es.add_budget_rule('Shopping', '<', 0.2)
+    es.add_budget_rule('Transportation', '<', 0.1)
+    es.add_budget_rule('Bills', '<', 0.1)
+    es.add_budget_rule('Loan Repayment', '<', 0.1)
+    es.add_budget_rule('Essential Costs', '<', 0.6)
+    es.add_budget_rule('Non-Essential Costs', '<', 0.4)
+
+    # self.debt_rules = {
+    #                 "high_interest_debt": "High-interest debt detected, consider paying off the debt first.",
+    #                 "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
+    #             }
+    es.add_debt_rule('high_interest_debt', 'High-interest debt detected, consider paying off the debt first.')
+    es.add_debt_rule('high_debt_to_income', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.')
+
+def addFacts(es, df):
+    global current_savings, total_deposited, total_spent
+    es.add_fact('Spending Percentages', getSpendingPercentages(df))
+    es.add_fact('Total Deposited', total_deposited)
+    es.add_fact('Total Spent', total_spent)
+    es.add_fact('Current Savings', current_savings)
+
+def getSpendingPercentages(df):
+    spending_percentages = {}
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    for category in spendList:
+        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_spent
+        # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
+    # print(spending_percentages)
     df_Essential = df[df['Category'].isin(essentialList)]
     df_Nonessential = df[df['Category'].isin(nonessentialList)]
     essential_spending = df_Essential['Withdrawal'].sum()
     nonessential_spending = df_Nonessential['Withdrawal'].sum()
-    print('Essential Spending: ', essential_spending)
-    print('Nonessential Spending: ', nonessential_spending)
-    if essential_spending > nonessential_spending:
-        ratio = essential_spending / nonessential_spending
-        print('You are spending', ratio, 'times more on essentials than nonessentials')
-    else:
-        print('You are spending more on nonessentials than essentials')
-        ratio = nonessential_spending / essential_spending
-        print('You are spending', ratio, 'times more on nonessentials than essentials')
 
-def plotSpending(df):
-    df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
-    df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
-    df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
-    df = df.reset_index() # reset the index
-    # print(df)
-
-    # plot the data
-    plt.figure(figsize=(15, 5))
-    plt.bar(df['Category'], df['Withdrawal'])
-    plt.xlabel('Category')
-    plt.ylabel('Withdrawal')
-    plt.title('Spending by Category')
-    plt.show()
-
-def plotIncome(df):
-    df = df[df['Deposit'] != 0] # filter out all the rows that have 0 in the Deposit column
-    df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Deposit column
-    df = df.sort_values(by=['Deposit'], ascending=False) # sort the dataframe by Deposit column in descending order
-    df = df.reset_index() # reset the index
-    # print(df)
-
-    # plot the data
-    plt.figure(figsize=(10, 5))
-    plt.bar(df['Category'], df['Deposit'])
-    plt.xlabel('Category')
-    plt.ylabel('Deposit')
-    plt.title('Income by Category')
-    plt.show()
-
-def plot_cashflow(df):
-    #show cashflow of income vs spending week by week beginning at the first date in the data set and ending at the last date in the data set
-    df = df.groupby(['Week']).sum() # group the dataframe by Date and sum the Deposit and Withdrawal columns
-    df = df.sort_values(by=['Week'], ascending=True) # sort the dataframe by Date column in ascending order
-    df = df.reset_index() # reset the index
-    # print(df)
-
-    # plot the data
-    plt.figure(figsize=(15, 5))
-    plt.plot(df['Week'], df['Deposit'], label='Income')
-    plt.plot(df['Week'], df['Withdrawal'], label='Spending')
-    plt.xlabel('Week')
-    plt.ylabel('Amount')
-    plt.title('Cashflow')
-    plt.legend()
-    plt.show()
-
-def calc_week_avgs(df):
-    
-    #first find averages for total deposits and withdrawals for each week
-    avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-    avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-
-    print('Average weekly deposits: ', avg_weekly_deposits)
-    print('Average weekly withdrawals: ', avg_weekly_withdrawals)
-    print('Average weekly cashflow: ', avg_weekly_deposits - avg_weekly_withdrawals)
-    global savings_per_week 
-    savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-    print('Savings per week: ', savings_per_week)
-
-    # calculate the sum of deposits and withdrawals for each week
-    week_sums = df.groupby(['Week', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
-    
-    # calculate the number of weeks
-    num_weeks = week_sums['Week'].nunique()
-    
-    # calculate the average deposits and withdrawals per week
-    week_avgs = week_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
-    week_avgs['Deposit'] = week_avgs['Deposit'] / num_weeks
-    week_avgs['Withdrawal'] = week_avgs['Withdrawal'] / num_weeks
-
-    return week_avgs
-
-def calc_monthly_avgs(df):
+    spending_percentages['Essential Costs'] = essential_spending / total_spent
+    spending_percentages['Non-Essential Costs'] = nonessential_spending / total_spent
         
-    #first find averages for total deposits and withdrawals for each week
-    avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-    avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-
-    print('Average monthly deposits: ', avg_monthly_deposits)
-    print('Average monthly withdrawals: ', avg_monthly_withdrawals)
-    print('Average monthly cashflow: ', avg_monthly_deposits - avg_monthly_withdrawals)
-    global savings_per_month
-    savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-    print('Savings per month: ', savings_per_month)
-
-    # calculate the sum of deposits and withdrawals for each month
-    month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
-    
-    # calculate the number of months
-    num_months = month_sums['Month'].nunique()
-    
-    # calculate the average deposits and withdrawals per month
-    month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
-    month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
-    month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
-
-    return month_avgs
-
-def plot_montly_avgs(month_avgs):
-    #plot monthly averages of income and spending by category
-    plt.figure(figsize=(15, 5))
-    plt.bar(month_avgs.index, month_avgs['Deposit'], label='Income')
-    plt.bar(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
-    plt.xlabel('Category')
-    plt.ylabel('Amount')
-    plt.title('Monthly Averages')
-    plt.legend()
-    plt.show()
-
-def plot_weekly_avgs(week_avgs):
-    #plot weekly averages of income and spending by category
-    plt.figure(figsize=(15, 5))
-    plt.bar(week_avgs.index, week_avgs['Deposit'], label='Income')
-    plt.bar(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
-    plt.xlabel('Category')
-    plt.ylabel('Amount')
-    plt.title('Weekly Averages')
-    plt.legend()
-    plt.show()
-
-def detect_spikes(df, category):
-    category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
-    category_df = category_df.groupby(['Week'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Deposit column
-    avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
-    category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
-    spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
-    spikes = spikes.reset_index(drop=True) # reset the index
-    if spikes.empty:
-        print(f"No Weekly spikes found in the category '{category}'.") 
-    else:
-        print(f"Weekly Spikes found in the category '{category}' in weeks:", spikes['Week'].tolist()) 
-        # print(spikes[['Week']])
-        # spike_Weeks = spikes['Week'].tolist() # convert the dataframe to a list
-        # for spike_Week in spike_Weeks: # loop through the list of spike weeks
-        #     spike_week = category_df[category_df['Week'] == spike_Week].index[0] # get the index of the first row in the category_df that has the spike week
-        #     first_day_of_week = df[df['Week'] == spike_Week]['Date'].iloc[spike_week] # get the first day of the week that has the spike
-        #     print(f"Weekly Spike occurred in week: {spike_Week} with first day of the week being {first_day_of_week}") # print the spike week and the first day of the week
-
-def detect_spikes_by_month(df, category):
-    category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
-    category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Deposit column
-    avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
-    category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
-    spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
-    spikes = spikes.reset_index(drop=True) # reset the index
-    if spikes.empty:
-        print(f"No Monthly spikes found in the category '{category}'.") 
-    else:
-        print(f"Monthly Spikes found in the category '{category}' in months:") 
-        # print(spikes[['Month']])
-        spike_months = spikes['Month'].tolist()
-        plot_spikes_by_month(df, category)
-        for spike_month in spike_months:
-            spike_week = category_df[category_df['Month'] == spike_month].index[0]
-            first_day_of_week = df[df['Month'] == spike_month]['Date'].iloc[spike_week]
-            # print(f"Monthly Spike occurred in Month: {spike_month} with first day of the week being {first_day_of_week}")
-            first_day_of_week = datetime.strptime(first_day_of_week, '%Y-%m-%d')
-            print('Monthly spike occured in : ' + calendar.month_name[spike_month] + ' of ' + str(first_day_of_week.year))
-
-#todo: incorporate income  
-def wishlist(price, savings = 10):
-    # calculate the number of months it will take to save up for an item
-    if(savings_per_week <= 0 and savings_per_month <= 0):
-        print("Your account currently has a negative netflow. You will need to increase your income or decrease your spending to save up for this item.")
-        return
-    months = price / savings
-    print(f"It will take {months} months to save up for this item.")
-
-def plot_spikes_by_month(df, category):
-    category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
-    category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Withdrawal column
-    avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
-    category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
-    spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
-
-    # Plot the spikes
-    fig, ax = plt.subplots()
-    ax.plot(category_df['Month'], category_df['Withdrawal'], label='Spending')
-    ax.plot(spikes['Month'], spikes['Withdrawal'], 'ro', label='Spike')
-    ax.axhline(avg_spending, color='black', linestyle='dashed', label='Average Monthly Spending')
-    ax.set_xlabel('Month')
-    ax.set_ylabel('Withdrawal')
-    ax.legend()
-    ax.set_title(f"Spikes in average spending in category '{category}'")
-    plt.show()
-
-#todo: refactor to use global variables
-def house_downpayment():
-    portion_down_payment = 0.25
-    current_savings = 0
-    r = 0.04 # annual return on investment
-    # total_cost = 1000000 
-    semi_annual_raise = 0.07
-
-    annual_salary = input('Enter your annual salary: ')
-    annual_salary = float(annual_salary)
-    portion_saved = input('Enter the percent of your salary to save, as a decimal: ')
-    portion_saved = float(portion_saved)
-    total_cost = input('Enter the cost of your dream home: ')
-    total_cost = float(total_cost)
-    semi_annual_raise = input('Enter the semi_annual_raise percentage: ')
-    semi_annual_raise = float(semi_annual_raise)
-
-    monthly_salary = (annual_salary / 12)
-    dpcost = total_cost * portion_down_payment
-    months = 0
-    # portion_saved = 0.1
-
-    while current_savings < dpcost:
-        months += 1
-        if months % 6 == 0:
-            annual_salary += annual_salary * semi_annual_raise
-            monthly_salary = (annual_salary / 12)
-            # print('ann salary: ' + str(annual_salary))
-        current_savings += current_savings*r/12
-        current_savings += monthly_salary * portion_saved
-
-    print('Number of Months to afford Downpayment: ' + str(months))
-
-def extract_rules(file_path):
-    with open(file_path, 'r') as f:
-        content = f.read()
-
-    lines = content.splitlines()
-    rules = []
-    for line in lines:
-        m = re.match(r'RULE \d+: If spending on (\w+) is (\w+) than (\d+)% of income', line)
-        if m:
-            condition, operator, threshold = m.groups()
-            rule = {
-                'condition': condition,
-                'operator': operator,
-                'threshold': int(threshold)
-            }
-            rules.append(rule)
-    print(rules)
-    return rules
-
-#todo: need to finish (initialize investment and savings)
-def evaluate_savings_and_investment(total_income, savings, investment, emergency_fund_goal, retirement_goal):
-    savings_percentage = savings / total_income * 100
-    investment_percentage = investment / total_income * 100
-    emergency_fund_achieved = savings >= emergency_fund_goal
-    retirement_goal_achieved = investment >= retirement_goal
-
-    recommendations = []
-    if savings_percentage < 10:
-        recommendations.append("Consider increasing your savings to ensure a secure future.")
-    if not emergency_fund_achieved:
-        recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
-    if not retirement_goal_achieved:
-        recommendations.append("Consider increasing contributions to your retirement account.")
-
-    return recommendations
-
+    return spending_percentages
 
 def main():
-    global emergency_fund_goal, retirement_goal, current_savings, total_deposited, total_spent
-    df = cleanData()
-    # emergency_fund_goal = 10000
-    # retirement_goal = 100000
-    # print(evaluate_savings_and_investment(total_deposited, current_savings, total_spent, emergency_fund_goal, retirement_goal))
+    global debt_list
+    df = preprocess()
+    expert_system = ExpertSystem(None, debt_list)
+    addRules(expert_system)
+    # print all debt rules with their premises and conclusions
+    drules = expert_system.get_debt_rules()
+    # for rule in drules:
+    #     print([rule.getPremises(), rule.getConclusion()])
+    
+    # addFacts(expert_system, df)
+    # expert_system.evaluateSpending()
+    # budget_violations = expert_system.getBudgetViolations()
+    # expert_system.MakeBudgetInferences()
+    # budget_inferences = expert_system.getBudgetInferences()
+    # print('Budget Inferences: ')
+    # for i in budget_inferences:
+    #     print(i)
 
-    # calc_week_avgs(df)
-    # calc_monthly_avgs(df)
-    # wishlist(1000, 10)
-    # plotIncome(df)
-    # plotSpending(df)
-    # plot_cashflow(df)
-    # print(calc_week_avgs(df))
-    # print()
-    # print(calc_monthly_avgs(df))
-    # plot_weekly_avgs(calc_week_avgs(df))
-    # plot_montly_avgs(calc_monthly_avgs(df))
-    # for x in spendList:
-    #     detect_spikes(df, x)
-    #     detect_spikes_by_month(df, x)
-
-    # plot_spikes_by_month(df, 'Groceries')
-    # essentialvsNonEssentialSpending(df)
-    debt_analysis_result = debt_analysis(debt_list)
-    print(debt_analysis_result)
-    # spending_habits(df)
-    # r = extract_rules('rules.txt')
-
-
+    expert_system.evaluateDebt()
+    expert_system.makeDebtInfereces()
+    debt_analysis = expert_system.getDebtViolations()
+    print('Debt Analysis: ')
+    for i in debt_analysis:
+        print(i)
 
 if __name__ == "__main__":
     main()
