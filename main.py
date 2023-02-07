@@ -296,25 +296,25 @@ def main():
     expert_system = ExpertSystem(None, debt_list)
     addRules(expert_system)
     # print all debt rules with their premises and conclusions
-    drules = expert_system.get_debt_rules()
+    # drules = expert_system.get_debt_rules()
     # for rule in drules:
     #     print([rule.getPremises(), rule.getConclusion()])
     
-    # addFacts(expert_system, df)
-    # expert_system.evaluateSpending()
-    # budget_violations = expert_system.getBudgetViolations()
-    # expert_system.MakeBudgetInferences()
-    # budget_inferences = expert_system.getBudgetInferences()
-    # print('Budget Inferences: ')
-    # for i in budget_inferences:
-    #     print(i)
-
-    expert_system.evaluateDebt()
-    expert_system.makeDebtInfereces()
-    debt_analysis = expert_system.getDebtViolations()
-    print('Debt Analysis: ')
-    for i in debt_analysis:
+    addFacts(expert_system, df)
+    expert_system.evaluateSpending()
+    budget_violations = expert_system.getBudgetViolations()
+    expert_system.MakeBudgetInferences()
+    budget_inferences = expert_system.getBudgetInferences()
+    print('Budget Inferences: ')
+    for i in budget_inferences:
         print(i)
+
+    # expert_system.evaluateDebt()
+    # expert_system.makeDebtInfereces()
+    # debt_analysis = expert_system.getDebtViolations()
+    # print('Debt Analysis: ')
+    # for i in debt_analysis:
+    #     print(i)
 
 if __name__ == "__main__":
     main()

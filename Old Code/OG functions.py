@@ -409,9 +409,9 @@ def main():
 
     # plot_spikes_by_month(df, 'Groceries')
     # essentialvsNonEssentialSpending(df)
-    debt_analysis_result = debt_analysis(debt_list)
-    print(debt_analysis_result)
-    # spending_habits(df)
+    # debt_analysis_result = debt_analysis(debt_list)
+    # print(debt_analysis_result)
+    spending_habits(df)
     # r = extract_rules('rules.txt')
 
 
