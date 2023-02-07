@@ -160,6 +160,8 @@ def preprocess():
         savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
         
         monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+        avg_monthly_income = monthly_income / df['Month'].nunique()
+        monthly_income = avg_monthly_income
 
         df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
 
