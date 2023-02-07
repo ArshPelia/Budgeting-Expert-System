@@ -16,7 +16,7 @@ global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_mo
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 8},
+    # {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
@@ -28,29 +28,43 @@ class ExpertSystem:
         self.facts = []
         self.budget_violations = []
         self.budget_infereces = []
-        self.debt_rules = {
-                        "high_income": "Your income is high, consider investing in stocks or real estate.",
-                        "low_income": "Your income is low, consider finding a higher paying job or reducing expenses.",
-                        "high_expenses": "Your expenses are high, consider reducing expenses or finding a higher paying job.",
-                        "manageable_expenses": "Your expenses are manageable.",
-                        "high_interest_debt": "High-interest debt detected, consider paying off the debt first.",
-                        "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
-                        "manageable_debt": "Your debt is manageable."
-                    }
+        # self.debt_rules = {
+        #                 "high_income": "Your income is high, consider investing in stocks or real estate.",
+        #                 "low_income": "Your income is low, consider finding a higher paying job or reducing expenses.",
+        #                 "high_expenses": "Your expenses are high, consider reducing expenses or finding a higher paying job.",
+        #                 "manageable_expenses": "Your expenses are manageable.",
+        #                 "high_interest_debt": "High-interest debt detected, consider paying off the debt first.",
+        #                 "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
+        #                 "manageable_debt": "Your debt is manageable."
+        #             }
+        self.debt_rules = []
         self.debt_violations = []
+
+    def add_debt_rule(self, premise, conclusion):
+        self.debt_rules.append(DebtRule(premise, conclusion))
+
+    def get_debt_rules(self):
+        return self.debt_rules
 
     def evaluateDebt(self):
         result = debt_analysis(self.debt_list)
         # print('result: ', result[0])
         if result[0].startswith("High-interest"):
             # return self.debt_rules["high_interest_debt"]
-            self.debt_violations.append(self.debt_rules["high_interest_debt"])
-        elif result[0].startswith("Y"):
+            # self.debt_violations.append(self.debt_rules["high_interest_debt"])
+            self.add_fact('high_interest_debt', True)
+        if result[0].startswith("Y"): # high debt to income ratio detected
             # return self.debt_rules["high_debt_to_income"]
-            self.debt_violations.append(self.debt_rules["high_debt_to_income"])
-        else:
-            # return self.debt_rules["manageable_debt"]
-            self.debt_violations.append(self.debt_rules["manageable_debt"])
+            # self.debt_violations.append(self.debt_rules["high_debt_to_income"])
+            self.add_fact('high_debt_to_income', True)
+        # else:
+        #     # return self.debt_rules["manageable_debt"]
+        #     self.debt_violations.append(self.debt_rules["manageable_debt"])
+
+    def makeDebtInfereces(self):
+        for rule in self.debt_rules:
+            if rule.check(self.facts):
+                self.debt_violations.append(rule.conclusion)        
 
     def getDebtViolations(self):
         return self.debt_violations
@@ -127,6 +141,36 @@ class BudgetRule:
             return spending_percentages[self.category] > self.threshold
         else:
             return False
+
+class DebtRule:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def check(self, facts):
+        # print('facts: ', facts)
+        # for f in facts:
+        #     print('fact: ', f.name, f.value)
+        # # for premise in self.premises:
+        #     print('premise: ', self.premise)
+        # if self.premise not in facts: # if the premise is not in the facts, return false
+        #     print('premise not in facts')
+        #     return False
+        # print('premise in facts')
+        # return True
+        for f in facts:
+            if self.premise == f.name:
+                # print('premise in facts')
+                return True
+        # print('premise not in facts')
+        return False
+    
+
+    def getConclusion(self):
+        return self.conclusion
+    
+    def getPremises(self):
+        return self.premise
 
 def preprocess():
     global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
@@ -214,6 +258,13 @@ def addRules(es):
     es.add_budget_rule('Essential Costs', '<', 0.6)
     es.add_budget_rule('Non-Essential Costs', '<', 0.4)
 
+    # self.debt_rules = {
+    #                 "high_interest_debt": "High-interest debt detected, consider paying off the debt first.",
+    #                 "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
+    #             }
+    es.add_debt_rule('high_interest_debt', 'High-interest debt detected, consider paying off the debt first.')
+    es.add_debt_rule('high_debt_to_income', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.')
+
 def addFacts(es, df):
     global current_savings, total_deposited, total_spent
     es.add_fact('Spending Percentages', getSpendingPercentages(df))
@@ -244,6 +295,11 @@ def main():
     df = preprocess()
     expert_system = ExpertSystem(None, debt_list)
     addRules(expert_system)
+    # print all debt rules with their premises and conclusions
+    # drules = expert_system.get_debt_rules()
+    # for rule in drules:
+    #     print([rule.getPremises(), rule.getConclusion()])
+    
     addFacts(expert_system, df)
     expert_system.evaluateSpending()
     budget_violations = expert_system.getBudgetViolations()
@@ -253,11 +309,12 @@ def main():
     for i in budget_inferences:
         print(i)
 
-    expert_system.evaluateDebt()
-    debt_analysis = expert_system.getDebtViolations()
-    print('Debt Analysis: ')
-    for i in debt_analysis:
-        print(i)
+    # expert_system.evaluateDebt()
+    # expert_system.makeDebtInfereces()
+    # debt_analysis = expert_system.getDebtViolations()
+    # print('Debt Analysis: ')
+    # for i in debt_analysis:
+    #     print(i)
 
 if __name__ == "__main__":
     main()
