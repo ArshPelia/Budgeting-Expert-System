@@ -16,7 +16,7 @@ global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_mo
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    # {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
+    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
@@ -26,11 +26,8 @@ class ExpertSystem:
         self.debt_list = debt_list
         self.rules = []
         self.facts = []
-        # self.spendingInferences = []
-        # self.savingsInferences = []
-        # self.debtInferences = []
-        # self.cashflowInferences = []
         self.inferences = []
+        self.types = ['Spending', 'Savings', 'Debt', 'Cashflow', 'Spike']
 
     def add_rule(self, type, premise, conclusion, severity):
         self.rules.append(Rule(type, premise, conclusion, severity))
@@ -62,18 +59,9 @@ class ExpertSystem:
     def makeInferences(self):
         for rule in self.rules:
             if rule.check(self.facts):
-                if rule.type == 'Spending':
-                    # self.spendingInferences.append(rule.conclusion)
-                    self.add_inference('Spending', rule.premise, rule.conclusion, rule.severity)
-                elif rule.type == 'Savings':
-                    # self.savingsInferences.append(rule.conclusion)
-                    self.add_inference('Savings', rule.premise, rule.conclusion, rule.severity)
-                elif rule.type == 'Debt':
-                    # self.debtInferences.append(rule.conclusion)
-                    self.add_inference('Debt',  rule.premise, rule.conclusion, rule.severity)
-                elif rule.type == 'Cashflow':
-                    # self.cashflowInferences.append(rule.conclusion)
-                    self.add_inference('Cashflow',  rule.premise, rule.conclusion, rule.severity)    
+                for type in self.types:
+                    if rule.type == type:
+                        self.add_inference(type, rule.premise, rule.conclusion, rule.severity)
 
     def getInferences(self):
         # return self.spendingInferences, self.savingsInferences, self.debtInferences, self.cashflowInferences
@@ -339,6 +327,23 @@ def checkCashflow(es):
     else:
         es.add_fact('Cashflow','Total Net Cashflow is negative', False)
 
+def checkforSpikes(es, df): #function to check for spikes in spending by category
+    #if there are more than 3 spikes in a category, then create a corresponding rule and fact in the expert system
+    global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+    categories = df['Category'].unique()
+    for category in categories:
+        category_df = df[df['Category'] == category]
+        category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index()
+        avg_spending = category_df['Withdrawal'].mean()
+        category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending
+        spikes = category_df[category_df['Above_Avg'] == True]
+        spikes = spikes.reset_index(drop=True)
+        if len(spikes) >= 3 and category != 'Loan Repayment':
+            es.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 'High')
+            es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, True)
+        else:
+            es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
+
 def main():
     global debt_list
     df = preprocess()
@@ -347,15 +352,14 @@ def main():
     checkBudget(expert_system, df)
     eval_Savings(expert_system, df)
     checkCashflow(expert_system)
+    checkforSpikes(expert_system, df)
     expert_system.evaluateDebt()
     expert_system.makeInferences()
     inferences = expert_system.getInferences()
-    #sort inference by severity
     inferences.sort(key=lambda x: x.severity)
     print('\nAll Inferences: \n')
     for i in inferences:
-        print(i.type, 'Inference:', i.premise, '\nRecommendation:', i.conclusion, 'Severity:',i.severity , '\n')
-
+        print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
 
 if __name__ == "__main__":
     main()
