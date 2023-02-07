@@ -29,6 +29,7 @@ class ExpertSystem:
         self.spendingInferences = []
         self.savingsInferences = []
         self.debtInferences = []
+        self.cashflowInferences = []
 
     def add_rule(self, type, premise, conclusion):
         self.rules.append(Rule(type, premise, conclusion))
@@ -62,10 +63,12 @@ class ExpertSystem:
                 elif rule.type == 'Savings':
                     self.savingsInferences.append(rule.conclusion)
                 elif rule.type == 'Debt':
-                    self.debtInferences.append(rule.conclusion)    
+                    self.debtInferences.append(rule.conclusion)
+                elif rule.type == 'Cashflow':
+                    self.cashflowInferences.append(rule.conclusion)    
 
     def getInferences(self):
-        return self.spendingInferences, self.savingsInferences, self.debtInferences
+        return self.spendingInferences, self.savingsInferences, self.debtInferences, self.cashflowInferences
 
     def add_fact(self, type, name, value):
         self.facts.append(Fact(type, name, value))
@@ -163,6 +166,11 @@ def preprocess():
     return df 
 
 def addRules(es):
+
+    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.')
+    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.')
+    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.')
+
 
     es.add_rule('Spending','Entertainment Spending is too high', 'Lower your Entertainment spending.')
     es.add_rule('Spending','Housing Spending is too high', 'Lower your Housing spending.')
@@ -292,9 +300,21 @@ def eval_Savings(es, df):
         es.add_fact('Savings','Insufficient Retirement Fund', True)
     else:
         es.add_fact('Savings','Insufficient Retirement Fund', False)
-    # return recommendations
 
-
+def checkCashflow(es):
+    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+    if avg_weekly_deposits < avg_weekly_withdrawals:
+        es.add_fact('Cashflow','Weekly Cashflow is negative', True)
+    else:
+        es.add_fact('Cashflow','Weekly Cashflow is negative', False)
+    if avg_monthly_deposits < avg_monthly_withdrawals:
+        es.add_fact('Cashflow','Monthly Cashflow is negative', True)
+    else:
+        es.add_fact('Cashflow','Monthly Cashflow is negative', False)
+    if total_deposited < total_spent:
+        es.add_fact('Cashflow','Total Net Cashflow is negative', True)
+    else:
+        es.add_fact('Cashflow','Total Net Cashflow is negative', False)
 
 def main():
     global debt_list
@@ -303,9 +323,10 @@ def main():
     addRules(expert_system)
     checkBudget(expert_system, df)
     eval_Savings(expert_system, df)
+    checkCashflow(expert_system)
     expert_system.evaluateDebt()
     expert_system.makeInfereces()
-    spendInfer, saveInfer, debtInfer = expert_system.getInferences()
+    spendInfer, saveInfer, debtInfer, cashflowInfer = expert_system.getInferences()
     print('\nSpending Analysis: ')
     for i in spendInfer:
         print(i)
@@ -314,6 +335,9 @@ def main():
         print(i)
     print('\nDebt Analysis: ')
     for i in debtInfer:
+        print(i)
+    print('\nCashflow Analysis: ')
+    for i in cashflowInfer:
         print(i)
 
 if __name__ == "__main__":
