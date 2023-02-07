@@ -14,9 +14,9 @@ incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal 
 global savings_per_week, savings_per_month, total_deposited, total_spent, return_rate, semi_annual_raise, current_savings, emergency_fund_goal, retirement_goal
 
 debt_list = [
-    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
+    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 1},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 8},
+    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
@@ -409,9 +409,9 @@ def main():
 
     # plot_spikes_by_month(df, 'Groceries')
     # essentialvsNonEssentialSpending(df)
-    # debt_analysis_result = debt_analysis(debt_list)
-    # print(debt_analysis_result)
-    spending_habits(df)
+    debt_analysis_result = debt_analysis(debt_list)
+    print(debt_analysis_result)
+    # spending_habits(df)
     # r = extract_rules('rules.txt')
 
 

@@ -37,23 +37,23 @@ class ExpertSystem:
                         "high_debt_to_income": "Your debt-to-income ratio is high, consider paying off some debt or increasing your income.",
                         "manageable_debt": "Your debt is manageable."
                     }
-        self.debt_inferences = []
+        self.debt_violations = []
 
     def evaluateDebt(self):
         result = debt_analysis(self.debt_list)
         # print('result: ', result[0])
         if result[0].startswith("High-interest"):
             # return self.debt_rules["high_interest_debt"]
-            self.debt_inferences.append(self.debt_rules["high_interest_debt"])
+            self.debt_violations.append(self.debt_rules["high_interest_debt"])
         elif result[0].startswith("Y"):
             # return self.debt_rules["high_debt_to_income"]
-            self.debt_inferences.append(self.debt_rules["high_debt_to_income"])
+            self.debt_violations.append(self.debt_rules["high_debt_to_income"])
         else:
             # return self.debt_rules["manageable_debt"]
-            self.debt_inferences.append(self.debt_rules["manageable_debt"])
+            self.debt_violations.append(self.debt_rules["manageable_debt"])
 
-    def getDebtInferences(self):
-        return self.debt_inferences
+    def getDebtViolations(self):
+        return self.debt_violations
 
     def add_fact(self, name, value):
         self.facts.append(Fact(name, value))
@@ -252,7 +252,7 @@ def main():
         print(i)
 
     expert_system.evaluateDebt()
-    debt_analysis = expert_system.getDebtInferences()
+    debt_analysis = expert_system.getDebtViolations()
     print('Debt Analysis: ')
     for i in debt_analysis:
         print(i)
