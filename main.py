@@ -131,7 +131,7 @@ def preprocess():
 
         for i in range(len(df)): # iterate through the dataframe
             if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
-                df.at[i, 'Category'] = random.choice(spending_percentages) # assign a random spend category to each row
+                df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
             else:
                 df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
 
