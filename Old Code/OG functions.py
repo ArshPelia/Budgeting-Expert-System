@@ -403,15 +403,15 @@ def main():
     # print(calc_monthly_avgs(df))
     # plot_weekly_avgs(calc_week_avgs(df))
     # plot_montly_avgs(calc_monthly_avgs(df))
-    for x in spendList:
-        detect_spikes(df, x)
-        detect_spikes_by_month(df, x)
+    # for x in spendList:
+    #     detect_spikes(df, x)
+    #     detect_spikes_by_month(df, x)
 
     # plot_spikes_by_month(df, 'Groceries')
     # essentialvsNonEssentialSpending(df)
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
-    # spending_habits(df)
+    spending_habits(df)
     # r = extract_rules('rules.txt')
 
 

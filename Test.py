@@ -6,7 +6,7 @@ from datetime import datetime
 import re
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
-spending_percentages = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
+spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
 essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportation']
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
@@ -176,30 +176,31 @@ def preprocess():
 
     return df 
 
-def addRules(es):
+def addRules(es, df):
 
-    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 'high')
-    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 'high')
-    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 'high')
+    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
+    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
+    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
+
+    es.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential spending.', 2)
+    es.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Nonessential spending.', 1)
+
+    categories = df['Category'].unique()
+    for category in categories:
+        if category in ['Groceries', 'Shopping']:
+            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
+        elif category in ['Transportation', 'Essential Costs']:
+            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
+        else:
+            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
 
 
-    es.add_rule('Spending','Entertainment Spending is too high', 'Lower your Entertainment spending.', 'high')
-    es.add_rule('Spending','Housing Spending is too high', 'Lower your Housing spending.', 'high')
-    es.add_rule('Spending','Groceries Spending is too high', 'Lower your Groceries spending.', 'medium')
-    es.add_rule('Spending','Dining Out Spending is too high', 'Lower your Dining Out spending.', 'high')
-    es.add_rule('Spending','Shopping Spending is too high', 'Lower your Shopping spending.', 'medium')
-    es.add_rule('Spending','Transportation Spending is too high', 'Lower your Transportation spending.', 'low')
-    es.add_rule('Spending','Bills Spending is too high', 'Lower your Bills spending.', 'high')
-    es.add_rule('Spending','Loan Repayment Spending is too high', 'Lower your Loan Repayment spending.', 'high')
-    es.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential Costs spending.', 'low')
-    es.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Non-Essential Costs spending.', 'high')
+    es.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
+    es.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
 
-    es.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 'high')
-    es.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 'medium')
-
-    es.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 'medium')
-    es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 'high')
-    es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 'low')
+    es.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 2)
+    es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
+    es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
 
 def checkBudget(es, df):
     global current_savings, total_deposited, total_spent
@@ -221,53 +222,19 @@ def checkBudget(es, df):
     
     spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
 
-    # # print list of categories and percentage of spending
+    # print list of categories and percentage of spending
     # for key, value in spending_percentages.items():
     #     print(key, ': ', value)
 
-    #evaluate each category against its threshold and add fact if it does not meet the threshold
-    if spending_percentages.get('Housing', 0) > 0.4:
-        es.add_fact('Spending','Housing Spending is too high', True)
-        # print('Housing Spending is too high')
-    else:
-        es.add_fact('Spending','Housing Spending is too high', False)
-        # print('Housing Spending is not too high')
-    if spending_percentages.get('Groceries', 0) > 0.1:
-        es.add_fact('Spending','Groceries Spending is too high', True)
-    else:
-        es.add_fact('Spending','Groceries Spending is too high', False)
-    if spending_percentages.get('Dining Out', 0) > 0.1:
-        es.add_fact('Spending','Dining Out Spending is too high', True)
-    else:
-        es.add_fact('Spending','Dining Out Spending is too high', False)
-    if spending_percentages.get('Shopping', 0) > 0.2:
-        es.add_fact('Spending','Shopping Spending is too high', True)
-    else:
-        es.add_fact('Spending','Shopping Spending is too high', False)
-    if spending_percentages.get('Transportation', 0) > 0.1:
-        es.add_fact('Spending','Transportation Spending is too high', True)
-    else:
-        es.add_fact('Spending','Transportation Spending is too high', False)
-    if spending_percentages.get('Bills', 0) > 0.1:
-        es.add_fact('Spending','Bills Spending is too high', True)
-    else:
-        es.add_fact('Spending','Bills Spending is too high', False)
-    if spending_percentages.get('Loan Repayment', 0) > 0.1:
-        es.add_fact('Spending','Loan Repayment Spending is too high', True)
-    else:
-        es.add_fact('Spending','Loan Repayment Spending is too high', False)
-    if spending_percentages.get('Essential Costs', 0) > 0.6:
-        es.add_fact('Spending','Essential Costs Spending is too high', True)
-    else:
-        es.add_fact('Spending','Essential Costs Spending is too high', False)
-    if spending_percentages.get('Non-Essential Costs', 0) > 0.4:
-        es.add_fact('Spending','Non-Essential Costs Spending is too high', True)
-    else:
-        es.add_fact('Spending','Non-Essential Costs Spending is too high', False)
-    if spending_percentages.get('Entertainment', 0) > 0.1:
-        es.add_fact('Spending','Entertainment Spending is too high', True)
-    else:
-        es.add_fact('Spending','Entertainment Spending is too high', False)
+    # #evaluate each category against its threshold and add fact if it does not meet the threshold
+    spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 'Loan Repayment': 0.1, 'Essential Costs': 0.6, 'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
+    for category in spending_percentages:
+        if spending_percentages[category] > spending_thresholds[category]:
+            # print(category + ' Spending is too high')
+            es.add_fact('Spending', category + ' Spending is too high', True)
+        else:
+            # print(category + ' Spending is not too high')
+            es.add_fact('Spending', category + ' Spending is too high', False)
 
 def getSpendingPercentages(df):
     spending_percentages = {}
@@ -339,16 +306,17 @@ def checkforSpikes(es, df): #function to check for spikes in spending by categor
         spikes = category_df[category_df['Above_Avg'] == True]
         spikes = spikes.reset_index(drop=True)
         if len(spikes) >= 3 and category != 'Loan Repayment':
-            es.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 'High')
+            es.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
             es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, True)
         else:
-            es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
+            # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
+            pass #if there are no spikes, then don't add a fact
 
 def main():
     global debt_list
     df = preprocess()
     expert_system = ExpertSystem(None, debt_list)
-    addRules(expert_system)
+    addRules(expert_system, df)
     checkBudget(expert_system, df)
     eval_Savings(expert_system, df)
     checkCashflow(expert_system)
@@ -359,7 +327,8 @@ def main():
     inferences.sort(key=lambda x: x.severity)
     print('\nAll Inferences: \n')
     for i in inferences:
-        print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+        # if i.type == 'Spike':
+            print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
 
 if __name__ == "__main__":
     main()
