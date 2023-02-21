@@ -21,7 +21,7 @@ nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-global allInferences 
+global allInferences, dataFrame
 
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
@@ -39,38 +39,10 @@ def popupmsg(msg):
     B1.pack()
     popup.mainloop()
 
-def select_file():
-    global filename, allInferences
-    filetypes = (
-                ('CSV files', '*.csv'),
-                ('All files', '*.*')
-    )
-
-    filename = fd.askopenfilename(
-        title='Open a file',
-        initialdir='/',
-        filetypes=filetypes)
-    
-    df = preprocess(filename)
-    expert_system = ExpertSystem(df, debt_list)
-    expert_system.addRules()
-    expert_system.checkBudget()
-    expert_system.eval_Savings()
-    expert_system.checkCashflow()
-    expert_system.checkforSpikes()
-    expert_system.evaluateDebt()
-    expert_system.makeInferences()
-    allInferences = expert_system.getInferences()
-    allInferences.sort(key=lambda x: x.severity)
-    print('\nAll Inferences: \n')
-    for i in allInferences:
-        # if i.type == 'Spike':
-            print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
-
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
         
-        tk.Tk.__init__(self, *args, **kwargs)
+        tk.Tk.__init__(self, *args, **kwargs) 
 
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
@@ -105,9 +77,38 @@ class ESapp(tk.Tk):
         frame.tkraise()
 
     def startup(self, cont):
-        select_file()
+        self.select_file()
         frame = self.frames[cont]
         frame.tkraise()
+    
+    def select_file(self):
+        global filename, allInferences, dataFrame
+        filetypes = (
+                    ('CSV files', '*.csv'),
+                    ('All files', '*.*')
+        )
+
+        filename = fd.askopenfilename(
+            title='Open a file',
+            initialdir='/',
+            filetypes=filetypes)
+        
+        df = preprocess(filename)
+        dataFrame = df
+        self.expert_system = ExpertSystem(df, debt_list)
+        self.expert_system.addRules()
+        self.expert_system.checkBudget()
+        self.expert_system.eval_Savings()
+        self.expert_system.checkCashflow()
+        self.expert_system.checkforSpikes()
+        self.expert_system.evaluateDebt()
+        self.expert_system.makeInferences()
+        allInferences = self.expert_system.getInferences()
+        allInferences.sort(key=lambda x: x.severity)
+        # print('\nAll Inferences: \n')
+        # for i in allInferences:
+        #     # if i.type == 'Spike':
+        #         print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
 
 class StartPage(tk.Frame):
 
@@ -127,9 +128,9 @@ class StartPage(tk.Frame):
                             command=quit)
         button2.pack()
 
-        button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(GraphPage))
-        button3.pack()
+        # button3 = ttk.Button(self, text="Graph Page",
+        #                     command=lambda: controller.show_frame(GraphPage))
+        # button3.pack()
 
 class PageOne(tk.Frame):
 
@@ -146,12 +147,12 @@ class PageOne(tk.Frame):
                             command= lambda: self.showInferences())
         button3.pack()
 
+        button4 = ttk.Button(self, text="Graph Page",
+                            command=lambda: controller.show_frame(GraphPage))
+        button4.pack()
+
     def showInferences(self):
         global allInferences
-        # show inferences in 3 lists (severe, moderate, minor)
-        severInferences = []
-        moderateInferences = []
-        minorInferences = []
         
         textBox_severe = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
         textBox_severe.pack(expand=True, side=tk.LEFT) 
@@ -165,29 +166,18 @@ class PageOne(tk.Frame):
         textBox_minor.pack(expand=True, side=tk.LEFT)
         textBox_minor.insert(tk.END, 'Minor Inferences: \n\n')
             
-
         for i in allInferences:
             if i.severity == 1:
-                # severInferences.append(i)
-                # inf = i.type + 'Inference: Premise:' + i.premise + 'Recommendation:' + i.conclusion + 'Severity:' + str(i.severity)
-                # severInferences.append(inf + '\n')
                 textBox_severe.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
             elif i.severity == 2:
-                # moderateInferences.append(i)
+
                 textBox_moderate.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
             else:
-                minorInferences.append(i)
                 textBox_minor.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
 
-        # textBox_severe = tk.Text(self, height=10, width=50, padx=10, pady=10, wrap=tk.WORD)
-        # textBox_severe.pack(expand=True) 
-        # textBox_severe.insert(tk.END, 'Severe Inferences: \n ' + str(severInferences))
         # textBox_severe.tag_configure("left", justify='left')
         # textBox_severe.tag_add("left", 1.0, "end")
        
-
-
-
 class PageTwo(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -214,17 +204,193 @@ class GraphPage(tk.Frame):
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        f = Figure(figsize=(5,5), dpi=100)
+        button2 = ttk.Button(self, text="View Spending",
+                            command=lambda: self.viewSpending())
+        button2.pack()
+
+        button3 = ttk.Button(self, text="View Income",
+                            command=lambda: self.viewIncome())
+        button3.pack()
+
+        button4 = ttk.Button(self, text="View Cashflow",
+                            command=lambda: self.viewCashflow())
+        button4.pack()
+
+        button5 = ttk.Button(self, text="View Weekly Averages",
+                            command=lambda: self.weeklyAvg())
+        button5.pack()
+
+        button6 = ttk.Button(self, text="View Monthly Averages",
+                            command=lambda: self.monthlyAvg())
+        button6.pack()
+
+        self.canvas = None
+
+        # f = Figure(figsize=(5,5), dpi=100)
+        # a = f.add_subplot(111)
+        # a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+
+        # canvas = FigureCanvasTkAgg(f, self)
+        # canvas.draw()
+        # canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    
+    def viewSpending(self):
+        global dataFrame
+
+        df = dataFrame
+        df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
+        df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
+        df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
+        df = df.reset_index() # reset the index
+
+        f = Figure(figsize=(12,5), dpi=100)
         a = f.add_subplot(111)
-        a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+        a.bar(df['Category'], df['Withdrawal'])
+        a.set_xlabel('Category')
+        a.set_ylabel('Spending')
 
-        canvas = FigureCanvasTkAgg(f, self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        
+    def viewIncome(self):
+        global dataFrame
+
+        df = dataFrame
+        df = df[df['Deposit'] != 0]
+        df = df.groupby(['Category']).sum()
+        df = df.sort_values(by=['Deposit'], ascending=False)
+        df = df.reset_index()
+
+        f = Figure(figsize=(12,5), dpi=100)
+        a = f.add_subplot(111) 
+        a.bar(df['Category'], df['Deposit'])
+        a.set_xlabel('Category')
+        a.set_ylabel('Income')
+
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    def viewCashflow(self):
+        global dataFrame
+
+        df = dataFrame
+        df = df.groupby(['Week']).sum() # group the dataframe by Date and sum the Deposit and Withdrawal columns
+        df = df.sort_values(by=['Week'], ascending=True) # sort the dataframe by Date column in ascending order
+        df = df.reset_index() # reset the index
+        # print(df)
+
+        f = Figure(figsize=(12,5), dpi=100)
+        a = f.add_subplot(111)
+        a.plot(df['Week'], df['Deposit'], label='Income')
+        a.plot(df['Week'], df['Withdrawal'], label='Spending')
+        a.set_xlabel('Week')
+        a.set_ylabel('Amount')
+        a.set_title('Cashflow')
+        a.legend()
+
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+    def weeklyAvg(self):
+        global dataFrame, savings_per_week
+
+        df = dataFrame
+        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+        # calculate the sum of deposits and withdrawals for each week
+        week_sums = df.groupby(['Week', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
+        # calculate the number of weeks
+        num_weeks = week_sums['Week'].nunique()
+            # calculate the average deposits and withdrawals per week
+        week_avgs = week_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+        week_avgs['Deposit'] = week_avgs['Deposit'] / num_weeks
+        week_avgs['Withdrawal'] = week_avgs['Withdrawal'] / num_weeks
+
+        f = Figure(figsize=(12,5), dpi=100)
+        a = f.add_subplot(111)
+        # a.plot(week_avgs['Deposit'], label='Income')    
+        # a.plot(week_avgs['Withdrawal'], label='Spending')
+        a.bar(week_avgs.index, week_avgs['Deposit'], label='Income')
+        a.bar(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
+        a.set_xlabel('Category')
+        a.set_ylabel('Amount')
+        a.set_title('Average Weekly Cashflow')
+        a.legend()
+
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+    def monthlyAvg(self):
+        global dataFrame, savings_per_month
+        df = dataFrame
+        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+        # calculate the sum of deposits and withdrawals for each month
+        month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
+        # calculate the number of months
+        num_months = month_sums['Month'].nunique()
+            # calculate the average deposits and withdrawals per month
+        month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+        month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
+        month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
+
+        f = Figure(figsize=(12,5), dpi=100)
+        a = f.add_subplot(111)
+        # a.plot(month_avgs['Deposit'], label='Income')
+        # a.plot(month_avgs['Withdrawal'], label='Spending')
+        a.bar(month_avgs.index, month_avgs['Deposit'], label='Income')
+        a.bar(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
+        a.set_xlabel('Category')
+        a.set_ylabel('Amount')
+        a.set_title('Average Monthly Cashflow')
+        a.legend()
+
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, self)
+        # toolbar.update()
+        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
 class ExpertSystem:
     def __init__(self, df, debt_list):

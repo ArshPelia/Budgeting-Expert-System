@@ -22,8 +22,8 @@ debt_list = [
 
 def cleanData():
     global current_savings, total_deposited, total_spent
-    if not os.path.exists('data.csv'): # check if the file exists
-        df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
+    if not os.path.exists('Datasets/data.csv'): # check if the file exists
+        df = pd.read_csv('Datasets/accountactivity.csv', names=headerlist) #assign column names 
         df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
 
         # convert the date column to a datetime format
@@ -48,7 +48,7 @@ def cleanData():
         # print(df.columns)
         # print(df)
     else:
-        df = pd.read_csv('data.csv')
+        df = pd.read_csv('Datasets/data.csv')
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
@@ -398,11 +398,11 @@ def main():
     # plotIncome(df)
     # plotSpending(df)
     # plot_cashflow(df)
-    # print(calc_week_avgs(df))
-    # print()
-    # print(calc_monthly_avgs(df))
-    # plot_weekly_avgs(calc_week_avgs(df))
-    # plot_montly_avgs(calc_monthly_avgs(df))
+    print(calc_week_avgs(df))
+    print()
+    print(calc_monthly_avgs(df))
+    plot_weekly_avgs(calc_week_avgs(df))
+    plot_montly_avgs(calc_monthly_avgs(df))
     # for x in spendList:
     #     detect_spikes(df, x)
     #     detect_spikes_by_month(df, x)
