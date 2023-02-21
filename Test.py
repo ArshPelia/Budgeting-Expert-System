@@ -21,6 +21,7 @@ nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+global allInferences 
 
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
@@ -39,7 +40,7 @@ def popupmsg(msg):
     popup.mainloop()
 
 def select_file():
-    global filename
+    global filename, allInferences
     filetypes = (
                 ('CSV files', '*.csv'),
                 ('All files', '*.*')
@@ -59,10 +60,10 @@ def select_file():
     expert_system.checkforSpikes()
     expert_system.evaluateDebt()
     expert_system.makeInferences()
-    inferences = expert_system.getInferences()
-    inferences.sort(key=lambda x: x.severity)
+    allInferences = expert_system.getInferences()
+    allInferences.sort(key=lambda x: x.severity)
     print('\nAll Inferences: \n')
-    for i in inferences:
+    for i in allInferences:
         # if i.type == 'Spike':
             print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
 
@@ -100,7 +101,11 @@ class ESapp(tk.Tk):
         self.show_frame(StartPage)
 
     def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
 
+    def startup(self, cont):
+        select_file()
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -112,24 +117,82 @@ class StartPage(tk.Frame):
         label.pack(pady=10,padx=10)
 
         label1 = tk.Label(self, text=("Please select a CSV file to begin."), font=NORM_FONT)
+        label1.pack(pady=10,padx=10)
 
         button1 = ttk.Button(self, text="Open a File",
-                            command=select_file)
+                            command=lambda: controller.startup(PageOne))
         button1.pack()
 
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack()
 
-        button3 = ttk.Button(self, text="Page One",
-                            command=lambda: controller.show_frame(PageOne))
+        button3 = ttk.Button(self, text="Graph Page",
+                            command=lambda: controller.show_frame(GraphPage))
         button3.pack()
 
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Page One!!!", font=LARGE_FONT)
+        label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+
+        button3 = ttk.Button(self, text="Show Inferences",
+                            command= lambda: self.showInferences())
+        button3.pack()
+
+    def showInferences(self):
+        global allInferences
+        # show inferences in 3 lists (severe, moderate, minor)
+        severInferences = []
+        moderateInferences = []
+        minorInferences = []
+        
+        textBox_severe = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        textBox_severe.pack(expand=True, side=tk.LEFT) 
+        textBox_severe.insert(tk.END, 'Severe Inferences: \n\n')
+
+        textBox_moderate = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        textBox_moderate.pack(expand=True, side=tk.LEFT) 
+        textBox_moderate.insert(tk.END, 'Moderate Inferences: \n\n')
+
+        textBox_minor = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        textBox_minor.pack(expand=True, side=tk.LEFT)
+        textBox_minor.insert(tk.END, 'Minor Inferences: \n\n')
+            
+
+        for i in allInferences:
+            if i.severity == 1:
+                # severInferences.append(i)
+                # inf = i.type + 'Inference: Premise:' + i.premise + 'Recommendation:' + i.conclusion + 'Severity:' + str(i.severity)
+                # severInferences.append(inf + '\n')
+                textBox_severe.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+            elif i.severity == 2:
+                # moderateInferences.append(i)
+                textBox_moderate.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+            else:
+                minorInferences.append(i)
+                textBox_minor.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+
+        # textBox_severe = tk.Text(self, height=10, width=50, padx=10, pady=10, wrap=tk.WORD)
+        # textBox_severe.pack(expand=True) 
+        # textBox_severe.insert(tk.END, 'Severe Inferences: \n ' + str(severInferences))
+        # textBox_severe.tag_configure("left", justify='left')
+        # textBox_severe.tag_add("left", 1.0, "end")
+       
+
+
+
+class PageTwo(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Select a method of inference", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
         button1 = ttk.Button(self, text="Back to Home",
