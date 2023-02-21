@@ -30,11 +30,16 @@ debt_list = [
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
-def popupmsg(msg):
+
+def viewInference(type, premise, conclusion):
     popup = tk.Tk()
-    popup.wm_title("!")
-    label = ttk.Label(popup, text=msg, font=NORM_FONT)
+    popup.wm_title("Inference")
+    label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
     label.pack(side="top", fill="x", pady=10)
+    label1 = ttk.Label(popup, text=("Premise: " + premise), font=NORM_FONT)
+    label1.pack(side="top", fill="x", pady=10)
+    label2 = ttk.Label(popup, text=("Conclusion: " + conclusion), font=NORM_FONT)
+    label2.pack(side="top", fill="x", pady=10)
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
     popup.mainloop()
@@ -134,6 +139,7 @@ class StartPage(tk.Frame):
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
@@ -150,6 +156,9 @@ class PageOne(tk.Frame):
                             command=lambda: controller.show_frame(GraphPage))
         button4.pack()
 
+        label1 = ttk.Label(self, text=("Double-Click on an inference to view in detail."), font=NORM_FONT)
+        label1.pack(pady=10,padx=10)
+        
     def showInferences(self):
         global allInferences
         
@@ -193,25 +202,15 @@ class PageOne(tk.Frame):
         tree.tag_configure("moderate", background="orange")
         tree.tag_configure("minor", background="yellow")
 
+        def selectRecord(event):
+            item = tree.focus()
+            values = tree.item(item, "values")
+            type, premise, recommendation = values
 
-        # textBox_severe.tag_configure("left", justify='left')
-        # textBox_severe.tag_add("left", 1.0, "end")
-       
-class PageTwo(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Select a method of inference", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
-
-        button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(GraphPage))
-        button3.pack()
-
+            viewInference(type, premise, recommendation)
+    
+        tree.bind("<Double-1>", selectRecord)
+    
 class GraphPage(tk.Frame):
 
     def __init__(self, parent, controller):
