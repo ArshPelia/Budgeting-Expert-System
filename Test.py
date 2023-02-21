@@ -1,9 +1,18 @@
+import tkinter as tk
+from tkinter import ttk
+from tkinter import filedialog as fd
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
+from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import random, os, calendar, datetime
-from datetime import datetime
-import re
+import random, os
+
+LARGE_FONT= ("Verdana", 12)
+NORM_FONT = ("Helvetica", 10)
+SMALL_FONT = ("Helvetica", 8)
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
 spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
@@ -19,6 +28,140 @@ debt_list = [
     {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
+
+def popupmsg(msg):
+    popup = tk.Tk()
+    popup.wm_title("!")
+    label = ttk.Label(popup, text=msg, font=NORM_FONT)
+    label.pack(side="top", fill="x", pady=10)
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1.pack()
+    popup.mainloop()
+
+def select_file():
+    global filename
+    filetypes = (
+                ('CSV files', '*.csv'),
+                ('All files', '*.*')
+    )
+
+    filename = fd.askopenfilename(
+        title='Open a file',
+        initialdir='/',
+        filetypes=filetypes)
+    
+    df = preprocess(filename)
+    expert_system = ExpertSystem(df, debt_list)
+    expert_system.addRules()
+    expert_system.checkBudget()
+    expert_system.eval_Savings()
+    expert_system.checkCashflow()
+    expert_system.checkforSpikes()
+    expert_system.evaluateDebt()
+    expert_system.makeInferences()
+    inferences = expert_system.getInferences()
+    inferences.sort(key=lambda x: x.severity)
+    print('\nAll Inferences: \n')
+    for i in inferences:
+        # if i.type == 'Spike':
+            print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+
+class ESapp(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        # tk.Tk.iconbitmap(self,default='clienticon.ico')
+        tk.Tk.wm_title(self, "Financial Budget Expert System")
+
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand = True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        container.configure(background='dark grey')
+
+        menubar = tk.Menu(container)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Save settings", command = lambda: popupmsg("Not supported just yet!"))
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=quit)
+        menubar.add_cascade(label="File", menu=filemenu)
+
+        tk.Tk.config(self, menu=menubar)
+
+        self.frames = {}
+
+        for F in (StartPage, PageOne, GraphPage):
+
+            frame = F(container, self)
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.show_frame(StartPage)
+
+    def show_frame(self, cont):
+
+        frame = self.frames[cont]
+        frame.tkraise()
+
+class StartPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent)
+        label = tk.Label(self, text=("Welcome to the budgeting Expert System"), font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        label1 = tk.Label(self, text=("Please select a CSV file to begin."), font=NORM_FONT)
+
+        button1 = ttk.Button(self, text="Open a File",
+                            command=select_file)
+        button1.pack()
+
+        button2 = ttk.Button(self, text="Exit Program",
+                            command=quit)
+        button2.pack()
+
+        button3 = ttk.Button(self, text="Page One",
+                            command=lambda: controller.show_frame(PageOne))
+        button3.pack()
+
+class PageOne(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Page One!!!", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+
+        button3 = ttk.Button(self, text="Graph Page",
+                            command=lambda: controller.show_frame(GraphPage))
+        button3.pack()
+
+class GraphPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+
+        f = Figure(figsize=(5,5), dpi=100)
+        a = f.add_subplot(111)
+        a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
 class ExpertSystem:
     def __init__(self, df, debt_list):
@@ -234,101 +377,34 @@ class Inference:
     def getPremises(self):
         return self.premise
 
-def preprocess():
+def preprocess(filename):
     global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+    
+    df = pd.read_csv(filename)
+    current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    
+    avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+    avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+    savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+    
+    avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+    avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+    savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+    
+    monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+    avg_monthly_income = monthly_income / df['Month'].nunique()
+    monthly_income = avg_monthly_income
 
-    if not os.path.exists('Datasets/data.csv'): # check if the file exists
-        df = pd.read_csv('Datasets/accountactivity.csv', names=headerlist) #assign column names 
-        df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
-
-        # convert the date column to a datetime format
-        df['Date'] = pd.to_datetime(df['Date'])
-        df['Week'] = df['Date'].dt.week
-        df['Month'] = df['Date'].dt.month
-        df['Year'] = df['Date'].dt.year
-
-        for i in range(len(df)): # iterate through the dataframe
-            if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
-                df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
-            else:
-                df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
-
-        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        
-        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-        
-        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-        
-        monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-        avg_monthly_income = monthly_income / df['Month'].nunique()
-        monthly_income = avg_monthly_income
-        total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
-
-        df.to_csv('Datasets/data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
-
-    else:
-        df = pd.read_csv('Datasets/data.csv')
-        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-        
-        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-        
-        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-        
-        monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-        avg_monthly_income = monthly_income / df['Month'].nunique()
-        monthly_income = avg_monthly_income
-
-        total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+    total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
     return df 
 
-def getSpendingPercentages(df):
-    spending_percentages = {}
-    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-    for category in spending_percentages:
-        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_spent
-        # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
-    # print(spending_percentages)
-    df_Essential = df[df['Category'].isin(essentialList)]
-    df_Nonessential = df[df['Category'].isin(nonessentialList)]
-    essential_spending = df_Essential['Withdrawal'].sum()
-    nonessential_spending = df_Nonessential['Withdrawal'].sum()
-
-    spending_percentages['Essential Costs'] = essential_spending / total_spent
-    spending_percentages['Non-Essential Costs'] = nonessential_spending / total_spent
-        
-    return spending_percentages
-
 def main():
     global debt_list
-    df = preprocess()
-    expert_system = ExpertSystem(df, debt_list)
-    expert_system.addRules()
-    expert_system.checkBudget()
-    expert_system.eval_Savings()
-    expert_system.checkCashflow()
-    expert_system.checkforSpikes()
-    expert_system.evaluateDebt()
-    expert_system.makeInferences()
-    inferences = expert_system.getInferences()
-    inferences.sort(key=lambda x: x.severity)
-    print('\nAll Inferences: \n')
-    for i in inferences:
-        # if i.type == 'Spike':
-            print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+    app = ESapp()
+    app.mainloop()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
