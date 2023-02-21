@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog as fd
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
@@ -19,18 +20,31 @@ def popupmsg(msg):
     B1.pack()
     popup.mainloop()
 
+def select_file():
+    global filename
+    filetypes = (
+                ('CSV files', '*.csv'),
+                ('All files', '*.*')
+    )
+
+    filename = fd.askopenfilename(
+        title='Open a file',
+        initialdir='/',
+        filetypes=filetypes)
+    
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
         
         tk.Tk.__init__(self, *args, **kwargs)
 
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
-        tk.Tk.wm_title(self, "Sea of BTC Client")
+        tk.Tk.wm_title(self, "Financial Budget Expert System")
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
+        container.configure(background='dark grey')
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -56,21 +70,20 @@ class ESapp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-        
 class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        label = tk.Label(self, text=("""ALPHA Bitcoin trading application
-        use at your own risk. There is no promise
-        of warranty."""), font=LARGE_FONT)
+        label = tk.Label(self, text=("Welcome to the budgeting Expert System"), font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button1 = ttk.Button(self, text="Agree",
-                            command=lambda: controller.show_frame(GraphPage))
+        label1 = tk.Label(self, text=("Please select a CSV file to begin."), font=NORM_FONT)
+
+        button1 = ttk.Button(self, text="Open a File",
+                            command=select_file)
         button1.pack()
 
-        button2 = ttk.Button(self, text="Disagree",
+        button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack()
 
@@ -92,8 +105,6 @@ class PageOne(tk.Frame):
         button3 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(GraphPage))
         button3.pack()
-
-
 
 class GraphPage(tk.Frame):
 

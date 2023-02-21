@@ -21,8 +21,8 @@ debt_list = [
 ]
 
 class ExpertSystem:
-    def __init__(self, data, debt_list):
-        self.data = data
+    def __init__(self, df, debt_list):
+        self.df = df
         self.debt_list = debt_list
         self.rules = []
         self.facts = []
@@ -75,6 +75,124 @@ class ExpertSystem:
     
     def getRules(self):
         return self.rules
+
+    def addRules(self):
+        self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
+        self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
+        self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
+
+        self.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential spending.', 2)
+        self.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Nonessential spending.', 1)
+
+        categories = self.df['Category'].unique()
+        for category in categories:
+            if category in ['Groceries', 'Shopping']:
+                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
+            elif category in ['Transportation', 'Essential Costs']:
+                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
+            else:
+                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
+
+
+        self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
+        self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
+
+        self.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 2)
+        self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
+        self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
+
+    def checkBudget(self):
+        global current_savings, total_deposited, total_spent
+        df = self.df
+        df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
+        df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
+        df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
+        df = df.reset_index() # reset the index
+        df = df[['Category', 'Withdrawal']] # select only the Category and Withdrawal columns
+        df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
+        spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
+        # add the percentage of spending for essential and non-essential costs
+        spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
+        spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
+
+
+        # print list of categories and amount spent
+        # for i in range(len(spending_dict)):
+        #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
+        
+        spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
+
+        # print list of categories and percentage of spending
+        # for key, value in spending_percentages.items():
+        #     print(key, ': ', value)
+
+        # #evaluate each category against its threshold and add fact if it does not meet the threshold
+        spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 'Loan Repayment': 0.1, 'Essential Costs': 0.6, 'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
+        for category in spending_percentages:
+            if spending_percentages[category] > spending_thresholds[category]:
+                # print(category + ' Spending is too high')
+                self.add_fact('Spending', category + ' Spending is too high', True)
+            else:
+                # print(category + ' Spending is not too high')
+                self.add_fact('Spending', category + ' Spending is too high', False)
+    
+    def eval_Savings(self):
+        global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+        emergency_fund_goal, retirement_goal = 1000, 100000
+        savings_percentage = total_deposited / total_spent * 100
+        investment_percentage = total_invested / total_deposited * 100
+        emergency_fund_achieved = current_savings >= emergency_fund_goal
+        retirement_goal_achieved = total_invested >= retirement_goal
+
+        # recommendations = []
+        if savings_percentage < 10:
+            # recommendations.append("Consider increasing your savings to ensure a secure future.")
+            self.add_fact('Savings','low_savings', True)
+        else:
+            self.add_fact('Savings','low_savings', False)
+        if not emergency_fund_achieved:
+            # recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
+            self.add_fact('Savings','Insufficient Emergency Fund', True)
+        else:
+            self.add_fact('Savings','Insufficient Emergency Fund', False)
+        if not retirement_goal_achieved:
+            # recommendations.append("Consider increasing contributions to your retirement account.")
+            self.add_fact('Savings','Insufficient Retirement Fund', True)
+        else:
+            self.add_fact('Savings','Insufficient Retirement Fund', False)
+
+    def checkCashflow(self):
+        global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+        if avg_weekly_deposits < avg_weekly_withdrawals:
+            self.add_fact('Cashflow','Weekly Cashflow is negative', True)
+        else:
+            self.add_fact('Cashflow','Weekly Cashflow is negative', False)
+        if avg_monthly_deposits < avg_monthly_withdrawals:
+            self.add_fact('Cashflow','Monthly Cashflow is negative', True)
+        else:
+            self.add_fact('Cashflow','Monthly Cashflow is negative', False)
+        if total_deposited < total_spent:
+            self.add_fact('Cashflow','Total Net Cashflow is negative', True)
+        else:
+            self.add_fact('Cashflow','Total Net Cashflow is negative', False)
+
+    def checkforSpikes(self): #function to check for spikes in spending by category
+        #if there are more than 3 spikes in a category, then create a corresponding rule and fact in the expert system
+        global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+        categories = self.df['Category'].unique()
+        for category in categories:
+            category_df = self.df[self.df['Category'] == category]
+            category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index()
+            avg_spending = category_df['Withdrawal'].mean()
+            category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending
+            spikes = category_df[category_df['Above_Avg'] == True]
+            spikes = spikes.reset_index(drop=True)
+            if len(spikes) >= 3 and category != 'Loan Repayment':
+                self.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+                self.add_fact('Spike', 'More than 3 monthly spikes in ' + category, True)
+            else:
+                # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
+                pass #if there are no spikes, then don't add a fact
 
 class Fact:
     def __init__(self, type, name, value):
@@ -176,66 +294,6 @@ def preprocess():
 
     return df 
 
-def addRules(es, df):
-
-    es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
-    es.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
-    es.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
-
-    es.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential spending.', 2)
-    es.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Nonessential spending.', 1)
-
-    categories = df['Category'].unique()
-    for category in categories:
-        if category in ['Groceries', 'Shopping']:
-            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
-        elif category in ['Transportation', 'Essential Costs']:
-            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
-        else:
-            es.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
-
-
-    es.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
-    es.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
-
-    es.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 2)
-    es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
-    es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
-
-def checkBudget(es, df):
-    global current_savings, total_deposited, total_spent
-    df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
-    df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
-    df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
-    df = df.reset_index() # reset the index
-    df = df[['Category', 'Withdrawal']] # select only the Category and Withdrawal columns
-    df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
-    spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
-    # add the percentage of spending for essential and non-essential costs
-    spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
-    spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
-
-
-    # print list of categories and amount spent
-    # for i in range(len(spending_dict)):
-    #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
-    
-    spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
-
-    # print list of categories and percentage of spending
-    # for key, value in spending_percentages.items():
-    #     print(key, ': ', value)
-
-    # #evaluate each category against its threshold and add fact if it does not meet the threshold
-    spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 'Loan Repayment': 0.1, 'Essential Costs': 0.6, 'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
-    for category in spending_percentages:
-        if spending_percentages[category] > spending_thresholds[category]:
-            # print(category + ' Spending is too high')
-            es.add_fact('Spending', category + ' Spending is too high', True)
-        else:
-            # print(category + ' Spending is not too high')
-            es.add_fact('Spending', category + ' Spending is too high', False)
-
 def getSpendingPercentages(df):
     spending_percentages = {}
     total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
@@ -254,73 +312,15 @@ def getSpendingPercentages(df):
         
     return spending_percentages
 
-def eval_Savings(es, df):
-    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-    emergency_fund_goal, retirement_goal = 1000, 100000
-    savings_percentage = total_deposited / total_spent * 100
-    investment_percentage = total_invested / total_deposited * 100
-    emergency_fund_achieved = current_savings >= emergency_fund_goal
-    retirement_goal_achieved = total_invested >= retirement_goal
-
-    # recommendations = []
-    if savings_percentage < 10:
-        # recommendations.append("Consider increasing your savings to ensure a secure future.")
-        es.add_fact('Savings','low_savings', True)
-    else:
-        es.add_fact('Savings','low_savings', False)
-    if not emergency_fund_achieved:
-        # recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
-        es.add_fact('Savings','Insufficient Emergency Fund', True)
-    else:
-        es.add_fact('Savings','Insufficient Emergency Fund', False)
-    if not retirement_goal_achieved:
-        # recommendations.append("Consider increasing contributions to your retirement account.")
-        es.add_fact('Savings','Insufficient Retirement Fund', True)
-    else:
-        es.add_fact('Savings','Insufficient Retirement Fund', False)
-
-def checkCashflow(es):
-    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-    if avg_weekly_deposits < avg_weekly_withdrawals:
-        es.add_fact('Cashflow','Weekly Cashflow is negative', True)
-    else:
-        es.add_fact('Cashflow','Weekly Cashflow is negative', False)
-    if avg_monthly_deposits < avg_monthly_withdrawals:
-        es.add_fact('Cashflow','Monthly Cashflow is negative', True)
-    else:
-        es.add_fact('Cashflow','Monthly Cashflow is negative', False)
-    if total_deposited < total_spent:
-        es.add_fact('Cashflow','Total Net Cashflow is negative', True)
-    else:
-        es.add_fact('Cashflow','Total Net Cashflow is negative', False)
-
-def checkforSpikes(es, df): #function to check for spikes in spending by category
-    #if there are more than 3 spikes in a category, then create a corresponding rule and fact in the expert system
-    global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-    categories = df['Category'].unique()
-    for category in categories:
-        category_df = df[df['Category'] == category]
-        category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index()
-        avg_spending = category_df['Withdrawal'].mean()
-        category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending
-        spikes = category_df[category_df['Above_Avg'] == True]
-        spikes = spikes.reset_index(drop=True)
-        if len(spikes) >= 3 and category != 'Loan Repayment':
-            es.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
-            es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, True)
-        else:
-            # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
-            pass #if there are no spikes, then don't add a fact
-
 def main():
     global debt_list
     df = preprocess()
-    expert_system = ExpertSystem(None, debt_list)
-    addRules(expert_system, df)
-    checkBudget(expert_system, df)
-    eval_Savings(expert_system, df)
-    checkCashflow(expert_system)
-    checkforSpikes(expert_system, df)
+    expert_system = ExpertSystem(df, debt_list)
+    expert_system.addRules()
+    expert_system.checkBudget()
+    expert_system.eval_Savings()
+    expert_system.checkCashflow()
+    expert_system.checkforSpikes()
     expert_system.evaluateDebt()
     expert_system.makeInferences()
     inferences = expert_system.getInferences()
