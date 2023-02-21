@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import random, os, calendar, datetime
 from datetime import datetime
 import re
+import tkinter as tk
+from tkinter import ttk
+from tkinter import filedialog as fd
+from tkinter.messagebox import showinfo
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
 spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
@@ -12,7 +16,7 @@ nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-
+global filename
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
@@ -176,6 +180,39 @@ def preprocess():
 
     return df 
 
+def processFile(fileName):
+    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+
+    df = pd.read_csv(fileName) 
+    df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
+
+    # convert the date column to a datetime format
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Week'] = df['Date'].dt.week
+    df['Month'] = df['Date'].dt.month
+    df['Year'] = df['Date'].dt.year
+
+    current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    
+    avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+    avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+    savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+    
+    avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+    avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+    savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+    
+    monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+    avg_monthly_income = monthly_income / df['Month'].nunique()
+    monthly_income = avg_monthly_income
+
+    total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+
+
+    return df
+
 def addRules(es, df):
 
     es.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
@@ -202,9 +239,11 @@ def addRules(es, df):
     es.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
     es.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
 
-def checkBudget(es, df):
+def checkBudget(es, df): 
     global current_savings, total_deposited, total_spent
     df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
+    #print(df)
+    print(df)
     df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
     df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
     df = df.reset_index() # reset the index
@@ -312,9 +351,37 @@ def checkforSpikes(es, df): #function to check for spikes in spending by categor
             # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
             pass #if there are no spikes, then don't add a fact
 
-def main():
-    global debt_list
-    df = preprocess()
+def createGUI():
+    global filename
+    root = tk.Tk()
+    root.title("Financial Budgeting Expert System")
+    root.geometry("800x600")
+    root.configure(background='dark slate gray')
+
+    #a button to select the csv file
+    open_button = ttk.Button(
+        root,
+        text='Open a File',
+        command=select_file
+    )
+
+    open_button.pack(expand=True)
+
+    root.mainloop()
+
+def select_file():
+    global filename
+    filetypes = (
+        ('text files', '*.txt'),
+        ('All files', '*.*')
+    )
+
+    filename = fd.askopenfilename(
+        title='Open a file',
+        initialdir='/',
+        filetypes=filetypes)
+    
+    df = processFile(filename)
     expert_system = ExpertSystem(None, debt_list)
     addRules(expert_system, df)
     checkBudget(expert_system, df)
@@ -329,6 +396,33 @@ def main():
     for i in inferences:
         # if i.type == 'Spike':
             print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+
+
+    # showinfo(
+    #     title='Selected File',
+    #     message=filename
+    # )
+
+def main():
+    global debt_list
+    # # df = preprocess()
+    # df = processFile('testData.csv')
+    # expert_system = ExpertSystem(None, debt_list)
+    # addRules(expert_system, df)
+    # checkBudget(expert_system, df)
+    # eval_Savings(expert_system, df)
+    # checkCashflow(expert_system)
+    # checkforSpikes(expert_system, df)
+    # expert_system.evaluateDebt()
+    # expert_system.makeInferences()
+    # inferences = expert_system.getInferences()
+    # inferences.sort(key=lambda x: x.severity)
+    # print('\nAll Inferences: \n')
+    # for i in inferences:
+    #     # if i.type == 'Spike':
+    #         print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+
+    createGUI()
 
 if __name__ == "__main__":
     main()
