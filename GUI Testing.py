@@ -4,8 +4,20 @@ import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
 from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
 
 LARGE_FONT= ("Verdana", 12)
+NORM_FONT = ("Helvetica", 10)
+SMALL_FONT = ("Helvetica", 8)
+
+def popupmsg(msg):
+    popup = tk.Tk()
+    popup.wm_title("!")
+    label = ttk.Label(popup, text=msg, font=NORM_FONT)
+    label.pack(side="top", fill="x", pady=10)
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1.pack()
+    popup.mainloop()
 
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -20,9 +32,18 @@ class ESapp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        menubar = tk.Menu(container)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Save settings", command = lambda: popupmsg("Not supported just yet!"))
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=quit)
+        menubar.add_cascade(label="File", menu=filemenu)
+
+        tk.Tk.config(self, menu=menubar)
+
         self.frames = {}
 
-        for F in (StartPage, PageOne, PageTwo, PageThree):
+        for F in (StartPage, PageOne, GraphPage):
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -40,26 +61,22 @@ class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        
-        label = ttk.Label(self, text="Start Page", font=LARGE_FONT)
+        label = tk.Label(self, text=("""ALPHA Bitcoin trading application
+        use at your own risk. There is no promise
+        of warranty."""), font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="Visit Page 1",
-                            command=lambda: controller.show_frame(PageOne))
-        button.pack()
+        button1 = ttk.Button(self, text="Agree",
+                            command=lambda: controller.show_frame(GraphPage))
+        button1.pack()
 
-        button2 = ttk.Button(self, text="Visit Page 2",
-                            command=lambda: controller.show_frame(PageTwo))
+        button2 = ttk.Button(self, text="Disagree",
+                            command=quit)
         button2.pack()
 
-        
-        button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(PageThree))
+        button3 = ttk.Button(self, text="Page One",
+                            command=lambda: controller.show_frame(PageOne))
         button3.pack()
-
-
-
-
 
 class PageOne(tk.Frame):
 
@@ -72,38 +89,13 @@ class PageOne(tk.Frame):
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        button2 = ttk.Button(self, text="Page Two",
-                            command=lambda: controller.show_frame(PageTwo))
-        button2.pack()
-
         button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(PageThree))
+                            command=lambda: controller.show_frame(GraphPage))
         button3.pack()
 
 
 
-class PageTwo(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Page Two!!!", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
-
-        button2 = ttk.Button(self, text="Page One",
-                            command=lambda: controller.show_frame(PageOne))
-        button2.pack()
-
-        
-        button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(PageThree))
-        button3.pack()
-
-
-class PageThree(tk.Frame):
+class GraphPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
