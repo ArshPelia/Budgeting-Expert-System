@@ -46,12 +46,12 @@ class ESapp(tk.Tk):
 
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
-
+        self.geometry("1280x720")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-        container.configure(background='dark grey')
+        container.configure(background='dark grey', width=1280, height=720)
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -65,7 +65,6 @@ class ESapp(tk.Tk):
         self.frames = {}
 
         for F in (StartPage, PageOne, GraphPage):
-
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -154,26 +153,46 @@ class PageOne(tk.Frame):
     def showInferences(self):
         global allInferences
         
-        textBox_severe = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        textBox_severe.pack(expand=True, side=tk.LEFT) 
-        textBox_severe.insert(tk.END, 'Severe Inferences: \n\n')
+        # textBox_severe = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        # textBox_severe.pack(expand=True, side=tk.LEFT) 
+        # textBox_severe.insert(tk.END, 'Severe Inferences: \n\n')
 
-        textBox_moderate = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        textBox_moderate.pack(expand=True, side=tk.LEFT) 
-        textBox_moderate.insert(tk.END, 'Moderate Inferences: \n\n')
+        # textBox_moderate = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        # textBox_moderate.pack(expand=True, side=tk.LEFT) 
+        # textBox_moderate.insert(tk.END, 'Moderate Inferences: \n\n')
 
-        textBox_minor = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        textBox_minor.pack(expand=True, side=tk.LEFT)
-        textBox_minor.insert(tk.END, 'Minor Inferences: \n\n')
+        # textBox_minor = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
+        # textBox_minor.pack(expand=True, side=tk.LEFT)
+        # textBox_minor.insert(tk.END, 'Minor Inferences: \n\n')
             
+        # for i in allInferences:
+        #     if i.severity == 1:
+        #         textBox_severe.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+        #     elif i.severity == 2:
+
+        #         textBox_moderate.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+        #     else:
+        #         textBox_minor.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+
+        columns = ("Type", "Premise", "Recommendation")
+        tree = ttk.Treeview(self, columns=columns, show="headings")
+        tree.heading("Type", text="Type")
+        tree.heading("Premise", text="Premise")
+        tree.heading("Recommendation", text="Recommendation")
+        tree.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
+
         for i in allInferences:
             if i.severity == 1:
-                textBox_severe.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("severe",))
             elif i.severity == 2:
-
-                textBox_moderate.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("moderate",))
             else:
-                textBox_minor.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("minor",))
+
+        tree.tag_configure("severe", background="red")
+        tree.tag_configure("moderate", background="orange")
+        tree.tag_configure("minor", background="yellow")
+
 
         # textBox_severe.tag_configure("left", justify='left')
         # textBox_severe.tag_add("left", 1.0, "end")
