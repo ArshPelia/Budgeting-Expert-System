@@ -23,6 +23,12 @@ incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
 global allInferences, dataFrame
 
+global spending_thresholds 
+spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
+                       'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
+                       'Loan Repayment': 0.1, 'Essential Costs': 0.6, 
+                       'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
+
 debt_list = [
     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
@@ -30,8 +36,8 @@ debt_list = [
     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 ]
 
-
 def viewInference(type, premise, conclusion):
+    global dataFrame, savings_per_month
     popup = tk.Tk()
     popup.wm_title("Inference")
     label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
@@ -40,8 +46,87 @@ def viewInference(type, premise, conclusion):
     label1.pack(side="top", fill="x", pady=10)
     label2 = ttk.Label(popup, text=("Conclusion: " + conclusion), font=NORM_FONT)
     label2.pack(side="top", fill="x", pady=10)
+
+    if type == 'Cashflow': 
+        if premise == 'Total Net Cashflow is negative':
+            df = dataFrame
+            df = df.groupby(['Week']).sum() # group the dataframe by Date and sum the Deposit and Withdrawal columns
+            df = df.sort_values(by=['Week'], ascending=True) # sort the dataframe by Date column in ascending order
+            df = df.reset_index() # reset the index
+            # print(df)
+
+            f = Figure(figsize=(12,5), dpi=100)
+            a = f.add_subplot(111)
+            a.plot(df['Week'], df['Deposit'], label='Income')
+            a.plot(df['Week'], df['Withdrawal'], label='Spending')
+            a.set_xlabel('Week')
+            a.set_ylabel('Amount')
+            a.set_title('Cashflow')
+            a.legend()
+
+            canvas = FigureCanvasTkAgg(f, popup)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        elif premise == 'Monthly Cashflow is negative':
+            df = dataFrame
+            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+            # calculate the sum of deposits and withdrawals for each month
+            month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
+            # calculate the number of months
+            num_months = month_sums['Month'].nunique()
+                # calculate the average deposits and withdrawals per month
+            month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+            month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
+            month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
+
+            f = Figure(figsize=(12,5), dpi=100)
+            a = f.add_subplot(111)
+            # a.plot(month_avgs['Deposit'], label='Income')
+            # a.plot(month_avgs['Withdrawal'], label='Spending')
+            a.bar(month_avgs.index, month_avgs['Deposit'], label='Income')
+            a.bar(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
+            a.set_xlabel('Category')
+            a.set_ylabel('Amount')
+            a.set_title('Average Monthly Cashflow')
+            a.legend()
+
+            canvas = FigureCanvasTkAgg(f, popup)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        elif premise == 'Weekly Cashflow is negative':
+            df = dataFrame
+            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+            # calculate the sum of deposits and withdrawals for each week
+            week_sums = df.groupby(['Week', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
+            # calculate the number of weeks
+            num_weeks = week_sums['Week'].nunique()
+                # calculate the average deposits and withdrawals per week
+            week_avgs = week_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+            week_avgs['Deposit'] = week_avgs['Deposit'] / num_weeks
+            week_avgs['Withdrawal'] = week_avgs['Withdrawal'] / num_weeks
+
+            f = Figure(figsize=(12,5), dpi=100)
+            a = f.add_subplot(111)
+            # a.plot(week_avgs['Deposit'], label='Income')    
+            # a.plot(week_avgs['Withdrawal'], label='Spending')
+            a.bar(week_avgs.index, week_avgs['Deposit'], label='Income')
+            a.bar(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
+            a.set_xlabel('Category')
+            a.set_ylabel('Amount')
+            a.set_title('Average Weekly Cashflow')
+            a.legend()
+
+            canvas = FigureCanvasTkAgg(f, popup)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
-    B1.pack()
+    B1.pack(padx=10, pady=10)
     popup.mainloop()
 
 class ESapp(tk.Tk):
@@ -56,7 +141,7 @@ class ESapp(tk.Tk):
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-        container.configure(background='dark grey', width=1280, height=720)
+        container.configure(background='dark grey')
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -69,7 +154,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, PageOne, GraphPage):
+        for F in (StartPage, InferencesPage, GraphPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -125,18 +210,20 @@ class StartPage(tk.Frame):
         label1.pack(pady=10,padx=10)
 
         button1 = ttk.Button(self, text="Open a File",
-                            command=lambda: controller.startup(PageOne))
-        button1.pack()
+                            command=lambda: controller.startup(InferencesPage))
+        button1.pack(padx=10, pady=10)
+        # button1.pack(side="left", padx=5, pady=5)
 
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
-        button2.pack()
+        button2.pack(padx=10, pady=10)
+        # button2.pack(side="left", padx=5, pady=5)
 
         # button3 = ttk.Button(self, text="Graph Page",
         #                     command=lambda: controller.show_frame(GraphPage))
         # button3.pack()
 
-class PageOne(tk.Frame):
+class InferencesPage(tk.Frame):
 
     def __init__(self, parent, controller):
         self.controller = controller
@@ -144,19 +231,22 @@ class PageOne(tk.Frame):
         label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        # button1 = ttk.Button(self, text="Back to Home",
+        #                     command=lambda: controller.show_frame(StartPage))
+        # button1.pack(pady=10,padx=10)
+        button2 = ttk.Button(self, text="Exit Program",
+                            command=quit)
+        button2.pack(padx=10, pady=10)
 
         button3 = ttk.Button(self, text="Show Inferences",
                             command= lambda: self.showInferences())
-        button3.pack()
+        button3.pack(padx=10, pady=10)
 
         button4 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(GraphPage))
-        button4.pack()
+        button4.pack(padx=10, pady=10)
 
-        label1 = ttk.Label(self, text=("Double-Click on an inference to view in detail."), font=NORM_FONT)
+        label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
         label1.pack(pady=10,padx=10)
         
     def showInferences(self):
@@ -210,6 +300,7 @@ class PageOne(tk.Frame):
             viewInference(type, premise, recommendation)
     
         tree.bind("<Double-1>", selectRecord)
+        tree["displaycolumns"] = ("Type", "Recommendation")
     
 class GraphPage(tk.Frame):
 
@@ -218,29 +309,36 @@ class GraphPage(tk.Frame):
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        button = ttk.Button(self, text="View Inferences",
+                            command=lambda: controller.show_frame(InferencesPage))
+        button.pack(padx=10, pady=10)
+
+        # button1 = ttk.Button(self, text="Back to Home",
+        #                     command=lambda: controller.show_frame(StartPage))
+        # button1.pack(padx=10, pady=10)
+        button1 = ttk.Button(self, text="Exit Program",
+                            command=quit)
+        button1.pack(padx=10, pady=5)
 
         button2 = ttk.Button(self, text="View Spending",
                             command=lambda: self.viewSpending())
-        button2.pack()
+        button2.pack(padx=10, pady=5)
 
         button3 = ttk.Button(self, text="View Income",
                             command=lambda: self.viewIncome())
-        button3.pack()
+        button3.pack(padx=10, pady=5)
 
         button4 = ttk.Button(self, text="View Cashflow",
                             command=lambda: self.viewCashflow())
-        button4.pack()
+        button4.pack(padx=10, pady=5)
 
         button5 = ttk.Button(self, text="View Weekly Averages",
                             command=lambda: self.weeklyAvg())
-        button5.pack()
+        button5.pack(padx=10, pady=5)
 
         button6 = ttk.Button(self, text="View Monthly Averages",
                             command=lambda: self.monthlyAvg())
-        button6.pack()
+        button6.pack(padx=10, pady=5)
 
         self.canvas = None
 
@@ -467,21 +565,37 @@ class ExpertSystem:
         return self.rules
 
     def addRules(self):
+        global spending_thresholds
         self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
         self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
         self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
 
         self.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential spending.', 2)
         self.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Nonessential spending.', 1)
-
-        categories = self.df['Category'].unique()
+        df = self.df
+        df = df[df['Withdrawal'] != 0]
+        categories = df['Category'].unique()
         for category in categories:
             if category in ['Groceries', 'Shopping']:
-                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
+                if category == 'Groceries':
+                    threshold = spending_thresholds['Groceries']
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
+                elif category == 'Shopping':
+                    threshold = spending_thresholds['Shopping']
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
+                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
             elif category in ['Transportation', 'Essential Costs']:
-                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
+                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
+                if category == 'Transportation':
+                    threshold = spending_thresholds['Transportation']
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
+                elif category == 'Essential Costs':
+                    threshold = spending_thresholds['Essential Costs']
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
             else:
-                self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
+                threshold = spending_thresholds[category]
+                self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
+                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
 
 
         self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
@@ -492,7 +606,7 @@ class ExpertSystem:
         self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
 
     def checkBudget(self):
-        global current_savings, total_deposited, total_spent
+        global current_savings, total_deposited, total_spent, spending_thresholds
         df = self.df
         df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
         df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
@@ -517,14 +631,16 @@ class ExpertSystem:
         #     print(key, ': ', value)
 
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
-        spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 'Loan Repayment': 0.1, 'Essential Costs': 0.6, 'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
         for category in spending_percentages:
+            threshold = spending_thresholds[category]
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
-                self.add_fact('Spending', category + ' Spending is too high', True)
+                # self.add_fact('Spending', category + ' Spending is too high', True)
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', True)
             else:
                 # print(category + ' Spending is not too high')
-                self.add_fact('Spending', category + ' Spending is too high', False)
+                # self.add_fact('Spending', category + ' Spending is too high', False)
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', False)
     
     def eval_Savings(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
