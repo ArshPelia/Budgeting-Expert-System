@@ -29,15 +29,27 @@ spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1,
                        'Loan Repayment': 0.1, 'Essential Costs': 0.6, 
                        'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
 
-debt_list = [
-    {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
-    {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-    {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
-    {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
-]
+# debt_list = [
+#     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
+#     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
+#     {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
+#     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
+# ]
+
+global debt_list
+debt_list = []
+
+def popupmsg(msg):
+    popup = tk.Tk()
+    popup.wm_title("!")
+    label = ttk.Label(popup, text=msg, font=NORM_FONT)
+    label.pack(side="top", fill="x", pady=10)
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1.pack()
+    popup.mainloop()
 
 def viewInference(type, premise, conclusion):
-    global dataFrame, savings_per_month
+    global dataFrame, savings_per_month, debt_list
     popup = tk.Tk()
     popup.wm_title("Inference")
     label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
@@ -123,11 +135,80 @@ def viewInference(type, premise, conclusion):
             canvas = FigureCanvasTkAgg(f, popup)
             canvas.draw()
             canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    elif type == 'Debt':
+        #insert table of debt list
+        debt_tree = ttk.Treeview(popup, columns=("name", "amount", "interest_rate"))
+        debt_tree.heading("#0", text="ID", anchor=tk.W)
+        debt_tree.heading("name", text="Name", anchor=tk.W)
+        debt_tree.heading("amount", text="Amount", anchor=tk.W)
+        debt_tree.heading("interest_rate", text="Interest Rate", anchor=tk.W)
+
+        debt_tree.column("#0", minwidth=0, width=50, stretch=tk.NO)
+        debt_tree.column("name", minwidth=0, width=100, stretch=tk.NO)
+        debt_tree.column("amount", minwidth=0, width=100, stretch=tk.NO)
+        debt_tree.column("interest_rate", minwidth=0, width=100, stretch=tk.NO)
+
+        debt_tree.pack(fill="both", expand=True)
+
+        for debt in debt_list:
+            debt_tree.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate']))
+
+        for item in debt_tree.get_children():
+            interest_rate = float(debt_tree.item(item)['values'][2])
+            if interest_rate > 8:
+                debt_tree.item(item, tags=('high_interest',))
+        debt_tree.tag_configure('high_interest', foreground='red')
 
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
     popup.mainloop()
+
+# def viewDebtList():
+#     global debt_list
+#     popup = tk.Tk()
+#     popup.wm_title("Debt List")
+
+#     input_frame = tk.Frame(popup)
+#     # input_frame.pack(side="top", fill="x", pady=10)
+#     input_frame.pack(fill="both", expand=True)
+
+#     # Create labels and entry widgets for the debt parameters
+#     name_label = tk.Label(input_frame, text="Debt Name:")
+#     name_label.grid(row=0, column=0, padx=10, pady=10)
+#     name_entry = tk.Entry(input_frame)
+#     name_entry.grid(row=0, column=1, padx=10, pady=10)
+
+#     amount_label = tk.Label(input_frame, text="Debt Amount:")
+#     amount_label.grid(row=1, column=0, padx=10, pady=10)
+#     amount_entry = tk.Entry(input_frame)
+#     amount_entry.grid(row=1, column=1, padx=10, pady=10)
+
+#     interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
+#     interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
+#     interest_rate_entry = tk.Entry(input_frame)
+#     interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
+
+#     # Create a button to add a new debt to the list
+#     add_button = ttk.Button(input_frame, text="Add Debt", command=add_debt)
+#     add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+#     list_frame = tk.Frame(popup)
+#     list_frame.pack(fill="both", expand=True)
+
+#         # Create a Treeview widget to display the debt list
+#     debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
+#     debt_treeview.heading("#0", text="ID")
+#     debt_treeview.heading("name", text="Debt Name")
+#     debt_treeview.heading("amount", text="Debt Amount")
+#     debt_treeview.heading("interest_rate", text="Interest Rate (%)")
+#     debt_treeview.pack(fill="both", expand=True)
+
+#     # Initialize the debt list
+#     debt_list = []
+#     next_debt_id = 1
+
+
 
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -154,7 +235,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage):
+        for F in (StartPage, InferencesPage, GraphPage, DebtPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -171,7 +252,7 @@ class ESapp(tk.Tk):
         frame.tkraise()
     
     def select_file(self):
-        global filename, allInferences, dataFrame
+        global filename, allInferences, dataFrame, debt_list
         filetypes = (
                     ('CSV files', '*.csv'),
                     ('All files', '*.*')
@@ -209,6 +290,10 @@ class StartPage(tk.Frame):
         label1 = tk.Label(self, text=("Please select a CSV file to begin."), font=NORM_FONT)
         label1.pack(pady=10,padx=10)
 
+        button = ttk.Button(self, text="Configure Debt",
+                            command=lambda: controller.show_frame(DebtPage))
+        button.pack()
+
         button1 = ttk.Button(self, text="Open a File",
                             command=lambda: controller.startup(InferencesPage))
         button1.pack(padx=10, pady=10)
@@ -222,6 +307,91 @@ class StartPage(tk.Frame):
         # button3 = ttk.Button(self, text="Graph Page",
         #                     command=lambda: controller.show_frame(GraphPage))
         # button3.pack()
+
+class DebtPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        global debt_list
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Page One-Debt List", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack(pady=10,padx=10)
+
+        input_frame = tk.Frame(self)
+        input_frame.pack(fill="both", expand=True)
+        # input_frame.pack(side="top", fill="x", pady=10)
+
+        # Create labels and entry widgets for the debt parameters
+        name_label = tk.Label(input_frame, text="Debt Name:")
+        name_label.grid(row=0, column=0, padx=10, pady=10)
+        self.name_entry = tk.Entry(input_frame)
+        self.name_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        amount_label = tk.Label(input_frame, text="Debt Amount:")
+        amount_label.grid(row=1, column=0, padx=10, pady=10)
+        self.amount_entry = tk.Entry(input_frame)
+        self.amount_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
+        interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
+        self.interest_rate_entry = tk.Entry(input_frame)
+        self.interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        # Create a button to add a new debt to the list
+        add_button = ttk.Button(input_frame, text="Add Debt", command=self.add_debt)
+        add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        # Create a frame for the debt list
+        list_frame = tk.Frame(self)
+        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+        # Create a Treeview widget to display the debt list
+        self.debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
+        self.debt_treeview.heading("#0", text="ID")
+        self.debt_treeview.heading("name", text="Debt Name")
+        self.debt_treeview.heading("amount", text="Debt Amount")
+        self.debt_treeview.heading("interest_rate", text="Interest Rate (%)")
+        #center all columns
+        self.debt_treeview.column("#0", anchor="center", width=50)
+        self.debt_treeview.column("name", anchor="center", width=200)
+        self.debt_treeview.column("amount", anchor="center", width=200)
+        self.debt_treeview.column("interest_rate", anchor="center", width=200)
+        self.debt_treeview.pack(fill="both", expand=True)
+
+        # Initialize the debt list
+        self.debt_list = debt_list
+        self.next_debt_id = 1
+
+    def add_debt(self):
+        # Get the input values
+        name = self.name_entry.get()
+        amount = int(self.amount_entry.get())
+        interest_rate = float(self.interest_rate_entry.get())
+
+        # Add the new debt to the list
+        self.debt_list.append({'id': self.next_debt_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate})
+        self.next_debt_id += 1
+
+        # Clear input fields
+        self.name_entry.delete(0, tk.END)
+        self.amount_entry.delete(0, tk.END)
+        self.interest_rate_entry.delete(0, tk.END)
+
+        # Update the debt list display
+        self.update_debt_list()
+
+    def update_debt_list(self):
+        # Clear the existing items in the Treeview
+        self.debt_treeview.delete(*self.debt_treeview.get_children())
+
+        # Insert the updated debt list into the Treeview
+        for debt in self.debt_list:
+            self.debt_treeview.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate']))
+
+        # print(self.debt_list)
 
 class InferencesPage(tk.Frame):
 
@@ -279,7 +449,7 @@ class InferencesPage(tk.Frame):
         tree.heading("Premise", text="Premise")
         tree.heading("Recommendation", text="Recommendation")
         tree.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
-
+        
         for i in allInferences:
             if i.severity == 1:
                 tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("severe",))
