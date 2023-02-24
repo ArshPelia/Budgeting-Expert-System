@@ -43,6 +43,7 @@ spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1,
 global debt_list, investment_list
 debt_list = []
 investment_list = []
+allInferences = []
 
 def getTheme():
     modern_theme = {
@@ -339,7 +340,7 @@ class ESapp(tk.Tk):
         
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
-        self.geometry("1080x720")
+        self.geometry("500x300")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
@@ -348,7 +349,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage, DebtPage, investmentPage):
+        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -358,13 +359,24 @@ class ESapp(tk.Tk):
         self.show_frame(StartPage)
 
     def show_frame(self, cont):
+        global filename, allInferences
+        if cont == DebtPage:
+            self.geometry("950x650")
+        elif cont == GraphPage:
+            self.geometry("1100x850")
+        elif cont == filePage:
+            self.geometry("400x200")
+        elif cont == InferencesPage:
+            if allInferences == []:
+                self.select_file()
+            self.geometry("950x650")
         frame = self.frames[cont]
         frame.tkraise()
 
-    def startup(self, cont):
-        self.select_file()
-        frame = self.frames[cont]
-        frame.tkraise()
+    # def startup(self, cont):
+    #     self.select_file()
+    #     frame = self.frames[cont]
+    #     frame.tkraise()
     
     def select_file(self):
         global filename, allInferences, dataFrame, debt_list
@@ -414,31 +426,36 @@ class StartPage(tk.Frame):
         label1 = tk.Label(self, text=("Please begin by entering the following information"), font=NORM_FONT)
         label1.pack(pady=10,padx=10)
 
-        label2 = tk.Label(self, text=("Age:"), font=NORM_FONT)
-        label2.pack(pady=10,padx=10)
+        input_frame = tk.Frame(self)
+        input_frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-        age = tk.Entry(self)
-        age.pack(pady=10,padx=10)
+        label2 = tk.Label(input_frame, text=("Age:"), font=NORM_FONT)
+        label2.grid(row=0, column=0, padx=10, pady=10)
 
-        label3 = tk.Label(self, text=("Retirement Fund:"), font=NORM_FONT)
-        label3.pack(pady=10,padx=10)
+        age = tk.Entry(input_frame)
+        age.grid(row=0, column=1, padx=10, pady=10)
 
-        retirement_fund = tk.Entry(self)
-        retirement_fund.pack(pady=10,padx=10)
+        label3 = tk.Label(input_frame, text=("Retirement Fund:"), font=NORM_FONT)
+        label3.grid(row=1, column=0, padx=10, pady=10)
 
-        label4 = tk.Label(self, text=("Emergency Fund:"), font=NORM_FONT)
-        label4.pack(pady=10,padx=10)
+        retirement_fund = tk.Entry(input_frame)
+        retirement_fund.grid(row=1, column=1, padx=10, pady=10)
 
-        emergency_fund = tk.Entry(self)
-        emergency_fund.pack(pady=10,padx=10)
+        label4 = tk.Label(input_frame, text=("Emergency Fund:"), font=NORM_FONT)
+        label4.grid(row=2, column=0, padx=10, pady=10)
 
-        button = ttk.Button(self, text="Continue",
+        emergency_fund = tk.Entry(input_frame)
+        emergency_fund.grid(row=2, column=1, padx=10, pady=10)
+
+        button = ttk.Button(input_frame, text="Continue",
                             command=lambda: self.set_variables_and_show_frame(controller, DebtPage))
-        button.pack()
+        # button.pack()
+        button.grid(row=3, column=0, padx=10, pady=10)
 
-        button2 = ttk.Button(self, text="Exit Program",
+        button2 = ttk.Button(input_frame, text="Exit Program",
                             command=quit)
-        button2.pack(padx=10, pady=10)
+        # button2.pack(padx=10, pady=10)
+        button2.grid(row=3, column=1, padx=10, pady=10)
 
     def set_variables_and_show_frame(self, controller, next_frame):
         global age, retirement_fund, emergency_fund 
@@ -465,7 +482,7 @@ class DebtPage(tk.Frame):
         label.pack(pady=10,padx=10)
 
         button = ttk.Button(self, text="Continue",
-                            command=lambda: controller.show_frame(InferencesPage))
+                            command=lambda: controller.show_frame(filePage))
         button.pack()
 
         button1 = ttk.Button(self, text="Back to Home",
@@ -643,6 +660,32 @@ class investmentPage(tk.Frame):
 
         print(self.investment_list)
 
+class filePage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        global filename
+        self.controller = controller
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="File Select", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
+        lbl_selectFile.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Open a File",
+                            # command=lambda: controller.startup(InferencesPage))
+                            command=lambda: controller.show_frame(InferencesPage))
+        button1.pack(padx=10, pady=5)
+
+
+        # button1 = ttk.Button(self, text="Back to Home",
+        #                     command=lambda: controller.show_frame(StartPage))
+        # button1.pack(pady=10,padx=10)
+        button2 = ttk.Button(self, text="Exit Program",
+                            command=quit)
+        button2.pack(padx=10, pady=5)
+
+
 class InferencesPage(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -652,13 +695,12 @@ class InferencesPage(tk.Frame):
         label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
-        lbl_selectFile.pack(pady=10,padx=10)
+        # lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
+        # lbl_selectFile.pack(pady=10,padx=10)
 
-        button1 = ttk.Button(self, text="Open a File",
-                            command=lambda: controller.startup(InferencesPage))
-        button1.pack(padx=10, pady=5)
-
+        # button1 = ttk.Button(self, text="Open a File",
+        #                     command=lambda: controller.startup(InferencesPage))
+        # button1.pack(padx=10, pady=5)
 
         # button1 = ttk.Button(self, text="Back to Home",
         #                     command=lambda: controller.show_frame(StartPage))
@@ -680,9 +722,12 @@ class InferencesPage(tk.Frame):
         
     def showInferences(self):
         global allInferences
-        #exit if no inferences
         if len(allInferences) == 0:
             return
+        
+        # check if the table already exists
+        if hasattr(self, "inferenceTable"):
+            self.inferenceTable.destroy()
 
         columns = ("Type", "Premise", "Recommendation")
         tree = ttk.Treeview(self, columns=columns, show="headings")
@@ -690,6 +735,9 @@ class InferencesPage(tk.Frame):
         tree.heading("Premise", text="Premise")
         tree.heading("Recommendation", text="Recommendation")
         tree.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
+
+        # save the table to the instance variable
+        self.inferenceTable = tree
         
         for i in allInferences:
             if i.severity == 1:
