@@ -12,14 +12,14 @@ import random, os
 
 LARGE_FONT= ("Verdana", 12)
 NORM_FONT = ("Helvetica", 10)
-SMALL_FONT = ("Helvetica", 8)
+SMALL_FONT = ("Serif", 8)
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
 spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
-             'Entertainment', 'Bills', 'Loan Repayment']
-essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportation']
-nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
-incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
+             'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
+essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Payment', 'Transportation', 'Healthcare']
+nonessentialList = ['Dining Out', 'Shopping', 'Entertainment', 'Personal Care']
+incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Other']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
 global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
@@ -29,8 +29,9 @@ global essential_spendingPercentages, nonessential_spendingPercentages
 
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
                        'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
-                       'Loan Repayment': 0.1, 'Essential Costs': 0.5, 
-                       'Non-Essential Costs': 0.3, 'Entertainment': 0.1}
+                       'Loan Payment': 0.1, 'Essential Costs': 0.5, 
+                       'Non-Essential Costs': 0.3, 'Entertainment': 0.1,
+                       'Personal Care': 0.1, 'Healthcare': 0.1}
 
 # debt_list = [
 #     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
@@ -43,6 +44,109 @@ global debt_list, investment_list
 debt_list = []
 investment_list = []
 
+def getTheme():
+    modern_theme = {
+        'tHeading': {
+            'configure': {
+                'background': '#009B4D',
+                'foreground': '#FAF5E9',
+                'font': ('Serif', 15, 'bold'),
+                'padx': 8,
+                'pady': 8,
+                'borderwidth': 3,
+            }
+        },      
+        'TLabel': {
+            'configure': {
+                'background': '#009B4D',
+                'foreground': '#FAF5E9',
+                'font': ('Helvetica', 10, 'bold'),
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'padx': 5,
+                'pady': 5
+            }
+        },
+        'TButton': {
+            'configure': {
+                'background': '#FFCC00',
+                'foreground': 'Black',
+                'font': ('Serif', 13, 'bold'),
+                'fontcolor': 'black',
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'activebackground': '#FFB300',
+                'activeforeground': '#FAF5E9',
+                'relief': 'flat',
+                'padx': 5,
+                'pady': 5,
+                'width': 18,
+                'anchor': 'center'
+            }
+        },
+        'TEntry': {
+            'configure': {
+                'background': '#FAF5E9',
+                'foreground': '#272727',
+                'font': ('Helvetica', 10),
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'padx': 5,
+                'pady': 5,
+                'width': 30
+            }
+        },
+        'Treeview': {
+            'configure': {
+                'background': '#FAF5E9',
+                'foreground': '#272727',
+                'font': ('Helvetica', 10),
+                'rowheight': 25,
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'selectbackground': '#FFCC00',
+                'selectforeground': '#272727'
+            }
+        },
+        'Treeview.Heading': {
+            'configure': {
+                'background': '#009B4D',
+                'foreground': '#FAF5E9',
+                'font': ('Helvetica', 10, 'bold'),
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'padx': 5,
+                'pady': 5,
+                'relief': 'raised'
+            }
+        },
+        'Tframe': {
+            'configure': {
+                'background': '#FAF5E9',
+                'foreground': '#272727',
+                'borderwidth': 5,
+                'relief': 'flat',
+                'highlightthickness': 0,
+                'padx': 5,
+                'pady': 5
+            }
+        },
+        'TNotebook': {
+            'configure': {
+                'background': '#FAF5E9',
+                'foreground': '#272727',
+                'tabposition': 'n',
+                'borderwidth': 1,
+                'relief': 'flat',
+                'highlightthickness': 0,
+                'padx': 5,
+                'pady': 5
+            }
+        }
+    }
+
+    return modern_theme
+
 def validateFile(file):
     if file.endswith('.csv'):
         return True
@@ -51,9 +155,16 @@ def validateFile(file):
 
 def popupmsg(msg):
     popup = tk.Tk()
+    popup.style = ttk.Style()
+    popup.style.theme_create('modern1', parent='default')
+    popup.style.theme_settings('modern1', getTheme())
+    popup.style.theme_use('modern1')
+
     popup.wm_title("!")
+    heading = ttk.Label(popup, text="Error")
+    heading.pack(side="top", fill="x")
     label = ttk.Label(popup, text=msg, font=NORM_FONT)
-    label.pack(side="top", fill="x", pady=10)
+    label.pack(side="top", fill="x")
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
     popup.mainloop()
@@ -223,7 +334,7 @@ class ESapp(tk.Tk):
         # set the root style to the theme from getTheme()
         self.style = ttk.Style()
         self.style.theme_create('modern', parent='default')
-        self.style.theme_settings('modern', self.getTheme())
+        self.style.theme_settings('modern', getTheme())
         self.style.theme_use('modern')
         
 
@@ -257,154 +368,6 @@ class ESapp(tk.Tk):
 
 
         self.show_frame(StartPage)
-
-    def getTheme(self):
-        modern_theme = {
-            'tHeading': {
-                'configure': {
-                    'background': '#1a1a1a',
-                    'foreground': '#f2f2f2',
-                    'font': ('Serif', 15, 'bold')
-                }
-            },      
-            'TLabel': {
-                'configure': {
-                    'background': '#1a1a1a',
-                    'foreground': '#f2f2f2',
-                    'font': ('Helvetica', 10, 'bold'),
-                    'borderwidth': 0,
-                    'highlightthickness': 0,
-                    'padx': 5,
-                    'pady': 5
-                }
-            },
-            'TButton': {
-                'configure': {
-                    'background': '#0091ea',
-                    'foreground': '#f2f2f2',
-                    'font': ('Serif', 13, 'bold'),
-                    'borderwidth': 0,
-                    'highlightthickness': 0,
-                    'activebackground': '#006db3',
-                    'activeforeground': '#f2f2f2',
-                    'relief': 'flat',
-                    'padx': 5,
-                    'pady': 5,
-                    'width': 18,
-                    'anchor': 'center'
-                }
-            },
-            'TEntry': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'font': ('Helvetica', 10),
-                    'borderwidth': 0,
-                    'highlightthickness': 0,
-                    'padx': 5,
-                    'pady': 5,
-                    'width': 30
-                }
-            },
-            'Treeview': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'font': ('Helvetica', 10),
-                    'rowheight': 25,
-                    'borderwidth': 0,
-                    'highlightthickness': 0,
-                    'selectbackground': '#b3e5fc',
-                    'selectforeground': '#272727'
-                }
-            },
-            'Treeview.Heading': {
-                'configure': {
-                    'background': '#1a1a1a',
-                    'foreground': '#f2f2f2',
-                    'font': ('Helvetica', 10, 'bold'),
-                    'borderwidth': 0,
-                    'highlightthickness': 0,
-                    'padx': 5,
-                    'pady': 5,
-                    'relief': 'raised'
-                }
-            },
-            'Tframe': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'borderwidth': 1,
-                    'relief': 'flat',
-                    'highlightthickness': 0,
-                    'padx': 5,
-                    'pady': 5
-                }
-            },
-            'TNotebook': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'tabposition': 'n',
-                    'borderwidth': 1,
-                    'relief': 'flat',
-                    'highlightthickness': 0,
-                    'padx': 5,
-                    'pady': 5
-                }
-            },
-            'TNotebook.Tab': {
-                'configure': {
-                    'background': '#1a1a1a',
-                    'foreground': '#f2f2f2',
-                    'font': ('Helvetica', 10, 'bold'),
-                    'borderwidth': 0,
-                    'highlightthickness': 2,
-                    'highlightcolor': '#0091ea',
-                    'relief': 'flat',
-                    'padding': 10,
-                },
-                'map': {
-                    'background': [('selected', '#0091ea')],
-                    'foreground': [('selected', '#f2f2f2')],
-                    'expand': [('selected', [1, 1, 1, 0])]
-                }
-            },
-            'TCombobox': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'font': ('Helvetica', 10),
-                    'padding': 5,
-                    'width': 30,
-                    'selectbackground': '#2980b9',
-                    'selectforeground': '#f2f2f2',
-                    'borderwidth': 2,
-                    'bordercolor': '#2980b9',
-                    'highlightthickness': 2,
-                    'highlightcolor': '#2980b9',
-                    'arrowcolor': '#272727',
-                    'arrowpadding': 5,
-                    'arrowwidth': 12
-                }
-            },
-            'TComboboxPopdown': {
-                'configure': {
-                    'background': '#f2f2f2',
-                    'foreground': '#272727',
-                    'font': ('Helvetica', 10),
-                    'highlightthickness': 0,
-                    'borderwidth': 2,
-                    'bordercolor': '#2980b9'
-                }
-            },
-        }
-
-        # style.theme_create('modern', parent='default')
-        # style.theme_settings('modern', modern_theme)
-        # style.theme_use('modern')
-
-        return modern_theme
 
 
     def show_frame(self, cont):
@@ -441,7 +404,7 @@ class ESapp(tk.Tk):
         self.expert_system.evaluateDebt()
         self.expert_system.makeInferences()
         allInferences = self.expert_system.getInferences()
-        allInferences.sort(key=lambda x: x.severity)
+        allInferences.sort(key=lambda x: x.severity, reverse=True)
         # print('\nAll Inferences: \n')
         # for i in allInferences:
         #     # if i.type == 'Spike':
@@ -556,20 +519,26 @@ class DebtPage(tk.Frame):
         self.interest_rate_entry = tk.Entry(input_frame)
         self.interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
 
+        min_payment_label = tk.Label(input_frame, text="Minimum Payment (%):")
+        min_payment_label.grid(row=3, column=0, padx=10, pady=10)
+        self.min_payment_entry = tk.Entry(input_frame)
+        self.min_payment_entry.grid(row=3, column=1, padx=10, pady=10)
+
         # Create a button to add a new debt to the list
         add_button = ttk.Button(input_frame, text="Add Debt", command=self.add_debt)
-        add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+        add_button.grid(row=3, column=2, columnspan=2, padx=10, pady=10)
 
         # Create a frame for the debt list
         list_frame = tk.Frame(self)
         list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10)) #fill both means it will fill the entire frame, expand true means it will expand to fill the entire frame
 
         # Create a Treeview widget to display the debt list
-        self.debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
+        self.debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate", "min_payment"))
         self.debt_treeview.heading("#0", text="ID")
         self.debt_treeview.heading("name", text="Account")
         self.debt_treeview.heading("amount", text="Debt Amount")
         self.debt_treeview.heading("interest_rate", text="Interest Rate (%)")
+        self.debt_treeview.heading("min_payment", text="Minimum Payment (%)")
         #center all columns
         self.debt_treeview.column("#0", anchor="center", width=50)
         self.debt_treeview.column("name", anchor="center", width=200)
@@ -586,9 +555,10 @@ class DebtPage(tk.Frame):
         name = self.name_entry.get()
         amount = int(self.amount_entry.get())
         interest_rate = float(self.interest_rate_entry.get())
+        min_payment = float(self.min_payment_entry.get())
 
         # Add the new debt to the list
-        self.debt_list.append({'id': self.next_debt_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate})
+        self.debt_list.append({'id': self.next_debt_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate, 'min_payment': min_payment})
         self.next_debt_id += 1
 
         # Clear input fields
@@ -605,7 +575,7 @@ class DebtPage(tk.Frame):
 
         # Insert the updated debt list into the Treeview
         for debt in self.debt_list:
-            self.debt_treeview.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate']))
+            self.debt_treeview.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate'], debt['min_payment']))
 
         # print(self.debt_list)
 
@@ -750,15 +720,15 @@ class InferencesPage(tk.Frame):
         
         for i in allInferences:
             if i.severity == 1:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("severe",))
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Minor",))
             elif i.severity == 2:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("moderate",))
-            else:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("minor",))
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Moderate",))
+            elif i.severity == 3:
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Severe",))
 
-        tree.tag_configure("severe", background="red")
-        tree.tag_configure("moderate", background="orange")
-        tree.tag_configure("minor", background="yellow")
+        tree.tag_configure("Severe", background="red")
+        tree.tag_configure("Moderate", background="orange")
+        tree.tag_configure("Minor", background="yellow")
 
         def selectRecord(event):
             item = tree.focus()
@@ -768,7 +738,7 @@ class InferencesPage(tk.Frame):
             viewInference(type, premise, recommendation)
     
         tree.bind("<Double-1>", selectRecord)
-        tree["displaycolumns"] = ("Type", "Recommendation")
+        tree["displaycolumns"] = ("Type", "Premise")
     
 class GraphPage(tk.Frame):
 
@@ -831,11 +801,13 @@ class GraphPage(tk.Frame):
         df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
         df = df.reset_index() # reset the index
 
-        f = Figure(figsize=(12,5), dpi=100)
+        f = Figure(figsize=(10,7), dpi=100) #dpi = dots per inch
         a = f.add_subplot(111)
         a.bar(df['Category'], df['Withdrawal'])
         a.set_xlabel('Category')
         a.set_ylabel('Spending')
+        # a.xticks(rotation=90) 
+        # a.set_xticklabels(df['Category'], rotation=90)
 
         if self.canvas is not None:
             self.canvas.get_tk_widget().forget()
@@ -843,6 +815,7 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        # self.canvas.get_tk_widget().pack(side=tk.BOTTOM)
 
         # toolbar = NavigationToolbar2Tk(canvas, self)
         # toolbar.update()
@@ -869,6 +842,8 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        # self.canvas.get_tk_widget().pack(side=tk.BOTTOM)
+
 
         # toolbar = NavigationToolbar2Tk(canvas, self)
         # toolbar.update()
@@ -995,22 +970,28 @@ class ExpertSystem:
         self.inferences.append(Inference(type, premise, conclusion, severity))
 
     def evaluateDebt(self):
+        global monthly_income
         high_interest_debt = []
-        total_debt = 0
-        
+        Monthly_debt_payment = 0
+
         for debt in self.debt_list:
-            total_debt += debt['amount']
+            Monthly_debt_payment += debt['amount'] * debt['min_payment']
             if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
                 high_interest_debt.append(debt)
         
         if high_interest_debt:
+            self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 2)
             self.add_fact('Debt','high_interest_debt', True)
-        else:
-            self.add_fact('Debt','high_interest_debt', False)
-        if total_debt > 0.5 * monthly_income:
-            self.add_fact('Debt','high_debt_to_MonthlyIncome', True)
-        else:
-            self.add_fact('Debt','high_debt_to_MonthlyIncome', False)
+        
+        if Monthly_debt_payment > 0.5 * monthly_income:
+            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio greater than 50% of monthly income, consider paying off some debt or increasing your income.', 3)
+            self.add_fact('Debt','High_DTI', True)
+        elif Monthly_debt_payment > 0.3 * monthly_income and Monthly_debt_payment <= 0.5 * monthly_income:
+            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is managable but leaves little to invest. (30% > DIT < 50% of monthly income)', 2)
+            self.add_fact('Debt','Moderate_DTI', True)
+        elif Monthly_debt_payment <= 0.3 * monthly_income and Monthly_debt_payment > 0.1 * monthly_income:
+            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is low (<30% of monthly income) but it can be improved.', 1)
+            self.add_fact('Debt','Low_DTI', True)
 
     def makeInferences(self):
         for rule in self.rules:
@@ -1034,17 +1015,27 @@ class ExpertSystem:
 
     def addRules(self):
         global spending_thresholds
-        self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 1)
-        self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
-        self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
+        self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 3)
+        self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 3)
+        self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 3)
 
-        self.add_rule('Spending','Essential Costs accounts for more than 0.5% of your income', 'Lower your Essential spending.', 2)
-        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.3% of your income', 'Lower your Nonessential spending.', 1) 
+        self.add_rule('Spending','Essential Costs accounts for more than 0.5% of your income', 'Lower your Essential spending.', 1)
+        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.3% of your income', 'Lower your Nonessential spending.', 3) 
         
+        # self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 2)
+        # self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
+        # self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 3)
+        # self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is managable but it can be improved.', 2)
+        # self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is low, keep it up.', 1)
         
-        df = self.df
-        df = df[df['Withdrawal'] != 0]
-        categories = df['Category'].unique()
+        # self.add_rule('Savings','Saving less than 10% of income', 'Your savings are low, consider increasing your savings.', 2)
+        # self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 3)
+        # self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 1)
+
+        
+        # df = self.df
+        # df = df[df['Withdrawal'] != 0]
+        # categories = df['Category'].unique()
         # for category in categories:
         #     if category == 'Non-Essential Costs':
         #         print('Non-Essential Costs')
@@ -1068,15 +1059,8 @@ class ExpertSystem:
 
         #add spending rules for essential and non-essential spending
 
-        self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
-        self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
-
-        self.add_rule('Savings','Saving less than 10% of income', 'Your savings are low, consider increasing your savings.', 2)
-        self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
-        self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
-
     def checkBudget(self):
-        global current_savings, total_deposited, total_spent, spending_thresholds
+        global current_savings, total_deposited, total_spent, spending_thresholds, essentialList, nonessentialList, monthly_income, weekly_income, monthly_essentialSpend, monthly_nonessentialSpend, weekly_essentialSpend, weekly_nonessentialSpend
         global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
         df = self.df
         dfCopy = df.copy()
@@ -1088,8 +1072,10 @@ class ExpertSystem:
         df = df.rename(columns={'Withdrawal': 'Amount'}) # rename the Withdrawal column to Amount
         spending_dict = df.to_dict('records') # convert the dataframe to a list of dictionaries
         # add the percentage of spending for essential and non-essential costs
-        spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
-        spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
+        # spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
+        spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(essentialList)]['Amount'].sum()})
+        # spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
+        spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(nonessentialList)]['Amount'].sum()})
         essentialSpend = spending_dict[-2]['Amount']
         nonessentialSpend = spending_dict[-1]['Amount']
         Weekly_essentialSpend = essentialSpend / dfCopy['Week'].nunique()
@@ -1111,8 +1097,8 @@ class ExpertSystem:
         spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
 
         # print list of categories and percentage of spending
-        for key, value in spending_percentages.items():
-            print(key, ': ', value)
+        # for key, value in spending_percentages.items():
+        #     print(key, ': ', value)
 
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
         for category in spending_percentages:
@@ -1121,43 +1107,47 @@ class ExpertSystem:
             #     print(category + ' accounts for ' + str(spending_percentages[category]) + '% of your income threshold: ' + str(threshold) + '%')
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
-                # self.add_fact('Spending', category + ' Spending is too high', True)
                 self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
             else:
                 # print(category + ' Spending is not too high')
-                # self.add_fact('Spending', category + ' Spending is too high', False)
                 self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', False)
 
-        #Q: why is essential costs not showing in the inference engine?
-        #A: because it is not a category in the spending dictionary
-        #how to fix: add essential costs and non-essential costs to the spending dictionary
-        # code: 
-        
     def eval_Savings(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-        global emergency_fund, retirement_fund
-        emergency_fund_goal, retirement_goal = 1000, 100000
-        savings_percentage = total_deposited / total_spent * 100
-        investment_percentage = total_invested / total_deposited * 100
-        emergency_fund_achieved = emergency_fund >= emergency_fund_goal
-        retirement_goal_achieved = retirement_fund >= retirement_goal
+        global emergency_fund, retirement_fund, age
+        avs_monthly_savings = avg_monthly_deposits - avg_monthly_withdrawals
+        if avs_monthly_savings <= monthly_income * 0.1:
+            self.add_rule('Savings','Low Monthly Savings', 'Saving less than 10% of monthly income, you MUST decreasing your spendature.', 3)
+            self.add_fact('Savings','Low Monthly Savings', True)
+        elif avs_monthly_savings <= monthly_income * 0.15 and avs_monthly_savings > monthly_income * 0.1:
+            self.add_rule('Savings','Moderate Monthly Savings', 'Saving less than 15% of monthly income, consider decreasing your spendature.', 2)
+            self.add_fact('Savings','Moderate Monthly Savings', True)
 
-        # recommendations = []
-        if savings_percentage < 10:
-            # recommendations.append("Consider increasing your savings to ensure a secure future.")
-            self.add_fact('Savings','Saving less than 10% of income', True)
-        else:
-            self.add_fact('Savings','Saving less than 10% of income', False)
-        if not emergency_fund_achieved:
-            # recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
-            self.add_fact('Savings','Insufficient Emergency Fund', True)
-        else:
-            self.add_fact('Savings','Insufficient Emergency Fund', False)
-        if not retirement_goal_achieved:
-            # recommendations.append("Consider increasing contributions to your retirement account.")
-            self.add_fact('Savings','Insufficient Retirement Fund', True)
-        else:
-            self.add_fact('Savings','Insufficient Retirement Fund', False)
+
+        if emergency_fund < avg_monthly_withdrawals * 5:
+            if emergency_fund >= avg_monthly_withdrawals * 3:
+                self.add_rule('Savings','Moderate Emergency Fund', 'Your emergency fund can support you for 3-5 months based on current spending', 1)
+                self.add_fact('Savings','Moderate Emergency Fund', True)
+            elif emergency_fund >= avg_monthly_withdrawals and emergency_fund < avg_monthly_withdrawals * 3:
+                self.add_rule('Savings','Low Emergency Fund', 'Your emergency fund can support you for 1-3 months based on current spending', 2)
+                self.add_fact('Savings','Low Emergency Fund', True)
+            elif emergency_fund < avg_monthly_withdrawals:
+                self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund can support you for less than 1 month based on current spending', 3)
+                self.add_fact('Savings','Insufficient Emergency Fund', True)
+        if age >= 25:
+            yearly_income = monthly_income * 12
+            optimal_retirement_fund = (yearly_income * 1.15) * (65 - age)
+            if retirement_fund < optimal_retirement_fund:
+                if retirement_fund > optimal_retirement_fund * 0.8:
+                    self.add_rule('Savings','Moderate Retirement Fund', 'Your retirement fund is moderate but not optimal assuming 15% of yearly income from age 25.', 1)
+                    self.add_fact('Savings','Moderate Retirement Fund', True)
+                elif retirement_fund < optimal_retirement_fund * 0.8 and retirement_fund > optimal_retirement_fund * 0.5:
+                    self.add_rule('Savings','Low Retirement Fund', 'Your retirement fund needs attention 50-80% of expected value assuming 15% of yearly income from age 25.', 2)
+                    self.add_fact('Savings','Low Retirement Fund', True)
+                elif retirement_fund < optimal_retirement_fund * 0.5:
+                    self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient at < 50% of expected value, you MUST allocate more funds towards it assuming 15% of yearly income from age 25.', 3)
+                    self.add_fact('Savings','Insufficient Retirement Fund', True)
+
 
     def checkCashflow(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
@@ -1185,8 +1175,8 @@ class ExpertSystem:
             category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending
             spikes = category_df[category_df['Above_Avg'] == True]
             spikes = spikes.reset_index(drop=True)
-            if len(spikes) >= 3 and category != 'Loan Repayment':
-                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+            if len(spikes) >= 3 and category != 'Loan Payment':
+                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)
                 self.add_fact('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, True)
                 # print('More than 3 monthly spikes in ' + category)
             else:
@@ -1249,9 +1239,10 @@ def preprocess(filename):
     avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
     savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
     
-    monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-    avg_monthly_income = monthly_income / df['Month'].nunique()
-    monthly_income = avg_monthly_income
+    # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+    # avg_monthly_income = monthly_income / df['Month'].nunique()
+    # monthly_income = avg_monthly_income
+    monthly_income = avg_monthly_deposits
 
     total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
@@ -1301,10 +1292,10 @@ def getSpendingPercentages(df):
             'amount': category_spending
         }
 
-    print('\nEssential Spending:')
-    print(essential_spendingPercentages)
-    print('Non-Essential Spending:')
-    print(nonessential_spendingPercentages)
+    # print('\nEssential Spending:')
+    # print(essential_spendingPercentages)
+    # print('Non-Essential Spending:')
+    # print(nonessential_spendingPercentages)
 
 def main():
     global debt_list
