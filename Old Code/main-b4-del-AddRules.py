@@ -337,14 +337,25 @@ class ESapp(tk.Tk):
         self.style.theme_settings('modern', getTheme())
         self.style.theme_use('modern')
         
+
+        # self.theme = self.getCustTheme()
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
-        self.geometry("1080x720")
+        self.geometry("880x520")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         container.configure(background='dark grey')
+
+
+        # menubar = tk.Menu(container)
+        # filemenu = tk.Menu(menubar, tearoff=0)
+        # filemenu.add_command(label="Save settings", command = lambda: popupmsg("Not supported just yet!"))
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Exit", command=quit)
+        # menubar.add_cascade(label="File", menu=filemenu)
+        # tk.Tk.config(self, menu=menubar)
 
         self.frames = {}
 
@@ -355,7 +366,9 @@ class ESapp(tk.Tk):
             #q: how can adjust the frame location from the class to be centered?
             # frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
+
         self.show_frame(StartPage)
+
 
     def show_frame(self, cont):
         frame = self.frames[cont]
@@ -383,7 +396,7 @@ class ESapp(tk.Tk):
         # print(spending_percentages)
         dataFrame = df
         self.expert_system = ExpertSystem(df, debt_list)
-        # self.expert_system.addRules()
+        self.expert_system.addRules()
         self.expert_system.checkBudget()
         self.expert_system.eval_Savings()
         self.expert_system.checkCashflow()
@@ -436,9 +449,22 @@ class StartPage(tk.Frame):
                             command=lambda: self.set_variables_and_show_frame(controller, DebtPage))
         button.pack()
 
+        # button = ttk.Button(self, text="Configure Debt",
+        #                     command=lambda: controller.show_frame(DebtPage))
+        # button.pack()
+
+        # btn_invest = ttk.Button(self, text="Configure Investments",
+        #                     command=lambda: controller.show_frame(investmentPage))          
+        # btn_invest.pack()
+
+        # button1 = ttk.Button(self, text="Open a File",
+        #                     command=lambda: controller.startup(InferencesPage))
+        # button1.pack(padx=10, pady=10)
+        
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack(padx=10, pady=10)
+
 
     def set_variables_and_show_frame(self, controller, next_frame):
         global age, retirement_fund, emergency_fund 
@@ -465,8 +491,9 @@ class DebtPage(tk.Frame):
         label.pack(pady=10,padx=10)
 
         button = ttk.Button(self, text="Continue",
-                            command=lambda: controller.show_frame(InferencesPage))
+                            command=lambda: controller.show_frame(investmentPage))
         button.pack()
+
 
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
@@ -697,14 +724,11 @@ class InferencesPage(tk.Frame):
             elif i.severity == 2:
                 tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Moderate",))
             elif i.severity == 3:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Alarming",))
-            elif i.severity == 4:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Critical",))
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Severe",))
 
-        tree.tag_configure("Critical", background="red")
-        tree.tag_configure("Alarming", background="orange")
-        tree.tag_configure("Moderate", background="yellow")
-        tree.tag_configure("Minor", background="white")
+        tree.tag_configure("Severe", background="red")
+        tree.tag_configure("Moderate", background="orange")
+        tree.tag_configure("Minor", background="yellow")
 
         def selectRecord(event):
             item = tree.focus()
@@ -989,6 +1013,52 @@ class ExpertSystem:
     def getRules(self):
         return self.rules
 
+    def addRules(self):
+        global spending_thresholds
+        self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 3)
+        self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 3)
+        self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 3)
+
+        self.add_rule('Spending','Essential Costs accounts for more than 0.5% of your income', 'Lower your Essential spending.', 1)
+        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.3% of your income', 'Lower your Nonessential spending.', 3) 
+        
+        # self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 2)
+        # self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
+        # self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 3)
+        # self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is managable but it can be improved.', 2)
+        # self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is low, keep it up.', 1)
+        
+        # self.add_rule('Savings','Saving less than 10% of income', 'Your savings are low, consider increasing your savings.', 2)
+        # self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 3)
+        # self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 1)
+
+        
+        # df = self.df
+        # df = df[df['Withdrawal'] != 0]
+        # categories = df['Category'].unique()
+        # for category in categories:
+        #     if category == 'Non-Essential Costs':
+        #         print('Non-Essential Costs')
+        #     if category in ['Groceries', 'Shopping']:
+        #         if category == 'Groceries':
+        #             threshold = spending_thresholds['Groceries']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #         elif category == 'Shopping':
+        #             threshold = spending_thresholds['Shopping']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #     elif category in ['Transportation', 'Essential Costs']:
+        #         if category == 'Transportation':
+        #             threshold = spending_thresholds['Transportation']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #         elif category == 'Essential Costs':
+        #             threshold = spending_thresholds['Essential Costs']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #     else:
+        #         threshold = spending_thresholds[category]
+        #         self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+
+        #add spending rules for essential and non-essential spending
+
     def checkBudget(self):
         global current_savings, total_deposited, total_spent, spending_thresholds, essentialList, nonessentialList, monthly_income, weekly_income, monthly_essentialSpend, monthly_nonessentialSpend, weekly_essentialSpend, weekly_nonessentialSpend
         global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
@@ -1033,15 +1103,14 @@ class ExpertSystem:
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
         for category in spending_percentages:
             threshold = spending_thresholds[category]
+            # if category == 'Essential Costs' or category == 'Non-Essential Costs':
             #     print(category + ' accounts for ' + str(spending_percentages[category]) + '% of your income threshold: ' + str(threshold) + '%')
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
-                if category == 'Essential Costs':
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
-                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
-                elif category == 'Non-Essential Costs':
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 3)
-                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
+            else:
+                # print(category + ' Spending is not too high')
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', False)
 
     def eval_Savings(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
@@ -1051,8 +1120,9 @@ class ExpertSystem:
             self.add_rule('Savings','Low Monthly Savings', 'Saving less than 10% of monthly income, you MUST decreasing your spendature.', 3)
             self.add_fact('Savings','Low Monthly Savings', True)
         elif avs_monthly_savings <= monthly_income * 0.15 and avs_monthly_savings > monthly_income * 0.1:
-            self.add_rule('Savings','Moderate Monthly Savings', 'Saving less than 15% of monthly income, consider decreasing your spendature.', 1)
+            self.add_rule('Savings','Moderate Monthly Savings', 'Saving less than 15% of monthly income, consider decreasing your spendature.', 2)
             self.add_fact('Savings','Moderate Monthly Savings', True)
+
 
         if emergency_fund < avg_monthly_withdrawals * 5:
             if emergency_fund >= avg_monthly_withdrawals * 3:
@@ -1062,7 +1132,7 @@ class ExpertSystem:
                 self.add_rule('Savings','Low Emergency Fund', 'Your emergency fund can support you for 1-3 months based on current spending', 2)
                 self.add_fact('Savings','Low Emergency Fund', True)
             elif emergency_fund < avg_monthly_withdrawals:
-                self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund can support you for less than 1 month based on current spending', 4)
+                self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund can support you for less than 1 month based on current spending', 3)
                 self.add_fact('Savings','Insufficient Emergency Fund', True)
         if age >= 25:
             yearly_income = monthly_income * 12
@@ -1078,23 +1148,21 @@ class ExpertSystem:
                     self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient at < 50% of expected value, you MUST allocate more funds towards it assuming 15% of yearly income from age 25.', 3)
                     self.add_fact('Savings','Insufficient Retirement Fund', True)
 
+
     def checkCashflow(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
         if avg_weekly_deposits < avg_weekly_withdrawals:
-            self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 3)
             self.add_fact('Cashflow','Weekly Cashflow is negative', True)
-        # else:
-        #     self.add_fact('Cashflow','Weekly Cashflow is negative', False)
+        else:
+            self.add_fact('Cashflow','Weekly Cashflow is negative', False)
         if avg_monthly_deposits < avg_monthly_withdrawals:
-            self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 4)
             self.add_fact('Cashflow','Monthly Cashflow is negative', True)
-        # else:
-        #     self.add_fact('Cashflow','Monthly Cashflow is negative', False)
+        else:
+            self.add_fact('Cashflow','Monthly Cashflow is negative', False)
         if total_deposited < total_spent:
-            self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 2)
             self.add_fact('Cashflow','Total Net Cashflow is negative', True)
-        # else:
-        #     self.add_fact('Cashflow','Total Net Cashflow is negative', False)
+        else:
+            self.add_fact('Cashflow','Total Net Cashflow is negative', False)
 
     def checkforSpikes(self): #function to check for spikes in spending by category
         #if there are more than 3 spikes in a category, then create a corresponding rule and fact in the expert system
@@ -1107,12 +1175,8 @@ class ExpertSystem:
             category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending
             spikes = category_df[category_df['Above_Avg'] == True]
             spikes = spikes.reset_index(drop=True)
-            if len(spikes) >= 5 and category != 'Loan Payment':
-                self.add_rule('Chronic Overspending', 'More than 5 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)
-                self.add_fact('Chronic Overspending', 'More than 5 monthly spikes over average amount spent on ' + category, True)
-                # print('More than 3 monthly spikes in ' + category)
-            elif len(spikes) >= 3 and category != 'Loan Payment' and len(spikes) < 5:
-                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+            if len(spikes) >= 3 and category != 'Loan Payment':
+                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)
                 self.add_fact('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, True)
                 # print('More than 3 monthly spikes in ' + category)
             else:
