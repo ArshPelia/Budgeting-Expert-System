@@ -298,8 +298,10 @@ def getSpendingPercentages(df):
     spending_percentages = {}
     total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
     total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-    for category in spending_percentages:
-        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_spent
+    df = df[df['Withdrawal'] != 0]
+    categories = df['Category'].unique()
+    for category in categories:
+        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
         # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
     # print(spending_percentages)
     df_Essential = df[df['Category'].isin(essentialList)]
@@ -315,20 +317,21 @@ def getSpendingPercentages(df):
 def main():
     global debt_list
     df = preprocess()
-    expert_system = ExpertSystem(df, debt_list)
-    expert_system.addRules()
-    expert_system.checkBudget()
-    expert_system.eval_Savings()
-    expert_system.checkCashflow()
-    expert_system.checkforSpikes()
-    expert_system.evaluateDebt()
-    expert_system.makeInferences()
-    inferences = expert_system.getInferences()
-    inferences.sort(key=lambda x: x.severity)
-    print('\nAll Inferences: \n')
-    for i in inferences:
-        # if i.type == 'Spike':
-            print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+    print(getSpendingPercentages(df))
+    # expert_system = ExpertSystem(df, debt_list)
+    # expert_system.addRules()
+    # expert_system.checkBudget()
+    # expert_system.eval_Savings()
+    # expert_system.checkCashflow()
+    # expert_system.checkforSpikes()
+    # expert_system.evaluateDebt()
+    # expert_system.makeInferences()
+    # inferences = expert_system.getInferences()
+    # inferences.sort(key=lambda x: x.severity)
+    # print('\nAll Inferences: \n')
+    # for i in inferences:
+    #     # if i.type == 'Spike':
+    #         print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
 
 if __name__ == "__main__":
     main()

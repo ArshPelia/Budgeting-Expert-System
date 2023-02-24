@@ -23,13 +23,14 @@ incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal 
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
 global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_thresholds 
+global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_thresholds, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
+global essential_spendingPercentages, nonessential_spendingPercentages
 
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
                        'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
-                       'Loan Repayment': 0.1, 'Essential Costs': 0.6, 
-                       'Non-Essential Costs': 0.4, 'Entertainment': 0.1}
+                       'Loan Repayment': 0.1, 'Essential Costs': 0., 
+                       'Non-Essential Costs': 0.3, 'Entertainment': 0.1}
 
 # debt_list = [
 #     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
@@ -58,7 +59,7 @@ def popupmsg(msg):
     popup.mainloop()
 
 def viewInference(type, premise, conclusion):
-    global dataFrame, savings_per_month, debt_list
+    global dataFrame, savings_per_month, debt_list, essential_spendingPercentages, nonessential_spendingPercentages
     popup = tk.Tk()
     popup.wm_title("Inference")
     label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
@@ -168,6 +169,42 @@ def viewInference(type, premise, conclusion):
                 debt_tree.item(item, tags=('high_interest',))
         debt_tree.tag_configure('high_interest', foreground='red')
 
+    elif type == 'Spending':
+        if premise == 'Essential Costs accounts for more than 0.5% of your income':
+            # create a treeview widget
+            tree = ttk.Treeview(popup)
+
+            # define the columns of the treeview
+            tree['columns'] = ('Percentage',)
+
+            # add column headings
+            tree.heading('#0', text='Category')
+            tree.heading('Percentage', text='Percentage')
+
+            for key, value in essential_spendingPercentages.items():
+                tree.insert('', 'end', text=key, values=value)
+
+            tree.pack(fill="both", expand=True)
+
+        elif premise == 'Non-Essential Costs accounts for more than 0.3% of your income':
+            # create a treeview widget
+            tree = ttk.Treeview(popup)
+
+            # define the columns of the treeview
+            tree['columns'] = ('Percentage',)
+
+            # add column headings
+            tree.heading('#0', text='Category')
+            tree.heading('Percentage', text='Percentage')
+
+            for key, value in nonessential_spendingPercentages.items():
+                tree.insert('', 'end', text=key, values=value)
+
+            tree.pack(fill="both", expand=True)
+
+
+
+            
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
@@ -230,6 +267,8 @@ class ESapp(tk.Tk):
             filetypes=filetypes)
         
         df = preprocess(filename)
+        getSpendingPercentages(df)
+        # print(spending_percentages)
         dataFrame = df
         self.expert_system = ExpertSystem(df, debt_list)
         self.expert_system.addRules()
@@ -837,39 +876,36 @@ class ExpertSystem:
         self.add_rule('Cashflow','Monthly Cashflow is negative', 'You currently have a negative Monthly cashflow Adjust your budget.', 1)
         self.add_rule('Cashflow','Total Net Cashflow is negative', 'You currently have a negative net cashflow. Adjust your budget.', 1)
 
-        self.add_rule('Spending','Essential Costs Spending is too high', 'Lower your Essential spending.', 2)
-        self.add_rule('Spending','Non-Essential Costs Spending is too high', 'Lower your Nonessential spending.', 1)
+        self.add_rule('Spending','Essential Costs accounts for more than 0.5% of your income', 'Lower your Essential spending.', 2)
+        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.3% of your income', 'Lower your Nonessential spending.', 1) 
+        
+        
         df = self.df
         df = df[df['Withdrawal'] != 0]
         categories = df['Category'].unique()
-        for category in categories:
-            if category == 'Non-Essential Costs':
-                print('Non-Essential Costs')
-            if category in ['Groceries', 'Shopping']:
-                if category == 'Groceries':
-                    threshold = spending_thresholds['Groceries']
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
-                elif category == 'Shopping':
-                    threshold = spending_thresholds['Shopping']
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
-                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 2)
-            elif category in ['Transportation', 'Essential Costs']:
-                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 3)
-                if category == 'Transportation':
-                    threshold = spending_thresholds['Transportation']
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
-                elif category == 'Essential Costs':
-                    threshold = spending_thresholds['Essential Costs']
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
-            else:
-                threshold = spending_thresholds[category]
-                self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
-                # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
+        # for category in categories:
+        #     if category == 'Non-Essential Costs':
+        #         print('Non-Essential Costs')
+        #     if category in ['Groceries', 'Shopping']:
+        #         if category == 'Groceries':
+        #             threshold = spending_thresholds['Groceries']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #         elif category == 'Shopping':
+        #             threshold = spending_thresholds['Shopping']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #     elif category in ['Transportation', 'Essential Costs']:
+        #         if category == 'Transportation':
+        #             threshold = spending_thresholds['Transportation']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #         elif category == 'Essential Costs':
+        #             threshold = spending_thresholds['Essential Costs']
+        #             self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
+        #     else:
+        #         threshold = spending_thresholds[category]
+        #         self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
 
         #add spending rules for essential and non-essential spending
-        self.add_rule('Spending','Essential Costs accounts for more than 0.6% of your spending.', 'Lower your Essential spending.', 2)
-        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.4% of your spending.', 'Lower your Nonessential spending.', 1) 
-        
+
         self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
         self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
 
@@ -892,12 +928,12 @@ class ExpertSystem:
         # add the percentage of spending for essential and non-essential costs
         spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
         spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
-        # essentialSpend = spending_dict[-2]['Amount']
-        # nonessentialSpend = spending_dict[-1]['Amount']
-        # Weekly_essentialSpend = essentialSpend / dfCopy['Week'].nunique()
-        # Weekly_nonessentialSpend = nonessentialSpend / dfCopy['Week'].nunique()
-        # monthly_essentialSpend = essentialSpend / dfCopy['Month'].nunique()
-        # monthly_nonessentialSpend = nonessentialSpend / dfCopy['Month'].nunique()
+        essentialSpend = spending_dict[-2]['Amount']
+        nonessentialSpend = spending_dict[-1]['Amount']
+        Weekly_essentialSpend = essentialSpend / dfCopy['Week'].nunique()
+        Weekly_nonessentialSpend = nonessentialSpend / dfCopy['Week'].nunique()
+        monthly_essentialSpend = essentialSpend / dfCopy['Month'].nunique()
+        monthly_nonessentialSpend = nonessentialSpend / dfCopy['Month'].nunique()
         # print('Essential Costs: ', essentialSpend)
         # print('Non-Essential Costs: ', nonessentialSpend)
         # print('Weekly Essential Costs: ', Weekly_essentialSpend)
@@ -920,15 +956,15 @@ class ExpertSystem:
         for category in spending_percentages:
             threshold = spending_thresholds[category]
             # if category == 'Essential Costs' or category == 'Non-Essential Costs':
-            #     print(category + ' accounts for ' + str(spending_percentages[category]) + '% of your spending. threshold: ' + str(threshold) + '%')
+            #     print(category + ' accounts for ' + str(spending_percentages[category]) + '% of your income threshold: ' + str(threshold) + '%')
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
                 # self.add_fact('Spending', category + ' Spending is too high', True)
-                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', True)
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
             else:
                 # print(category + ' Spending is not too high')
                 # self.add_fact('Spending', category + ' Spending is too high', False)
-                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', False)
+                self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', False)
 
         #Q: why is essential costs not showing in the inference engine?
         #A: because it is not a category in the spending dictionary
@@ -1058,6 +1094,38 @@ def preprocess(filename):
     total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
     return df 
+
+def getSpendingPercentages(df):
+    global essential_spendingPercentages, nonessential_spendingPercentages, essentialList, nonessentialList
+    spending_percentages = {}
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    df = df[df['Withdrawal'] != 0]
+    categories = df['Category'].unique()
+    for category in categories:
+        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
+        # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
+    # print(spending_percentages)
+    df_Essential = df[df['Category'].isin(essentialList)]
+    df_Nonessential = df[df['Category'].isin(nonessentialList)]
+    essential_spending = df_Essential['Withdrawal'].sum()
+    nonessential_spending = df_Nonessential['Withdrawal'].sum()
+
+    spending_percentages['Essential Costs'] = essential_spending / total_spent
+    spending_percentages['Non-Essential Costs'] = nonessential_spending / total_spent
+
+    #create a dictionary for essential and nonessential spending percentages
+    essential_spendingPercentages = {}
+    nonessential_spendingPercentages = {}
+    for category in essentialList:
+        essential_spendingPercentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / essential_spending
+    for category in nonessentialList:
+        nonessential_spendingPercentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / nonessential_spending
+
+    # print(essential_spendingPercentages)
+    # print(nonessential_spendingPercentages)
+        
+    # return spending_percentages
 
 def main():
     global debt_list
