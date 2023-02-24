@@ -15,13 +15,14 @@ NORM_FONT = ("Helvetica", 10)
 SMALL_FONT = ("Helvetica", 8)
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
-spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 'Entertainment', 'Bills', 'Loan Repayment']
+spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
+             'Entertainment', 'Bills', 'Loan Repayment']
 essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportation']
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-global allInferences, dataFrame
+global allInferences, dataFrame, age, retirement_fund, emergency_fund 
 
 global spending_thresholds 
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
@@ -36,8 +37,15 @@ spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1,
 #     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
 # ]
 
-global debt_list
+global debt_list, investment_list
 debt_list = []
+investment_list = []
+
+def validateFile(file):
+    if file.endswith('.csv'):
+        return True
+    else:
+        return False
 
 def popupmsg(msg):
     popup = tk.Tk()
@@ -164,52 +172,6 @@ def viewInference(type, premise, conclusion):
     B1.pack(padx=10, pady=10)
     popup.mainloop()
 
-# def viewDebtList():
-#     global debt_list
-#     popup = tk.Tk()
-#     popup.wm_title("Debt List")
-
-#     input_frame = tk.Frame(popup)
-#     # input_frame.pack(side="top", fill="x", pady=10)
-#     input_frame.pack(fill="both", expand=True)
-
-#     # Create labels and entry widgets for the debt parameters
-#     name_label = tk.Label(input_frame, text="Debt Name:")
-#     name_label.grid(row=0, column=0, padx=10, pady=10)
-#     name_entry = tk.Entry(input_frame)
-#     name_entry.grid(row=0, column=1, padx=10, pady=10)
-
-#     amount_label = tk.Label(input_frame, text="Debt Amount:")
-#     amount_label.grid(row=1, column=0, padx=10, pady=10)
-#     amount_entry = tk.Entry(input_frame)
-#     amount_entry.grid(row=1, column=1, padx=10, pady=10)
-
-#     interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
-#     interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
-#     interest_rate_entry = tk.Entry(input_frame)
-#     interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
-
-#     # Create a button to add a new debt to the list
-#     add_button = ttk.Button(input_frame, text="Add Debt", command=add_debt)
-#     add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
-
-#     list_frame = tk.Frame(popup)
-#     list_frame.pack(fill="both", expand=True)
-
-#         # Create a Treeview widget to display the debt list
-#     debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
-#     debt_treeview.heading("#0", text="ID")
-#     debt_treeview.heading("name", text="Debt Name")
-#     debt_treeview.heading("amount", text="Debt Amount")
-#     debt_treeview.heading("interest_rate", text="Interest Rate (%)")
-#     debt_treeview.pack(fill="both", expand=True)
-
-#     # Initialize the debt list
-#     debt_list = []
-#     next_debt_id = 1
-
-
-
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
         
@@ -217,7 +179,7 @@ class ESapp(tk.Tk):
 
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
-        self.geometry("1280x720")
+        self.geometry("880x520")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
@@ -235,10 +197,13 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage, DebtPage):
+        for F in (StartPage, InferencesPage, GraphPage, DebtPage, investmentPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
+            #q: how can adjust the frame location from the class to be centered?
+            # frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
 
         self.show_frame(StartPage)
 
@@ -255,7 +220,7 @@ class ESapp(tk.Tk):
         global filename, allInferences, dataFrame, debt_list
         filetypes = (
                     ('CSV files', '*.csv'),
-                    ('All files', '*.*')
+                    # ('All files', '*.*')
         )
 
         filename = fd.askopenfilename(
@@ -283,38 +248,64 @@ class ESapp(tk.Tk):
 class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
+        global age, retirement_fund, emergency_fund 
         tk.Frame.__init__(self,parent)
         label = tk.Label(self, text=("Welcome to the budgeting Expert System"), font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        label1 = tk.Label(self, text=("Please select a CSV file to begin."), font=NORM_FONT)
+        label1 = tk.Label(self, text=("Please begin by entering the following information"), font=NORM_FONT)
         label1.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="Configure Debt",
+        label2 = tk.Label(self, text=("Age:"), font=NORM_FONT)
+        label2.pack(pady=10,padx=10)
+
+        age = tk.Entry(self)
+        age.pack(pady=10,padx=10)
+
+        label3 = tk.Label(self, text=("Retirement Fund:"), font=NORM_FONT)
+        label3.pack(pady=10,padx=10)
+
+        retirement_fund = tk.Entry(self)
+        retirement_fund.pack(pady=10,padx=10)
+
+        label4 = tk.Label(self, text=("Emergency Fund:"), font=NORM_FONT)
+        label4.pack(pady=10,padx=10)
+
+        emergency_fund = tk.Entry(self)
+        emergency_fund.pack(pady=10,padx=10)
+
+        button = ttk.Button(self, text="Continue",
                             command=lambda: controller.show_frame(DebtPage))
         button.pack()
 
-        button1 = ttk.Button(self, text="Open a File",
-                            command=lambda: controller.startup(InferencesPage))
-        button1.pack(padx=10, pady=10)
-        # button1.pack(side="left", padx=5, pady=5)
+        # button = ttk.Button(self, text="Configure Debt",
+        #                     command=lambda: controller.show_frame(DebtPage))
+        # button.pack()
 
+        # btn_invest = ttk.Button(self, text="Configure Investments",
+        #                     command=lambda: controller.show_frame(investmentPage))          
+        # btn_invest.pack()
+
+        # button1 = ttk.Button(self, text="Open a File",
+        #                     command=lambda: controller.startup(InferencesPage))
+        # button1.pack(padx=10, pady=10)
+        
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack(padx=10, pady=10)
-        # button2.pack(side="left", padx=5, pady=5)
-
-        # button3 = ttk.Button(self, text="Graph Page",
-        #                     command=lambda: controller.show_frame(GraphPage))
-        # button3.pack()
 
 class DebtPage(tk.Frame):
 
     def __init__(self, parent, controller):
         global debt_list
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Page One-Debt List", font=LARGE_FONT)
+        label = ttk.Label(self, text="Debt List", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
+
+        button = ttk.Button(self, text="Continue",
+                            command=lambda: controller.show_frame(investmentPage))
+        button.pack()
+
 
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
@@ -325,7 +316,7 @@ class DebtPage(tk.Frame):
         # input_frame.pack(side="top", fill="x", pady=10)
 
         # Create labels and entry widgets for the debt parameters
-        name_label = tk.Label(input_frame, text="Debt Name:")
+        name_label = tk.Label(input_frame, text="Account:")
         name_label.grid(row=0, column=0, padx=10, pady=10)
         self.name_entry = tk.Entry(input_frame)
         self.name_entry.grid(row=0, column=1, padx=10, pady=10)
@@ -346,12 +337,12 @@ class DebtPage(tk.Frame):
 
         # Create a frame for the debt list
         list_frame = tk.Frame(self)
-        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10)) #fill both means it will fill the entire frame, expand true means it will expand to fill the entire frame
 
         # Create a Treeview widget to display the debt list
         self.debt_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
         self.debt_treeview.heading("#0", text="ID")
-        self.debt_treeview.heading("name", text="Debt Name")
+        self.debt_treeview.heading("name", text="Account")
         self.debt_treeview.heading("amount", text="Debt Amount")
         self.debt_treeview.heading("interest_rate", text="Interest Rate (%)")
         #center all columns
@@ -393,55 +384,137 @@ class DebtPage(tk.Frame):
 
         # print(self.debt_list)
 
+class investmentPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        global investment_list
+        tk.Frame.__init__(self, parent)
+        self.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        label = ttk.Label(self, text="Investment List", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button = ttk.Button(self, text="Continue",
+                            command=lambda: controller.show_frame(InferencesPage))
+        button.pack()
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack(pady=10,padx=10)
+
+        input_frame = tk.Frame(self)
+        #pack frame so it sits in the middle of the page
+        input_frame.pack(fill="both", expand=True)
+
+
+        # Create labels and entry widgets for the investment parameters
+        name_label = tk.Label(input_frame, text="Account:")
+        name_label.grid(row=0, column=0, padx=10, pady=10)
+        self.name_entry = tk.Entry(input_frame)
+        self.name_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        amount_label = tk.Label(input_frame, text="investment Amount:")
+        amount_label.grid(row=1, column=0, padx=10, pady=10)
+        self.amount_entry = tk.Entry(input_frame)
+        self.amount_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
+        interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
+        self.interest_rate_entry = tk.Entry(input_frame)
+        self.interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        # Create a button to add a new investment to the list
+        add_button = ttk.Button(input_frame, text="Add investment", command=self.add_investment)
+        add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        # Create a frame for the investment list
+        list_frame = tk.Frame(self)
+        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10)) #fill both means it will fill the entire frame, expand true means it will expand to fill the entire frame
+
+        # Create a Treeview widget to display the investment list
+        self.investment_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
+        self.investment_treeview.heading("#0", text="ID")
+        self.investment_treeview.heading("name", text="Account")
+        self.investment_treeview.heading("amount", text="investment Amount")
+        self.investment_treeview.heading("interest_rate", text="Interest Rate (%)")
+        #center all columns
+        self.investment_treeview.column("#0", anchor="center", width=50)
+        self.investment_treeview.column("name", anchor="center", width=200)
+        self.investment_treeview.column("amount", anchor="center", width=200)
+        self.investment_treeview.column("interest_rate", anchor="center", width=200)
+        self.investment_treeview.pack(fill="both", expand=True)
+
+        # Initialize the investment list
+        self.investment_list = investment_list
+        self.next_investment_id = 1
+
+    def add_investment(self):
+        # Get the input values
+        name = self.name_entry.get()
+        amount = int(self.amount_entry.get())
+        interest_rate = float(self.interest_rate_entry.get())
+
+        # Add the new investment to the list
+        self.investment_list.append({'id': self.next_investment_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate})
+        self.next_investment_id += 1
+
+        # Clear input fields
+        self.name_entry.delete(0, tk.END)
+        self.amount_entry.delete(0, tk.END)
+        self.interest_rate_entry.delete(0, tk.END)
+
+        # Update the investment list display
+        self.update_investment_list()
+
+    def update_investment_list(self):
+        # Clear the existing items in the Treeview
+        self.investment_treeview.delete(*self.investment_treeview.get_children())
+
+        # Insert the updated investment list into the Treeview
+        for investment in self.investment_list:
+            self.investment_treeview.insert("", "end", text=investment['id'], values=(investment['name'], investment['amount'], investment['interest_rate']))
+
+        print(self.investment_list)
+
 class InferencesPage(tk.Frame):
 
     def __init__(self, parent, controller):
+        global filename
         self.controller = controller
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
+
+        lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
+        lbl_selectFile.pack(pady=10,padx=10)
+
+        button1 = ttk.Button(self, text="Open a File",
+                            command=lambda: controller.startup(InferencesPage))
+        button1.pack(padx=10, pady=5)
+
 
         # button1 = ttk.Button(self, text="Back to Home",
         #                     command=lambda: controller.show_frame(StartPage))
         # button1.pack(pady=10,padx=10)
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
-        button2.pack(padx=10, pady=10)
+        button2.pack(padx=10, pady=5)
 
         button3 = ttk.Button(self, text="Show Inferences",
                             command= lambda: self.showInferences())
-        button3.pack(padx=10, pady=10)
+        button3.pack(padx=10, pady=5)
 
         button4 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(GraphPage))
-        button4.pack(padx=10, pady=10)
+        button4.pack(padx=10, pady=5)
 
         label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
-        label1.pack(pady=10,padx=10)
+        label1.pack(pady=10,padx=5)
         
     def showInferences(self):
         global allInferences
-        
-        # textBox_severe = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        # textBox_severe.pack(expand=True, side=tk.LEFT) 
-        # textBox_severe.insert(tk.END, 'Severe Inferences: \n\n')
-
-        # textBox_moderate = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        # textBox_moderate.pack(expand=True, side=tk.LEFT) 
-        # textBox_moderate.insert(tk.END, 'Moderate Inferences: \n\n')
-
-        # textBox_minor = tk.Text(self, height=20, width=70, padx=10, pady=10, wrap=tk.WORD)
-        # textBox_minor.pack(expand=True, side=tk.LEFT)
-        # textBox_minor.insert(tk.END, 'Minor Inferences: \n\n')
-            
-        # for i in allInferences:
-        #     if i.severity == 1:
-        #         textBox_severe.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
-        #     elif i.severity == 2:
-
-        #         textBox_moderate.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
-        #     else:
-        #         textBox_minor.insert(tk.END, i.type + ' Inference: Premise: ' + i.premise + ' Recommendation: ' + i.conclusion + '\n\n')
+        #exit if no inferences
+        if len(allInferences) == 0:
+            return
 
         columns = ("Type", "Premise", "Recommendation")
         tree = ttk.Treeview(self, columns=columns, show="headings")
@@ -767,7 +840,6 @@ class ExpertSystem:
                 self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
                 # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
 
-
         self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
         self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
 
@@ -864,8 +936,8 @@ class ExpertSystem:
             spikes = category_df[category_df['Above_Avg'] == True]
             spikes = spikes.reset_index(drop=True)
             if len(spikes) >= 3 and category != 'Loan Repayment':
-                self.add_rule('Spike', 'More than 3 monthly spikes in ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
-                self.add_fact('Spike', 'More than 3 monthly spikes in ' + category, True)
+                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+                self.add_fact('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, True)
             else:
                 # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
                 pass #if there are no spikes, then don't add a fact
