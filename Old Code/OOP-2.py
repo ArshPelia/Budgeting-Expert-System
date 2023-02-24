@@ -175,8 +175,8 @@ class DebtRule:
 def preprocess():
     global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
 
-    if not os.path.exists('data.csv'): # check if the file exists
-        df = pd.read_csv('accountactivity.csv', names=headerlist) #assign column names 
+    if not os.path.exists('Datasets/data.csv'): # check if the file exists
+        df = pd.read_csv('Datasets/accountactivity.csv', names=headerlist) #assign column names 
         df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
 
         # convert the date column to a datetime format
@@ -207,10 +207,10 @@ def preprocess():
         avg_monthly_income = monthly_income / df['Month'].nunique()
         monthly_income = avg_monthly_income
 
-        df.to_csv('data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
+        df.to_csv('Datasets/data.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
 
     else:
-        df = pd.read_csv('data.csv')
+        df = pd.read_csv('Datasets/data.csv')
         current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
         total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
         total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()

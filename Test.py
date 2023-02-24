@@ -21,10 +21,11 @@ essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Repayment', 'Transportat
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment']
 incomeList = ['Salary', 'Bonus', 'Interest', 'Return on Investement', 'Personal Sale']
 
-global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-global allInferences, dataFrame, age, retirement_fund, emergency_fund 
+global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
+global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_thresholds 
+global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 
-global spending_thresholds 
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
                        'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
                        'Loan Repayment': 0.1, 'Essential Costs': 0.6, 
@@ -244,6 +245,12 @@ class ESapp(tk.Tk):
         # for i in allInferences:
         #     # if i.type == 'Spike':
         #         print(i.type, 'Inference: Premise:', i.premise, '\nRecommendation:', i.conclusion, '\nSeverity:',i.severity , '\n')
+        # print('Facts: \n')
+        # for i in self.expert_system.facts:
+        #     print(i.name, i.value)
+        # print('Rules: \n')
+        # for i in self.expert_system.rules:
+        #     print(i.type, i.premise, i.conclusion)
 
 class StartPage(tk.Frame):
 
@@ -275,7 +282,7 @@ class StartPage(tk.Frame):
         emergency_fund.pack(pady=10,padx=10)
 
         button = ttk.Button(self, text="Continue",
-                            command=lambda: controller.show_frame(DebtPage))
+                            command=lambda: self.set_variables_and_show_frame(controller, DebtPage))
         button.pack()
 
         # button = ttk.Button(self, text="Configure Debt",
@@ -293,6 +300,23 @@ class StartPage(tk.Frame):
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack(padx=10, pady=10)
+
+
+    def set_variables_and_show_frame(self, controller, next_frame):
+        global age, retirement_fund, emergency_fund 
+        if age.get() == '':
+            popupmsg("Please enter your age")
+            return
+        elif retirement_fund.get() == '':
+            popupmsg("Please enter your retirement fund")
+            return
+        elif emergency_fund.get() == '':
+            popupmsg("Please enter your emergency fund")
+            return
+        age = float(age.get())
+        retirement_fund = float(retirement_fund.get() or 0)
+        emergency_fund = float(emergency_fund.get() or 0)
+        controller.show_frame(next_frame)
 
 class DebtPage(tk.Frame):
 
@@ -758,7 +782,7 @@ class ExpertSystem:
         self.rules = []
         self.facts = []
         self.inferences = []
-        self.types = ['Spending', 'Savings', 'Debt', 'Cashflow', 'Spike']
+        self.types = ['Spending', 'Savings', 'Debt', 'Cashflow', 'Chronic Overspending']
 
     def add_rule(self, type, premise, conclusion, severity):
         self.rules.append(Rule(type, premise, conclusion, severity))
@@ -819,6 +843,8 @@ class ExpertSystem:
         df = df[df['Withdrawal'] != 0]
         categories = df['Category'].unique()
         for category in categories:
+            if category == 'Non-Essential Costs':
+                print('Non-Essential Costs')
             if category in ['Groceries', 'Shopping']:
                 if category == 'Groceries':
                     threshold = spending_thresholds['Groceries']
@@ -840,16 +866,22 @@ class ExpertSystem:
                 self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', 'Lower your ' + category + ' spending.', 1)
                 # self.add_rule('Spending', category + ' Spending is too high', 'Lower your ' + category + ' spending.', 1)
 
+        #add spending rules for essential and non-essential spending
+        self.add_rule('Spending','Essential Costs accounts for more than 0.6% of your spending.', 'Lower your Essential spending.', 2)
+        self.add_rule('Spending','Non-Essential Costs accounts for more than 0.4% of your spending.', 'Lower your Nonessential spending.', 1) 
+        
         self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 1)
         self.add_rule('Debt','high_debt_to_MonthlyIncome', 'Your debt-to-income ratio is high, consider paying off some debt or increasing your income.', 2)
 
-        self.add_rule('Savings','low_savings', 'Your savings are low, consider increasing your savings.', 2)
+        self.add_rule('Savings','Saving less than 10% of income', 'Your savings are low, consider increasing your savings.', 2)
         self.add_rule('Savings','Insufficient Emergency Fund', 'Your emergency fund is insufficient, consider increasing your emergency fund.', 1)
         self.add_rule('Savings','Insufficient Retirement Fund', 'Your retirement fund is insufficient, consider increasing your retirement fund.', 3)
 
     def checkBudget(self):
         global current_savings, total_deposited, total_spent, spending_thresholds
+        global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
         df = self.df
+        dfCopy = df.copy()
         df = df[df['Withdrawal'] != 0] # filter out all the rows that have 0 in the Withdrawal column
         df = df.groupby(['Category']).sum() # group the dataframe by Category and sum the Withdrawal column
         df = df.sort_values(by=['Withdrawal'], ascending=False) # sort the dataframe by Withdrawal column in descending order
@@ -860,6 +892,18 @@ class ExpertSystem:
         # add the percentage of spending for essential and non-essential costs
         spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(['Housing', 'Bills', 'Groceries', 'Transportation'])]['Amount'].sum()})
         spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
+        # essentialSpend = spending_dict[-2]['Amount']
+        # nonessentialSpend = spending_dict[-1]['Amount']
+        # Weekly_essentialSpend = essentialSpend / dfCopy['Week'].nunique()
+        # Weekly_nonessentialSpend = nonessentialSpend / dfCopy['Week'].nunique()
+        # monthly_essentialSpend = essentialSpend / dfCopy['Month'].nunique()
+        # monthly_nonessentialSpend = nonessentialSpend / dfCopy['Month'].nunique()
+        # print('Essential Costs: ', essentialSpend)
+        # print('Non-Essential Costs: ', nonessentialSpend)
+        # print('Weekly Essential Costs: ', Weekly_essentialSpend)
+        # print('Weekly Non-Essential Costs: ', Weekly_nonessentialSpend)
+        # print('Monthly Essential Costs: ', monthly_essentialSpend)
+        # print('Monthly Non-Essential Costs: ', monthly_nonessentialSpend)
 
 
         # print list of categories and amount spent
@@ -875,6 +919,8 @@ class ExpertSystem:
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
         for category in spending_percentages:
             threshold = spending_thresholds[category]
+            # if category == 'Essential Costs' or category == 'Non-Essential Costs':
+            #     print(category + ' accounts for ' + str(spending_percentages[category]) + '% of your spending. threshold: ' + str(threshold) + '%')
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
                 # self.add_fact('Spending', category + ' Spending is too high', True)
@@ -883,21 +929,27 @@ class ExpertSystem:
                 # print(category + ' Spending is not too high')
                 # self.add_fact('Spending', category + ' Spending is too high', False)
                 self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your spending.', False)
-    
+
+        #Q: why is essential costs not showing in the inference engine?
+        #A: because it is not a category in the spending dictionary
+        #how to fix: add essential costs and non-essential costs to the spending dictionary
+        # code: 
+        
     def eval_Savings(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+        global emergency_fund, retirement_fund
         emergency_fund_goal, retirement_goal = 1000, 100000
         savings_percentage = total_deposited / total_spent * 100
         investment_percentage = total_invested / total_deposited * 100
-        emergency_fund_achieved = current_savings >= emergency_fund_goal
-        retirement_goal_achieved = total_invested >= retirement_goal
+        emergency_fund_achieved = emergency_fund >= emergency_fund_goal
+        retirement_goal_achieved = retirement_fund >= retirement_goal
 
         # recommendations = []
         if savings_percentage < 10:
             # recommendations.append("Consider increasing your savings to ensure a secure future.")
-            self.add_fact('Savings','low_savings', True)
+            self.add_fact('Savings','Saving less than 10% of income', True)
         else:
-            self.add_fact('Savings','low_savings', False)
+            self.add_fact('Savings','Saving less than 10% of income', False)
         if not emergency_fund_achieved:
             # recommendations.append("Consider starting an emergency fund to cover unexpected expenses.")
             self.add_fact('Savings','Insufficient Emergency Fund', True)
@@ -938,6 +990,7 @@ class ExpertSystem:
             if len(spikes) >= 3 and category != 'Loan Repayment':
                 self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
                 self.add_fact('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, True)
+                # print('More than 3 monthly spikes in ' + category)
             else:
                 # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
                 pass #if there are no spikes, then don't add a fact
