@@ -45,6 +45,11 @@ class ESapp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         container.configure(background='dark grey')
+        
+        style = ttk.Style(container)
+        style.theme_use('alt')
+        #list all available themes
+        # themes: clam, alt, default, classic, vista, xpnative, winnative, aqua, 
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)

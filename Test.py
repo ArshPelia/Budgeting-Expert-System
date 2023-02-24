@@ -29,7 +29,7 @@ global essential_spendingPercentages, nonessential_spendingPercentages
 
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
                        'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
-                       'Loan Repayment': 0.1, 'Essential Costs': 0., 
+                       'Loan Repayment': 0.1, 'Essential Costs': 0.5, 
                        'Non-Essential Costs': 0.3, 'Entertainment': 0.1}
 
 # debt_list = [
@@ -63,11 +63,11 @@ def viewInference(type, premise, conclusion):
     popup = tk.Tk()
     popup.wm_title("Inference")
     label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
-    label.pack(side="top", fill="x", pady=10)
+    label.pack(side="top", fill="x", pady=10, padx=10)
     label1 = ttk.Label(popup, text=("Premise: " + premise), font=NORM_FONT)
-    label1.pack(side="top", fill="x", pady=10)
+    label1.pack(side="top", fill="x", pady=10, padx=10)
     label2 = ttk.Label(popup, text=("Conclusion: " + conclusion), font=NORM_FONT)
-    label2.pack(side="top", fill="x", pady=10)
+    label2.pack(side="top", fill="x", pady=10, padx=10)
 
     if type == 'Cashflow': 
         if premise == 'Total Net Cashflow is negative':
@@ -145,6 +145,7 @@ def viewInference(type, premise, conclusion):
             canvas = FigureCanvasTkAgg(f, popup)
             canvas.draw()
             canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    
     elif type == 'Debt':
         #insert table of debt list
         debt_tree = ttk.Treeview(popup, columns=("name", "amount", "interest_rate"))
@@ -158,7 +159,7 @@ def viewInference(type, premise, conclusion):
         debt_tree.column("amount", minwidth=0, width=100, stretch=tk.NO)
         debt_tree.column("interest_rate", minwidth=0, width=100, stretch=tk.NO)
 
-        debt_tree.pack(fill="both", expand=True)
+        debt_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         for debt in debt_list:
             debt_tree.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate']))
@@ -168,43 +169,47 @@ def viewInference(type, premise, conclusion):
             if interest_rate > 8:
                 debt_tree.item(item, tags=('high_interest',))
         debt_tree.tag_configure('high_interest', foreground='red')
-
+    
     elif type == 'Spending':
         if premise == 'Essential Costs accounts for more than 0.5% of your income':
             # create a treeview widget
             tree = ttk.Treeview(popup)
 
             # define the columns of the treeview
-            tree['columns'] = ('Percentage',)
+            tree['columns'] = ('Percentage', 'Amount Spent')
 
             # add column headings
             tree.heading('#0', text='Category')
-            tree.heading('Percentage', text='Percentage')
+            tree.heading('Percentage', text='Percentage of Essential Spending')
+            tree.heading('Amount Spent', text='Amount Spent')
 
-            for key, value in essential_spendingPercentages.items():
-                tree.insert('', 'end', text=key, values=value)
+            for category, data in essential_spendingPercentages.items():
+                percentage = "{:.2%}".format(data["percentage"])
+                amount = "${:.2f}".format(data["amount"])
+                tree.insert("", tk.END, text=category, values=(percentage, amount))
 
-            tree.pack(fill="both", expand=True)
+            tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         elif premise == 'Non-Essential Costs accounts for more than 0.3% of your income':
             # create a treeview widget
             tree = ttk.Treeview(popup)
 
             # define the columns of the treeview
-            tree['columns'] = ('Percentage',)
+            tree['columns'] = ('Percentage', 'Amount Spent')
 
             # add column headings
             tree.heading('#0', text='Category')
-            tree.heading('Percentage', text='Percentage')
+            tree.heading('Percentage', text='Percentage of Non-Essential Spending')
+            tree.heading('Amount Spent', text='Amount Spent')
 
-            for key, value in nonessential_spendingPercentages.items():
-                tree.insert('', 'end', text=key, values=value)
+            for category, data in nonessential_spendingPercentages.items():
+                percentage = "{:.2%}".format(data["percentage"])
+                amount = "${:.2f}".format(data["amount"])
+                tree.insert("", tk.END, text=category, values=(percentage, amount))
+    
 
-            tree.pack(fill="both", expand=True)
+            tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-
-
-            
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
@@ -215,6 +220,14 @@ class ESapp(tk.Tk):
         
         tk.Tk.__init__(self, *args, **kwargs) 
 
+        # set the root style to the theme from getTheme()
+        self.style = ttk.Style()
+        self.style.theme_create('modern', parent='default')
+        self.style.theme_settings('modern', self.getTheme())
+        self.style.theme_use('modern')
+        
+
+        # self.theme = self.getCustTheme()
         # tk.Tk.iconbitmap(self,default='clienticon.ico')
         tk.Tk.wm_title(self, "Financial Budget Expert System")
         self.geometry("880x520")
@@ -224,14 +237,14 @@ class ESapp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
         container.configure(background='dark grey')
 
-        menubar = tk.Menu(container)
-        filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Save settings", command = lambda: popupmsg("Not supported just yet!"))
-        filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=quit)
-        menubar.add_cascade(label="File", menu=filemenu)
 
-        tk.Tk.config(self, menu=menubar)
+        # menubar = tk.Menu(container)
+        # filemenu = tk.Menu(menubar, tearoff=0)
+        # filemenu.add_command(label="Save settings", command = lambda: popupmsg("Not supported just yet!"))
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Exit", command=quit)
+        # menubar.add_cascade(label="File", menu=filemenu)
+        # tk.Tk.config(self, menu=menubar)
 
         self.frames = {}
 
@@ -244,6 +257,155 @@ class ESapp(tk.Tk):
 
 
         self.show_frame(StartPage)
+
+    def getTheme(self):
+        modern_theme = {
+            'tHeading': {
+                'configure': {
+                    'background': '#1a1a1a',
+                    'foreground': '#f2f2f2',
+                    'font': ('Serif', 15, 'bold')
+                }
+            },      
+            'TLabel': {
+                'configure': {
+                    'background': '#1a1a1a',
+                    'foreground': '#f2f2f2',
+                    'font': ('Helvetica', 10, 'bold'),
+                    'borderwidth': 0,
+                    'highlightthickness': 0,
+                    'padx': 5,
+                    'pady': 5
+                }
+            },
+            'TButton': {
+                'configure': {
+                    'background': '#0091ea',
+                    'foreground': '#f2f2f2',
+                    'font': ('Serif', 13, 'bold'),
+                    'borderwidth': 0,
+                    'highlightthickness': 0,
+                    'activebackground': '#006db3',
+                    'activeforeground': '#f2f2f2',
+                    'relief': 'flat',
+                    'padx': 5,
+                    'pady': 5,
+                    'width': 18,
+                    'anchor': 'center'
+                }
+            },
+            'TEntry': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'font': ('Helvetica', 10),
+                    'borderwidth': 0,
+                    'highlightthickness': 0,
+                    'padx': 5,
+                    'pady': 5,
+                    'width': 30
+                }
+            },
+            'Treeview': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'font': ('Helvetica', 10),
+                    'rowheight': 25,
+                    'borderwidth': 0,
+                    'highlightthickness': 0,
+                    'selectbackground': '#b3e5fc',
+                    'selectforeground': '#272727'
+                }
+            },
+            'Treeview.Heading': {
+                'configure': {
+                    'background': '#1a1a1a',
+                    'foreground': '#f2f2f2',
+                    'font': ('Helvetica', 10, 'bold'),
+                    'borderwidth': 0,
+                    'highlightthickness': 0,
+                    'padx': 5,
+                    'pady': 5,
+                    'relief': 'raised'
+                }
+            },
+            'Tframe': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'borderwidth': 1,
+                    'relief': 'flat',
+                    'highlightthickness': 0,
+                    'padx': 5,
+                    'pady': 5
+                }
+            },
+            'TNotebook': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'tabposition': 'n',
+                    'borderwidth': 1,
+                    'relief': 'flat',
+                    'highlightthickness': 0,
+                    'padx': 5,
+                    'pady': 5
+                }
+            },
+            'TNotebook.Tab': {
+                'configure': {
+                    'background': '#1a1a1a',
+                    'foreground': '#f2f2f2',
+                    'font': ('Helvetica', 10, 'bold'),
+                    'borderwidth': 0,
+                    'highlightthickness': 2,
+                    'highlightcolor': '#0091ea',
+                    'relief': 'flat',
+                    'padding': 10,
+                },
+                'map': {
+                    'background': [('selected', '#0091ea')],
+                    'foreground': [('selected', '#f2f2f2')],
+                    'expand': [('selected', [1, 1, 1, 0])]
+                }
+            },
+            'TCombobox': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'font': ('Helvetica', 10),
+                    'padding': 5,
+                    'width': 30,
+                    'selectbackground': '#2980b9',
+                    'selectforeground': '#f2f2f2',
+                    'borderwidth': 2,
+                    'bordercolor': '#2980b9',
+                    'highlightthickness': 2,
+                    'highlightcolor': '#2980b9',
+                    'arrowcolor': '#272727',
+                    'arrowpadding': 5,
+                    'arrowwidth': 12
+                }
+            },
+            'TComboboxPopdown': {
+                'configure': {
+                    'background': '#f2f2f2',
+                    'foreground': '#272727',
+                    'font': ('Helvetica', 10),
+                    'highlightthickness': 0,
+                    'borderwidth': 2,
+                    'bordercolor': '#2980b9'
+                }
+            },
+        }
+
+        # style.theme_create('modern', parent='default')
+        # style.theme_settings('modern', modern_theme)
+        # style.theme_use('modern')
+
+        return modern_theme
+
 
     def show_frame(self, cont):
         frame = self.frames[cont]
@@ -949,8 +1111,8 @@ class ExpertSystem:
         spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
 
         # print list of categories and percentage of spending
-        # for key, value in spending_percentages.items():
-        #     print(key, ': ', value)
+        for key, value in spending_percentages.items():
+            print(key, ': ', value)
 
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
         for category in spending_percentages:
@@ -1103,29 +1265,46 @@ def getSpendingPercentages(df):
     df = df[df['Withdrawal'] != 0]
     categories = df['Category'].unique()
     for category in categories:
-        spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
-        # spending_percentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / total_deposited
-    # print(spending_percentages)
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        spending_percentages[category] = {
+            'percentage': category_spending / total_deposited,
+            'amount': category_spending
+        }
+
     df_Essential = df[df['Category'].isin(essentialList)]
     df_Nonessential = df[df['Category'].isin(nonessentialList)]
     essential_spending = df_Essential['Withdrawal'].sum()
     nonessential_spending = df_Nonessential['Withdrawal'].sum()
 
-    spending_percentages['Essential Costs'] = essential_spending / total_spent
-    spending_percentages['Non-Essential Costs'] = nonessential_spending / total_spent
+    spending_percentages['Essential Costs'] = {
+        'percentage': essential_spending / total_spent,
+        'amount': essential_spending
+    }
+    spending_percentages['Non-Essential Costs'] = {
+        'percentage': nonessential_spending / total_spent,
+        'amount': nonessential_spending
+    }
 
-    #create a dictionary for essential and nonessential spending percentages
+    # create a dictionary for essential and nonessential spending percentages
     essential_spendingPercentages = {}
     nonessential_spendingPercentages = {}
     for category in essentialList:
-        essential_spendingPercentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / essential_spending
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        essential_spendingPercentages[category] = {
+            'percentage': category_spending / essential_spending,
+            'amount': category_spending
+        }
     for category in nonessentialList:
-        nonessential_spendingPercentages[category] = df[df['Category'] == category]['Withdrawal'].sum() / nonessential_spending
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        nonessential_spendingPercentages[category] = {
+            'percentage': category_spending / nonessential_spending,
+            'amount': category_spending
+        }
 
-    # print(essential_spendingPercentages)
-    # print(nonessential_spendingPercentages)
-        
-    # return spending_percentages
+    print('\nEssential Spending:')
+    print(essential_spendingPercentages)
+    print('Non-Essential Spending:')
+    print(nonessential_spendingPercentages)
 
 def main():
     global debt_list
