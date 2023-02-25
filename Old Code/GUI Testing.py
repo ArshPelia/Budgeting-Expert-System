@@ -134,6 +134,98 @@ class GraphPage(tk.Frame):
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+class investmentPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        global investment_list
+        tk.Frame.__init__(self, parent)
+        self.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        label = ttk.Label(self, text="Investment List", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button = ttk.Button(self, text="Continue",
+                            command=lambda: controller.show_frame(InferencesPage))
+        button.pack()
+
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack(pady=10,padx=10)
+
+        input_frame = tk.Frame(self)
+        #pack frame so it sits in the middle of the page
+        input_frame.pack(fill="both", expand=True)
+
+
+        # Create labels and entry widgets for the investment parameters
+        name_label = tk.Label(input_frame, text="Account:")
+        name_label.grid(row=0, column=0, padx=10, pady=10)
+        self.name_entry = tk.Entry(input_frame)
+        self.name_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        amount_label = tk.Label(input_frame, text="investment Amount:")
+        amount_label.grid(row=1, column=0, padx=10, pady=10)
+        self.amount_entry = tk.Entry(input_frame)
+        self.amount_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
+        interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
+        self.interest_rate_entry = tk.Entry(input_frame)
+        self.interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        # Create a button to add a new investment to the list
+        add_button = ttk.Button(input_frame, text="Add investment", command=self.add_investment)
+        add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        # Create a frame for the investment list
+        list_frame = tk.Frame(self)
+        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10)) #fill both means it will fill the entire frame, expand true means it will expand to fill the entire frame
+
+        # Create a Treeview widget to display the investment list
+        self.investment_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
+        self.investment_treeview.heading("#0", text="ID")
+        self.investment_treeview.heading("name", text="Account")
+        self.investment_treeview.heading("amount", text="investment Amount")
+        self.investment_treeview.heading("interest_rate", text="Interest Rate (%)")
+        #center all columns
+        self.investment_treeview.column("#0", anchor="center", width=50)
+        self.investment_treeview.column("name", anchor="center", width=200)
+        self.investment_treeview.column("amount", anchor="center", width=200)
+        self.investment_treeview.column("interest_rate", anchor="center", width=200)
+        self.investment_treeview.pack(fill="both", expand=True)
+
+        # Initialize the investment list
+        self.investment_list = investment_list
+        self.next_investment_id = 1
+
+    def add_investment(self):
+        # Get the input values
+        name = self.name_entry.get()
+        amount = int(self.amount_entry.get())
+        interest_rate = float(self.interest_rate_entry.get())
+
+        # Add the new investment to the list
+        self.investment_list.append({'id': self.next_investment_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate})
+        self.next_investment_id += 1
+
+        # Clear input fields
+        self.name_entry.delete(0, tk.END)
+        self.amount_entry.delete(0, tk.END)
+        self.interest_rate_entry.delete(0, tk.END)
+
+        # Update the investment list display
+        self.update_investment_list()
+
+    def update_investment_list(self):
+        # Clear the existing items in the Treeview
+        self.investment_treeview.delete(*self.investment_treeview.get_children())
+
+        # Insert the updated investment list into the Treeview
+        for investment in self.investment_list:
+            self.investment_treeview.insert("", "end", text=investment['id'], values=(investment['name'], investment['amount'], investment['interest_rate']))
+
+        print(self.investment_list)
+
+
 def main():
     app = ESapp()
     app.mainloop()

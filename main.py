@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
-import matplotlib
+import matplotlib, operator
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
 from matplotlib.figure import Figure
@@ -23,27 +23,21 @@ incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Other']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
 global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_thresholds, spending_percentages
+global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 global essential_spendingPercentages, nonessential_spendingPercentages
 
+
+global debt_list, investment_list, statusDict, spending_thresholds
+debt_list = []
+# investment_list = []
+allInferences = []
+statusDict= {'Spending': 'Optimal', 'Savings': 'Optimal', 'Debt': 'Optimal', 'Chronic Overspending': 'Optimal'}
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
                        'Shopping': 0.2, 'Transportation': 0.1, 'Bills': 0.1, 
                        'Loan Payment': 0.1, 'Essential Costs': 0.5, 
                        'Non-Essential Costs': 0.3, 'Entertainment': 0.1,
                        'Personal Care': 0.1, 'Healthcare': 0.1}
-
-# debt_list = [
-#     {'name': 'Credit card', 'amount': 5000, 'interest_rate': 15},
-#     {'name': 'Student loan', 'amount': 20000, 'interest_rate': 5},
-#     {'name': 'Car loan', 'amount': 10000, 'interest_rate': 7},
-#     {'name': 'Mortgage', 'amount': 100000, 'interest_rate': 3},
-# ]
-
-global debt_list, investment_list
-debt_list = []
-investment_list = []
-allInferences = []
 
 def getTheme():
     modern_theme = {
@@ -59,8 +53,8 @@ def getTheme():
         },      
         'TLabel': {
             'configure': {
-                'background': '#009B4D',
-                'foreground': '#FAF5E9',
+                'background': '#009B4D', #green
+                'foreground': '#FAF5E9', #white
                 'font': ('Helvetica', 10, 'bold'),
                 'borderwidth': 0,
                 'highlightthickness': 0,
@@ -401,7 +395,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage, recommendationsPage):
+        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage, StatusPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -421,7 +415,7 @@ class ESapp(tk.Tk):
         elif cont == InferencesPage:
             if allInferences == []:
                 self.select_file()
-            self.geometry("950x650")
+            self.geometry("950x650")        
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -621,97 +615,6 @@ class DebtPage(tk.Frame):
 
         # print(self.debt_list)
 
-class investmentPage(tk.Frame):
-
-    def __init__(self, parent, controller):
-        global investment_list
-        tk.Frame.__init__(self, parent)
-        self.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-        label = ttk.Label(self, text="Investment List", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-
-        button = ttk.Button(self, text="Continue",
-                            command=lambda: controller.show_frame(InferencesPage))
-        button.pack()
-
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack(pady=10,padx=10)
-
-        input_frame = tk.Frame(self)
-        #pack frame so it sits in the middle of the page
-        input_frame.pack(fill="both", expand=True)
-
-
-        # Create labels and entry widgets for the investment parameters
-        name_label = tk.Label(input_frame, text="Account:")
-        name_label.grid(row=0, column=0, padx=10, pady=10)
-        self.name_entry = tk.Entry(input_frame)
-        self.name_entry.grid(row=0, column=1, padx=10, pady=10)
-
-        amount_label = tk.Label(input_frame, text="investment Amount:")
-        amount_label.grid(row=1, column=0, padx=10, pady=10)
-        self.amount_entry = tk.Entry(input_frame)
-        self.amount_entry.grid(row=1, column=1, padx=10, pady=10)
-
-        interest_rate_label = tk.Label(input_frame, text="Interest Rate (%):")
-        interest_rate_label.grid(row=2, column=0, padx=10, pady=10)
-        self.interest_rate_entry = tk.Entry(input_frame)
-        self.interest_rate_entry.grid(row=2, column=1, padx=10, pady=10)
-
-        # Create a button to add a new investment to the list
-        add_button = ttk.Button(input_frame, text="Add investment", command=self.add_investment)
-        add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
-
-        # Create a frame for the investment list
-        list_frame = tk.Frame(self)
-        list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10)) #fill both means it will fill the entire frame, expand true means it will expand to fill the entire frame
-
-        # Create a Treeview widget to display the investment list
-        self.investment_treeview = ttk.Treeview(list_frame, columns=("name", "amount", "interest_rate"))
-        self.investment_treeview.heading("#0", text="ID")
-        self.investment_treeview.heading("name", text="Account")
-        self.investment_treeview.heading("amount", text="investment Amount")
-        self.investment_treeview.heading("interest_rate", text="Interest Rate (%)")
-        #center all columns
-        self.investment_treeview.column("#0", anchor="center", width=50)
-        self.investment_treeview.column("name", anchor="center", width=200)
-        self.investment_treeview.column("amount", anchor="center", width=200)
-        self.investment_treeview.column("interest_rate", anchor="center", width=200)
-        self.investment_treeview.pack(fill="both", expand=True)
-
-        # Initialize the investment list
-        self.investment_list = investment_list
-        self.next_investment_id = 1
-
-    def add_investment(self):
-        # Get the input values
-        name = self.name_entry.get()
-        amount = int(self.amount_entry.get())
-        interest_rate = float(self.interest_rate_entry.get())
-
-        # Add the new investment to the list
-        self.investment_list.append({'id': self.next_investment_id, 'name': name, 'amount': amount, 'interest_rate': interest_rate})
-        self.next_investment_id += 1
-
-        # Clear input fields
-        self.name_entry.delete(0, tk.END)
-        self.amount_entry.delete(0, tk.END)
-        self.interest_rate_entry.delete(0, tk.END)
-
-        # Update the investment list display
-        self.update_investment_list()
-
-    def update_investment_list(self):
-        # Clear the existing items in the Treeview
-        self.investment_treeview.delete(*self.investment_treeview.get_children())
-
-        # Insert the updated investment list into the Treeview
-        for investment in self.investment_list:
-            self.investment_treeview.insert("", "end", text=investment['id'], values=(investment['name'], investment['amount'], investment['interest_rate']))
-
-        print(self.investment_list)
-
 class filePage(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -769,7 +672,7 @@ class InferencesPage(tk.Frame):
         button4.pack(padx=10, pady=5)
 
         button5 = ttk.Button(self, text="View by Category",
-                            command=lambda: controller.show_frame(recommendationsPage))
+                            command=lambda: controller.show_frame(StatusPage))
         button5.pack(padx=10, pady=5)
 
         label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
@@ -1030,7 +933,7 @@ class GraphPage(tk.Frame):
         # toolbar.update()
         # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-class recommendationsPage(tk.Frame):
+class StatusPage(tk.Frame):
     
     def __init__(self, parent, controller):
 
@@ -1042,12 +945,12 @@ class recommendationsPage(tk.Frame):
                             command=lambda: controller.show_frame(InferencesPage))
         button.pack()
 
-        button3 = ttk.Button(self, text="Show Inferences",
+        button3 = ttk.Button(self, text="Show Status",
                             command= lambda: self.showInferences())
         button3.pack(padx=10, pady=5)
 
     def showInferences(self):
-        global allInferences
+        global allInferences, statusDict
         if len(allInferences) == 0:
             return
         
@@ -1064,7 +967,6 @@ class recommendationsPage(tk.Frame):
             #check if allinferencetypes has any inferences of that type
             if not any(i.type == inferenceType for i in allInferences):
                 continue
-            
 
             # create a frame for the tab
             frame = tk.Frame(self.inferenceNotebook)
@@ -1081,15 +983,23 @@ class recommendationsPage(tk.Frame):
                         
             # update the label based on the most severe inference
             if most_severe == 0:
-                label["text"] += "Unknown"
+                label["text"] += "Optimal"
             elif most_severe == 1:
                 label["text"] += "Minor"
+                statusDict[inferenceType] = "Minor"
+                label["background"] = "green"
             elif most_severe == 2:
                 label["text"] += "Moderate"
+                statusDict[inferenceType] = "Moderate"
+                label["background"] = "yellow"
             elif most_severe == 3:
                 label["text"] += "Alarming"
+                statusDict[inferenceType] = "Alarming"
+                label["background"] = "orange"
             elif most_severe == 4:
                 label["text"] += "Critical"
+                statusDict[inferenceType] = "Critical"
+                label["background"] = "red"
 
             columns = ("Type", "Premise", "Recommendation")
             tree = ttk.Treeview(frame, columns=columns, show="headings")
@@ -1126,6 +1036,46 @@ class recommendationsPage(tk.Frame):
             
             # add the tab to the notebook
             self.inferenceNotebook.add(frame, text=inferenceType)
+
+            # print('Status of ' + inferenceType + ': ')
+            # print(statusDict)
+
+           # create a frame for the table
+        
+            
+        frame = tk.Frame(self)
+        frame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        
+        # create the treeview
+        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.heading("Category", text="Category")
+        tree.heading("Status", text="Status")
+        tree.heading("# Inferences", text="# Inferences")
+        tree.heading("Most Severe Inference", text="Most Severe Inference")
+        tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        
+        # sort the categories by status
+        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
+        
+        # populate the treeview with data for each category
+        for category in categories:
+            count = sum(i.type == category for i in allInferences)
+            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
+            
+            tree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
+            tree.tag_configure("Optimal", background="light Green")
+            tree.tag_configure("Minor", background="light gray")
+            tree.tag_configure("Moderate", background="yellow")
+            tree.tag_configure("Alarming", background="orange")
+            tree.tag_configure("Critical", background="red")
+        
+        # make the table sortable by clicking on the column headers
+        for col in columns:
+            tree.heading(col, text=col, command=lambda c=col: operator.sortby(tree, c, 0))
+            
+        # set the default sort order to be by status
+        tree.set("", "Status")
 
 class ExpertSystem:
     def __init__(self, df, debt_list):
