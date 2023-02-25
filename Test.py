@@ -19,7 +19,7 @@ spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing',
              'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
 essentialList = ['Groceries', 'Housing', 'Bills', 'Loan Payment', 'Transportation', 'Healthcare']
 nonessentialList = ['Dining Out', 'Shopping', 'Entertainment', 'Personal Care']
-incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Other']
+incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Trading']
 
 global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
 global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
