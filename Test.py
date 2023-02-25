@@ -1058,12 +1058,20 @@ class recommendationsPage(tk.Frame):
         self.inferenceNotebook = ttk.Notebook(self)
         self.inferenceNotebook.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
 
-        inferenceTypes = ["Spending", "Chronic Overpending", "Debt", "Savings", "Cashflow"]
+        inferenceTypes = ["Spending", "Chronic Overspending", "Debt", "Savings", "Cashflow"]
 
         for inferenceType in inferenceTypes:
+            #check if allinferencetypes has any inferences of that type
+            if not any(i.type == inferenceType for i in allInferences):
+                continue
+            
+
             # create a frame for the tab
             frame = tk.Frame(self.inferenceNotebook)
             frame.pack(expand=True, fill=tk.BOTH)
+
+            label = ttk.Label(frame, text=(inferenceType + " Health: "), font=LARGE_FONT)
+            label.pack(pady=10,padx=10)
 
             columns = ("Type", "Premise", "Recommendation")
             tree = ttk.Treeview(frame, columns=columns, show="headings")
