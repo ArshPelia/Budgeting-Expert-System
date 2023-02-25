@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
-import matplotlib, operator
+import matplotlib, operator, calendar
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
 from matplotlib.figure import Figure
@@ -25,7 +25,7 @@ global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_mo
 global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
 global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
-global essential_spendingPercentages, nonessential_spendingPercentages
+global essential_spendingPercentages, nonessential_spendingPercentages, Monthly_debt_payment
 
 
 global debt_list, investment_list, statusDict, spending_thresholds
@@ -179,6 +179,8 @@ def popupmsg(msg):
 
 def viewInference(type, premise, conclusion):
     global dataFrame, savings_per_month, debt_list, essential_spendingPercentages, nonessential_spendingPercentages
+    global monthly_income, Monthly_debt_payment, monthly_essentialSpend, monthly_nonessentialSpend, savings_per_month
+    global avg_monthly_withdrawals
     popup = tk.Tk()
     popup.wm_title("Inference")
     label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
@@ -266,22 +268,31 @@ def viewInference(type, premise, conclusion):
             canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     
     elif type == 'Debt':
+
+        lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+        lblIncome.pack(side="top", fill="x", pady=10, padx=10)
+
+        lblDebt = ttk.Label(popup, text="Minimium Monthly Payments: " + str(Monthly_debt_payment), font=NORM_FONT)
+        lblDebt.pack(side="top", fill="x", pady=10, padx=10)
+
         #insert table of debt list
-        debt_tree = ttk.Treeview(popup, columns=("name", "amount", "interest_rate"))
+        debt_tree = ttk.Treeview(popup, columns=("name", "amount", "interest_rate", "min_payment"))
         debt_tree.heading("#0", text="ID", anchor=tk.W)
         debt_tree.heading("name", text="Name", anchor=tk.W)
         debt_tree.heading("amount", text="Amount", anchor=tk.W)
         debt_tree.heading("interest_rate", text="Interest Rate", anchor=tk.W)
+        debt_tree.heading("min_payment", text="Minimum Payment (%)", anchor=tk.W)
 
         debt_tree.column("#0", minwidth=0, width=50, stretch=tk.NO)
         debt_tree.column("name", minwidth=0, width=100, stretch=tk.NO)
         debt_tree.column("amount", minwidth=0, width=100, stretch=tk.NO)
         debt_tree.column("interest_rate", minwidth=0, width=100, stretch=tk.NO)
+        debt_tree.column("min_payment", minwidth=0, width=100, stretch=tk.NO)
 
         debt_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         for debt in debt_list:
-            debt_tree.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate']))
+            debt_tree.insert("", "end", text=debt['id'], values=(debt['name'], debt['amount'], debt['interest_rate'], debt['min_payment']))
 
         for item in debt_tree.get_children():
             interest_rate = float(debt_tree.item(item)['values'][2])
@@ -290,9 +301,16 @@ def viewInference(type, premise, conclusion):
         debt_tree.tag_configure('high_interest', foreground='red')
     
     elif type == 'Spending':
-        if premise == 'Essential Costs accounts for more than 0.5% of your income':
+        print('Spending')
+        if premise == 'Essential Costs accounts for more than 0.5% of your income.':
             # create a treeview widget
             tree = ttk.Treeview(popup)
+
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", fill="x", pady=10, padx=10)
+
+            lblEssential = ttk.Label(popup, text="Monthly Essential Spending: " + str(monthly_essentialSpend), font=NORM_FONT)
+            lblEssential.pack(side="top", fill="x", pady=10, padx=10)
 
             # define the columns of the treeview
             tree['columns'] = ('Percentage', 'Amount Spent')
@@ -309,9 +327,15 @@ def viewInference(type, premise, conclusion):
 
             tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        elif premise == 'Non-Essential Costs accounts for more than 0.3% of your income':
+        elif premise == 'Non-Essential Costs accounts for more than 0.3% of your income.':
             # create a treeview widget
             tree = ttk.Treeview(popup)
+
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", fill="x", pady=10, padx=10)
+
+            lblEssential = ttk.Label(popup, text="Monthly Non-Essential Spending: " + str(monthly_nonessentialSpend), font=NORM_FONT)
+            lblEssential.pack(side="top", fill="x", pady=10, padx=10)
 
             # define the columns of the treeview
             tree['columns'] = ('Percentage', 'Amount Spent')
@@ -341,17 +365,9 @@ def viewInference(type, premise, conclusion):
                 category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
                 spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
 
-                # Plot the spikes
-                # f = Figure(figsize=(12,5), dpi=100)
-                # ax = plt.subplots()
-                # ax.plot(category_df['Month'], category_df['Withdrawal'], label='Spending')
-                # ax.plot(spikes['Month'], spikes['Withdrawal'], 'ro', label='Spike')
-                # ax.axhline(avg_spending, color='black', linestyle='dashed', label='Average Monthly Spending')
-                # ax.set_xlabel('Month')
-                # ax.set_ylabel('Withdrawal')
-                # ax.legend()
-                # ax.set_title(f"Spikes in average spending in category '{category}'")
-                # plt.show()
+                # convert month number to month name
+                category_df['Month'] = category_df['Month'].apply(lambda x: calendar.month_name[x])
+                spikes['Month'] = spikes['Month'].apply(lambda x: calendar.month_name[x])
 
                 f = Figure(figsize=(12,5), dpi=100)
                 a = f.add_subplot(111)
@@ -366,8 +382,39 @@ def viewInference(type, premise, conclusion):
                 canvas = FigureCanvasTkAgg(f, popup)
                 canvas.draw()
                 canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-                
 
+    elif type == 'Savings':
+        if 'Monthly Savings' in premise:           
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+
+            lblSavings = ttk.Label(popup, text="Monthly Savings: " + str(savings_per_month), font=NORM_FONT)
+            lblSavings.pack(side="top", fill="x", pady=10, padx=10)
+        
+        elif 'Emergency' in premise:
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+
+            lblSavings = ttk.Label(popup, text="Monthly Spendature: " + str(avg_monthly_withdrawals), font=NORM_FONT)
+            lblSavings.pack(side="top", fill="x", pady=10, padx=10)
+
+            lblEmergency = ttk.Label(popup, text="Emergency Fund: " + str(emergency_fund), font=NORM_FONT)
+            lblEmergency.pack(side="top", fill="x", pady=10, padx=10)
+
+        elif 'Retirement' in premise:
+            yearly_income = monthly_income * 12
+            optimal_retirement_fund = (yearly_income * 0.15) * (age - 25)
+            lblIncome = ttk.Label(popup, text="Yearly Income: " + str(yearly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+
+            lblRetirement = ttk.Label(popup, text="Current Retirement Fund: " + str(retirement_fund), font=NORM_FONT)
+            lblRetirement.pack(side="top", fill="x", pady=10, padx=10)
+
+            lblOptimal = ttk.Label(popup, text="Optimal Retirement Fund: " + str(optimal_retirement_fund), font=NORM_FONT)
+            lblOptimal.pack(side="top", fill="x", pady=10, padx=10)
+
+            lblnote = ttk.Label(popup, text="Note: Optimal retirement fund is calculated assuming a 15% allocation of yearly income beginning at the age of 25.", font=NORM_FONT)
+            lblnote.pack(side="top", fill="x", pady=10, padx=10)
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
@@ -601,6 +648,7 @@ class DebtPage(tk.Frame):
         self.name_entry.delete(0, tk.END)
         self.amount_entry.delete(0, tk.END)
         self.interest_rate_entry.delete(0, tk.END)
+        self.min_payment_entry.delete(0, tk.END)
 
         # Update the debt list display
         self.update_debt_list()
@@ -1096,27 +1144,33 @@ class ExpertSystem:
         self.inferences.append(Inference(type, premise, conclusion, severity))
 
     def evaluateDebt(self):
-        global monthly_income
+        global monthly_income, Monthly_debt_payment
         high_interest_debt = []
         Monthly_debt_payment = 0
 
         for debt in self.debt_list:
-            Monthly_debt_payment += debt['amount'] * debt['min_payment']
+            Monthly_debt_payment += (debt['amount'] * debt['min_payment'] / 100) 
             if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
                 high_interest_debt.append(debt)
+
+        # print('Monthly Debt Payment: ' + str(Monthly_debt_payment))
+        
+        dti = Monthly_debt_payment / monthly_income
         
         if high_interest_debt:
-            self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, consider paying off the debt first.', 2)
+            self.add_rule('Debt','high_interest_debt', 'High-interest debt detected, prioritize paying off debts with an interest rate greater than 8%.', 2)
             self.add_fact('Debt','high_interest_debt', True)
         
         if Monthly_debt_payment > 0.5 * monthly_income:
-            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio greater than 50% of monthly income, consider paying off some debt or increasing your income.', 3)
+            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str(dti), 3)
             self.add_fact('Debt','High_DTI', True)
+       
         elif Monthly_debt_payment > 0.3 * monthly_income and Monthly_debt_payment <= 0.5 * monthly_income:
-            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is managable but leaves little to invest. (30% > DIT < 50% of monthly income)', 2)
+            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str(dti), 2)
             self.add_fact('Debt','Moderate_DTI', True)
+        
         elif Monthly_debt_payment <= 0.3 * monthly_income and Monthly_debt_payment > 0.1 * monthly_income:
-            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is low (<30% of monthly income) but it can be improved.', 1)
+            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is moderate but it can be improved. DTI: ' + str(dti), 1)
             self.add_fact('Debt','Low_DTI', True)
 
     def makeInferences(self):
@@ -1187,11 +1241,11 @@ class ExpertSystem:
             if spending_percentages[category] > spending_thresholds[category]:
                 # print(category + ' Spending is too high')
                 if category == 'Essential Costs':
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 1)
-                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income.', 'Lower your ' + category + ' spending.', 1)
+                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income.', True)
                 elif category == 'Non-Essential Costs':
-                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', 'Lower your ' + category + ' spending.', 3)
-                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income', True)
+                    self.add_rule('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income.', 'Lower your ' + category + ' spending.', 3)
+                    self.add_fact('Spending', category + ' accounts for more than '+ str(threshold) + '% of your income.', True)
 
     def eval_Savings(self):
         global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
@@ -1216,7 +1270,7 @@ class ExpertSystem:
                 self.add_fact('Savings','Insufficient Emergency Fund', True)
         if age >= 25:
             yearly_income = monthly_income * 12
-            optimal_retirement_fund = (yearly_income * 1.15) * (65 - age)
+            optimal_retirement_fund = (yearly_income * .15) * (age - 25)
             if retirement_fund < optimal_retirement_fund:
                 if retirement_fund > optimal_retirement_fund * 0.8:
                     self.add_rule('Savings','Moderate Retirement Fund', 'Your retirement fund is moderate but not optimal assuming 15% of yearly income from age 25.', 1)

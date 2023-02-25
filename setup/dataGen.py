@@ -78,7 +78,7 @@ global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_mo
 def preprocess():
     global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
 
-    df = pd.read_csv('Datasets/accountactivity.csv', names=headerlist) #assign column names 
+    df = pd.read_csv('Datasets/Randomize.csv', names=headerlist) #assign column names 
     df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
 
     # convert the date column to a datetime format
@@ -110,7 +110,7 @@ def preprocess():
     monthly_income = avg_monthly_income
     total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
-    df.to_csv('New Data/data-4.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
+    df.to_csv('New Data/alldata.csv', index=False) # save the dataframe to a csv file, index=False means it will not save the index column (0, 1, 2, 3, ...)
 
 
 preprocess()
