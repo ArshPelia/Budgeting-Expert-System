@@ -128,8 +128,8 @@ def getTheme():
                 'borderwidth': 5,
                 'relief': 'flat',
                 'highlightthickness': 0,
-                'padx': 5,
-                'pady': 5
+                'padx': 10,
+                'pady': 10
             }
         },
         'TNotebook': {
@@ -140,10 +140,23 @@ def getTheme():
                 'borderwidth': 1,
                 'relief': 'flat',
                 'highlightthickness': 0,
-                'padx': 5,
-                'pady': 5
+                'padx': 10,
+                'pady': 10
             }
-        }
+        },
+        'TNotebook.Tab': {
+            'configure': {
+                'background': '#009B4D',
+                'foreground': '#FAF5E9',
+                'font': ('Helvetica', 10, 'bold'),
+                'borderwidth': 0,
+                'highlightthickness': 0,
+                'padx': 10,
+                'pady': 10,
+                'relief': 'raised'
+            }
+        },
+
     }
 
     return modern_theme
@@ -322,6 +335,45 @@ def viewInference(type, premise, conclusion):
 
             tree.pack(fill="both", expand=True, padx=10, pady=10)
 
+    elif type == 'Chronic Overspending':
+        df = dataFrame
+        for c in spendList:
+            if c in conclusion:
+                category = c
+               
+                category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
+                category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Withdrawal column
+                avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
+                category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
+                spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
+
+                # Plot the spikes
+                # f = Figure(figsize=(12,5), dpi=100)
+                # ax = plt.subplots()
+                # ax.plot(category_df['Month'], category_df['Withdrawal'], label='Spending')
+                # ax.plot(spikes['Month'], spikes['Withdrawal'], 'ro', label='Spike')
+                # ax.axhline(avg_spending, color='black', linestyle='dashed', label='Average Monthly Spending')
+                # ax.set_xlabel('Month')
+                # ax.set_ylabel('Withdrawal')
+                # ax.legend()
+                # ax.set_title(f"Spikes in average spending in category '{category}'")
+                # plt.show()
+
+                f = Figure(figsize=(12,5), dpi=100)
+                a = f.add_subplot(111)
+                a.plot(category_df['Month'], category_df['Withdrawal'], label='Spending')
+                a.plot(spikes['Month'], spikes['Withdrawal'], 'ro', label='Spike')
+                a.axhline(avg_spending, color='black', linestyle='dashed', label='Average Monthly Spending')
+                a.set_xlabel('Month')
+                a.set_ylabel('Withdrawal')
+                a.legend()
+                a.set_title(f"Spikes in average spending in category '{category}'")
+
+                canvas = FigureCanvasTkAgg(f, popup)
+                canvas.draw()
+                canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+                
+
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
@@ -349,7 +401,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage):
+        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage, recommendationsPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -685,7 +737,6 @@ class filePage(tk.Frame):
                             command=quit)
         button2.pack(padx=10, pady=5)
 
-
 class InferencesPage(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -716,6 +767,10 @@ class InferencesPage(tk.Frame):
         button4 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(GraphPage))
         button4.pack(padx=10, pady=5)
+
+        button5 = ttk.Button(self, text="View by Category",
+                            command=lambda: controller.show_frame(recommendationsPage))
+        button5.pack(padx=10, pady=5)
 
         label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
         label1.pack(pady=10,padx=5)
@@ -975,6 +1030,77 @@ class GraphPage(tk.Frame):
         # toolbar.update()
         # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
+class recommendationsPage(tk.Frame):
+    
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Recommendations", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+
+        button = ttk.Button(self, text="Back to Inferences",
+                            command=lambda: controller.show_frame(InferencesPage))
+        button.pack()
+
+        button3 = ttk.Button(self, text="Show Inferences",
+                            command= lambda: self.showInferences())
+        button3.pack(padx=10, pady=5)
+
+    def showInferences(self):
+        global allInferences
+        if len(allInferences) == 0:
+            return
+        
+        # check if the notebook already exists
+        if hasattr(self, "inferenceNotebook"):
+            self.inferenceNotebook.destroy()
+
+        self.inferenceNotebook = ttk.Notebook(self)
+        self.inferenceNotebook.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        inferenceTypes = ["Spending", "Chronic Overpending", "Debt", "Savings", "Cashflow"]
+
+        for inferenceType in inferenceTypes:
+            # create a frame for the tab
+            frame = tk.Frame(self.inferenceNotebook)
+            frame.pack(expand=True, fill=tk.BOTH)
+
+            columns = ("Type", "Premise", "Recommendation")
+            tree = ttk.Treeview(frame, columns=columns, show="headings")
+            tree.heading("Type", text="Type")
+            tree.heading("Premise", text="Premise")
+            tree.heading("Recommendation", text="Recommendation")
+            tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+            for i in allInferences:
+                if i.type == inferenceType:
+                    if i.severity == 1:
+                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Minor",))
+                    elif i.severity == 2:
+                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Moderate",))
+                    elif i.severity == 3:
+                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Alarming",))
+                    elif i.severity == 4:
+                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Critical",))
+
+            tree.tag_configure("Critical", background="red")
+            tree.tag_configure("Alarming", background="orange")
+            tree.tag_configure("Moderate", background="yellow")
+            tree.tag_configure("Minor", background="white")
+
+            # def selectRecord(event):
+            #     item = tree.focus()
+            #     values = tree.item(item, "values")
+            #     type, premise, recommendation = values
+
+            #     viewInference(type, premise, recommendation)
+
+            # tree.bind("<Double-1>", selectRecord)
+            tree["displaycolumns"] = ("Recommendation",)
+            
+            # add the tab to the notebook
+            self.inferenceNotebook.add(frame, text=inferenceType)
+
 class ExpertSystem:
     def __init__(self, df, debt_list):
         self.df = df
@@ -1211,26 +1337,63 @@ def preprocess(filename):
     global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
     
     df = pd.read_csv(filename)
-    current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-    
-    avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-    avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-    savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-    
-    avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-    avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-    savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-    
-    # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-    # avg_monthly_income = monthly_income / df['Month'].nunique()
-    # monthly_income = avg_monthly_income
-    monthly_income = avg_monthly_deposits
+    expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
+  
+    if set(df.columns.tolist()) == set(expected_headers):
+        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+        
+        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+        
+        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+        
+        # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+        # avg_monthly_income = monthly_income / df['Month'].nunique()
+        # monthly_income = avg_monthly_income
+        monthly_income = avg_monthly_deposits
 
-    total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+        total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
-    return df 
+    else:
+        df = pd.read_csv(filename, names=headerlist) #assign column names 
+        df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
+
+        # convert the date column to a datetime format
+        df['Date'] = pd.to_datetime(df['Date'])
+        df['Week'] = df['Date'].dt.week
+        df['Month'] = df['Date'].dt.month
+        df['Year'] = df['Date'].dt.year
+
+        for i in range(len(df)): # iterate through the dataframe
+            if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
+                df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
+            else:
+                df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
+
+        current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+        total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+        total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+
+        avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+        avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+        savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+
+        avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+        avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+        savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+
+        # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
+        # avg_monthly_income = monthly_income / df['Month'].nunique()
+        # monthly_income = avg_monthly_income
+        monthly_income = avg_monthly_deposits
+        total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+
+    return df
 
 def getSpendingPercentages(df):
     global essential_spendingPercentages, nonessential_spendingPercentages, essentialList, nonessentialList

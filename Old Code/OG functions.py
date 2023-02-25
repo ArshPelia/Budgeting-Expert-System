@@ -300,7 +300,7 @@ def wishlist(price, savings = 10):
 def plot_spikes_by_month(df, category):
     category_df = df[df['Category'] == category] # filter out all the rows that have the category we are looking for
     category_df = category_df.groupby(['Month'])['Withdrawal'].sum().reset_index() # group the dataframe by Category and sum the Withdrawal column
-    avg_spending = category_df['Withdrawal'].mean() # calculate the average spending for the category
+    avg_spending = category_df['Withdrawal'].mean() # alculate the average spending for the category
     category_df['Above_Avg'] = category_df['Withdrawal'] > avg_spending # create a new column that is True if the spending is above the average spending
     spikes = category_df[category_df['Above_Avg'] == True] # filter out all the rows that have False in the Above_Avg column
 
@@ -398,16 +398,16 @@ def main():
     # plotIncome(df)
     # plotSpending(df)
     # plot_cashflow(df)
-    print(calc_week_avgs(df))
-    print()
-    print(calc_monthly_avgs(df))
-    plot_weekly_avgs(calc_week_avgs(df))
-    plot_montly_avgs(calc_monthly_avgs(df))
+    # print(calc_week_avgs(df))
+    # print()
+    # print(calc_monthly_avgs(df))
+    # plot_weekly_avgs(calc_week_avgs(df))
+    # plot_montly_avgs(calc_monthly_avgs(df))
     # for x in spendList:
     #     detect_spikes(df, x)
     #     detect_spikes_by_month(df, x)
 
-    # plot_spikes_by_month(df, 'Groceries')
+    plot_spikes_by_month(df, 'Groceries')
     # essentialvsNonEssentialSpending(df)
     # debt_analysis_result = debt_analysis(debt_list)
     # print(debt_analysis_result)
