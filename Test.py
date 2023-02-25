@@ -1073,6 +1073,24 @@ class recommendationsPage(tk.Frame):
             label = ttk.Label(frame, text=(inferenceType + " Health: "), font=LARGE_FONT)
             label.pack(pady=10,padx=10)
 
+            most_severe = 0  # keep track of the most severe inference
+            for i in allInferences:
+                if i.type == inferenceType:
+                    if i.severity > most_severe:
+                        most_severe = i.severity
+                        
+            # update the label based on the most severe inference
+            if most_severe == 0:
+                label["text"] += "Unknown"
+            elif most_severe == 1:
+                label["text"] += "Minor"
+            elif most_severe == 2:
+                label["text"] += "Moderate"
+            elif most_severe == 3:
+                label["text"] += "Alarming"
+            elif most_severe == 4:
+                label["text"] += "Critical"
+
             columns = ("Type", "Premise", "Recommendation")
             tree = ttk.Treeview(frame, columns=columns, show="headings")
             tree.heading("Type", text="Type")
