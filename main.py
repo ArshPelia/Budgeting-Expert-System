@@ -26,9 +26,8 @@ global savings_per_week, savings_per_month, total_deposited, total_spent, curren
 global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 global essential_spendingPercentages, nonessential_spendingPercentages, Monthly_debt_payment
-
-
 global debt_list, investment_list, statusDict, spending_thresholds
+
 debt_list = []
 # investment_list = []
 allInferences = []
@@ -442,7 +441,7 @@ class ESapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, InferencesPage, GraphPage, DebtPage, filePage, StatusPage):
+        for F in (StartPage, statsPage, GraphPage, DebtPage, filePage, inferencesPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -459,7 +458,7 @@ class ESapp(tk.Tk):
             self.geometry("1100x850")
         elif cont == filePage:
             self.geometry("400x200")
-        elif cont == InferencesPage:
+        elif cont == statsPage:
             if allInferences == []:
                 self.select_file()
             self.geometry("950x650")        
@@ -677,7 +676,7 @@ class filePage(tk.Frame):
 
         button1 = ttk.Button(self, text="Open a File",
                             # command=lambda: controller.startup(InferencesPage))
-                            command=lambda: controller.show_frame(InferencesPage))
+                            command=lambda: controller.show_frame(statsPage))
         button1.pack(padx=10, pady=5)
 
 
@@ -688,44 +687,127 @@ class filePage(tk.Frame):
                             command=quit)
         button2.pack(padx=10, pady=5)
 
-class InferencesPage(tk.Frame):
+class statsPage(tk.Frame):
 
     def __init__(self, parent, controller):
-        global filename
+        global filename, essential_spendingPercentages, nonessential_spendingPercentages
+        global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
+        global savings_per_week, savings_per_month, total_deposited, total_spent
+        global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
         self.controller = controller
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        # lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
-        # lbl_selectFile.pack(pady=10,padx=10)
-
-        # button1 = ttk.Button(self, text="Open a File",
-        #                     command=lambda: controller.startup(InferencesPage))
-        # button1.pack(padx=10, pady=5)
-
-        # button1 = ttk.Button(self, text="Back to Home",
-        #                     command=lambda: controller.show_frame(StartPage))
-        # button1.pack(pady=10,padx=10)
         button2 = ttk.Button(self, text="Exit Program",
                             command=quit)
         button2.pack(padx=10, pady=5)
 
-        button3 = ttk.Button(self, text="Show Inferences",
-                            command= lambda: self.showInferences())
+        button3 = ttk.Button(self, text="Show Financial Stats",
+                            command= lambda: self.showFinancialStats())
         button3.pack(padx=10, pady=5)
 
         button4 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(GraphPage))
         button4.pack(padx=10, pady=5)
 
-        button5 = ttk.Button(self, text="View by Category",
-                            command=lambda: controller.show_frame(StatusPage))
+        button5 = ttk.Button(self, text="View Inferences",
+                            command=lambda: controller.show_frame(inferencesPage))
         button5.pack(padx=10, pady=5)
 
-        label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
-        label1.pack(pady=10,padx=5)
+
+        # label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
+        # label1.pack(pady=10,padx=5)
+    
         
+    def showFinancialStats(self):
+        global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
+        global savings_per_week, savings_per_month, total_deposited, total_spent, Monthly_debt_payment
+        global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
+
+        if hasattr(self, 'statsFrame'):
+            return
+        
+        if hasattr(self, 'spendFrame'):
+            return
+        
+        #create spending percentages frame
+        spendFrame = ttk.Frame(self)
+        spendFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        lbl = ttk.Label(spendFrame, text=" Spending Percentages:")
+        lbl.pack(padx=10, pady=10)
+
+        columns = ("Category", "Percentage", "Amount")
+        table = ttk.Treeview(spendFrame, columns=columns, show="headings")
+        table.heading("#1", text="Category")
+        table.heading("#2", text="Percentage")
+        table.heading("#3", text="Amount")
+        table.column("#1", width=100)
+        table.column("#2", width=100)
+        table.column("#3", width=100)
+        table.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
+
+        essential_spending_percentages = essential_spendingPercentages.items()
+        nonessential_spending_percentages = nonessential_spendingPercentages.items()
+
+        for category, values in essential_spending_percentages:
+            percentage = values['percentage'] * 100
+            amount = values['amount']
+            table.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
+
+        for category, values in nonessential_spending_percentages:
+            percentage = values['percentage'] * 100
+            amount = values['amount']
+            table.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
+        
+        # create a scrollbar
+        scrollbar = ttk.Scrollbar(spendFrame, orient="vertical", command=table.yview)
+        scrollbar.pack(side="right", fill="y")
+        table.configure(yscrollcommand=scrollbar.set)
+
+
+        #create stats frame
+        statsFrame = ttk.Frame(self)
+        statsFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        lbl = ttk.Label(statsFrame, text=" Financial Statistics:")
+        lbl.pack(padx=10, pady=10)
+
+        # Create a treeview
+        tree = ttk.Treeview(statsFrame)
+        
+        # Define columns for the treeview
+        tree["columns"] = ("value")
+        tree.column("value", width=100, anchor="center")
+        
+        # Add headers to the columns
+        tree.heading("#0", text="Variable")
+        tree.heading("value", text="Value")
+
+        # Pack the treeview
+        tree.pack(expand=True, side=tk.LEFT, fill=tk.BOTH)
+        
+        # Add values to the treeview
+        tree.insert("", tk.END, text="Average Weekly Deposits", values=('$%.2f' % avg_weekly_deposits,))
+        tree.insert("", tk.END, text="Average Weekly Withdrawals", values=('$%.2f' % avg_weekly_withdrawals,))
+        tree.insert("", tk.END, text="Average Monthly Deposits", values=('$%.2f' % avg_monthly_deposits,))
+        tree.insert("", tk.END, text="Average Monthly Withdrawals", values=('$%.2f' % avg_monthly_withdrawals,))
+        tree.insert("", tk.END, text="Savings Per Week", values=('$%.2f' % savings_per_week,))
+        tree.insert("", tk.END, text="Savings Per Month", values=('$%.2f' % savings_per_month,))
+        tree.insert("", tk.END, text="Total Deposited", values=('$%.2f' % total_deposited,))
+        tree.insert("", tk.END, text="Total Spent", values=('$%.2f' % total_spent,))
+        tree.insert("", tk.END, text="Weekly Essential Spending", values=('$%.2f' % Weekly_essentialSpend,))
+        tree.insert("", tk.END, text="Weekly Non-Essential Spending", values=('$%.2f' % Weekly_nonessentialSpend,))
+        tree.insert("", tk.END, text="Monthly Essential Spending", values=('$%.2f' % monthly_essentialSpend,))
+        tree.insert("", tk.END, text="Monthly Non-Essential Spending", values=('$%.2f' % monthly_nonessentialSpend,))
+        tree.insert("", tk.END, text="Minimum Monthly Debt Cost", values=('$%.2f' % Monthly_debt_payment,))
+        
+        # create a scrollbar
+        scrollbar = ttk.Scrollbar(statsFrame, orient="vertical", command=tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        tree.configure(yscrollcommand=scrollbar.set)
+
     def showInferences(self):
         global allInferences
         if len(allInferences) == 0:
@@ -777,8 +859,8 @@ class GraphPage(tk.Frame):
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="View Inferences",
-                            command=lambda: controller.show_frame(InferencesPage))
+        button = ttk.Button(self, text="View Stats",
+                            command=lambda: controller.show_frame(statsPage))
         button.pack(padx=10, pady=10)
 
         # button1 = ttk.Button(self, text="Back to Home",
@@ -981,7 +1063,7 @@ class GraphPage(tk.Frame):
         # toolbar.update()
         # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-class StatusPage(tk.Frame):
+class inferencesPage(tk.Frame):
     
     def __init__(self, parent, controller):
 
@@ -989,13 +1071,14 @@ class StatusPage(tk.Frame):
         label = ttk.Label(self, text="Recommendations", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="Back to Inferences",
-                            command=lambda: controller.show_frame(InferencesPage))
+        button = ttk.Button(self, text="Back to Stats",
+                            command=lambda: controller.show_frame(statsPage))
         button.pack()
 
-        button3 = ttk.Button(self, text="Show Status",
+        button3 = ttk.Button(self, text="Show Inferences",
                             command= lambda: self.showInferences())
         button3.pack(padx=10, pady=5)
+
 
     def showInferences(self):
         global allInferences, statusDict
@@ -1004,7 +1087,61 @@ class StatusPage(tk.Frame):
         
         # check if the notebook already exists
         if hasattr(self, "inferenceNotebook"):
-            self.inferenceNotebook.destroy()
+            # self.inferenceNotebook.destroy()
+            return
+
+        #check if summary frame already exists
+        if hasattr(self, "summaryFrame"):
+            # self.summaryFrame.destroy()
+            return
+        
+        #create summary frame
+        self.sumFrame = tk.Frame(self)
+        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
+        lbl.pack(pady=10,padx=10)
+        
+        # create the treeview
+        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
+        self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
+        self.sumTree.heading("Category", text="Category")
+        self.sumTree.heading("Status", text="Status")
+        self.sumTree.heading("# Inferences", text="# Inferences")
+        self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
+        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        
+        # sort the categories by status
+        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
+        
+        # populate the treeview with data for each category
+        for category in categories:
+            count = sum(i.type == category for i in allInferences)
+            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
+            
+            self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
+            self.sumTree.tag_configure("Optimal", background="light Green")
+            self.sumTree.tag_configure("Minor", background="light gray")
+            self.sumTree.tag_configure("Moderate", background="yellow")
+            self.sumTree.tag_configure("Alarming", background="orange")
+            self.sumTree.tag_configure("Critical", background="red")
+        
+        # make the table sortable by clicking on the column headers
+        for col in columns:
+            self.sumTree.heading(col, text=col, command=lambda c=col: operator.sortby(self.sumTree, c, 0))
+            
+        # set the default sort order to be by status
+        self.sumTree.set("", "Status")
+
+        self.sumTree.configure(height=len(self.sumTree.get_children()))
+
+        # create the notebook
+
+        lblInferences = ttk.Label(self, text=("Inferences"), font=LARGE_FONT)
+        lblInferences.pack(pady=10,padx=10)
+        
+        lbl1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
+        lbl1.pack(pady=10,padx=5)
 
         self.inferenceNotebook = ttk.Notebook(self)
         self.inferenceNotebook.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
@@ -1072,59 +1209,25 @@ class StatusPage(tk.Frame):
             tree.tag_configure("Moderate", background="yellow")
             tree.tag_configure("Minor", background="white")
 
-            # def selectRecord(event):
-            #     item = tree.focus()
-            #     values = tree.item(item, "values")
-            #     type, premise, recommendation = values
+            def selectRecord(event):
+                # get the the active frame in the notebook
+                frame = self.inferenceNotebook.nametowidget(self.inferenceNotebook.select())
+                # get the treeview in the active frame
+                tree = frame.winfo_children()[1]
+                item = tree.focus()
+                values = tree.item(item, "values")
+                type, premise, recommendation = values
 
-            #     viewInference(type, premise, recommendation)
+                viewInference(type, premise, recommendation)
 
-            # tree.bind("<Double-1>", selectRecord)
-            tree["displaycolumns"] = ("Recommendation",)
+
+            tree.bind("<Double-1>", selectRecord)
+            tree["displaycolumns"] = ("Premise","Recommendation")
             
             # add the tab to the notebook
             self.inferenceNotebook.add(frame, text=inferenceType)
 
-            # print('Status of ' + inferenceType + ': ')
-            # print(statusDict)
-
-           # create a frame for the table
-        
-            
-        frame = tk.Frame(self)
-        frame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-        
-        # create the treeview
-        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
-        tree = ttk.Treeview(frame, columns=columns, show="headings")
-        tree.heading("Category", text="Category")
-        tree.heading("Status", text="Status")
-        tree.heading("# Inferences", text="# Inferences")
-        tree.heading("Most Severe Inference", text="Most Severe Inference")
-        tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-        
-        # sort the categories by status
-        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
-        
-        # populate the treeview with data for each category
-        for category in categories:
-            count = sum(i.type == category for i in allInferences)
-            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
-            
-            tree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
-            tree.tag_configure("Optimal", background="light Green")
-            tree.tag_configure("Minor", background="light gray")
-            tree.tag_configure("Moderate", background="yellow")
-            tree.tag_configure("Alarming", background="orange")
-            tree.tag_configure("Critical", background="red")
-        
-        # make the table sortable by clicking on the column headers
-        for col in columns:
-            tree.heading(col, text=col, command=lambda c=col: operator.sortby(tree, c, 0))
-            
-        # set the default sort order to be by status
-        tree.set("", "Status")
-
+                   
 class ExpertSystem:
     def __init__(self, df, debt_list):
         self.df = df
@@ -1283,7 +1386,8 @@ class ExpertSystem:
                     self.add_fact('Savings','Insufficient Retirement Fund', True)
 
     def checkCashflow(self):
-        global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+        global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
+        global savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
         if avg_weekly_deposits < avg_weekly_withdrawals:
             self.add_rule('Cashflow','Weekly Cashflow is negative', 'You currently have a negative Weekly cashflow Adjust your budget.', 3)
             self.add_fact('Cashflow','Weekly Cashflow is negative', True)
@@ -1299,6 +1403,10 @@ class ExpertSystem:
             self.add_fact('Cashflow','Total Net Cashflow is negative', True)
         # else:
         #     self.add_fact('Cashflow','Total Net Cashflow is negative', False)
+        if avg_monthly_deposits > avg_monthly_withdrawals:
+            if savings_per_month < avg_monthly_deposits * 0.2:
+                self.add_rule('Cashflow','Monthly Cashflow is low', 'Saving less than 20% of monthly income, consider improving cashflow', 1)
+                self.add_fact('Cashflow','Monthly Cashflow is low', True)
 
     def checkforSpikes(self): #function to check for spikes in spending by category
         #if there are more than 3 spikes in a category, then create a corresponding rule and fact in the expert system
