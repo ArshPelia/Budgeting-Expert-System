@@ -28,10 +28,10 @@ global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, 
 global essential_spendingPercentages, nonessential_spendingPercentages, Monthly_debt_payment
 global debt_list, investment_list, statusDict, spending_thresholds, default_debt_list
 
-default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 0.18, 'min_payment': 5}, 
-                     {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 0.05, 'min_payment': 7},
-                     {'id': 3, 'name': 'Car Loan', 'amount': 1000, 'interest_rate': 0.08, 'min_payment': 10},
-                     {'id': 4, 'name': 'Credit Card 2', 'amount': 500, 'interest_rate': 0.21, 'min_payment': 9}]
+default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 5, 'min_payment': 5}, 
+                     {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 9, 'min_payment': 7},
+                     {'id': 3, 'name': 'Car Loan', 'amount': 1000, 'interest_rate': 4, 'min_payment': 10},
+                     {'id': 4, 'name': 'Credit Card 2', 'amount': 500, 'interest_rate': 12, 'min_payment': 9}]
 
 debt_list = []
 # investment_list = []
@@ -44,120 +44,99 @@ spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1,
                        'Personal Care': 0.1, 'Healthcare': 0.1}
 
 def getTheme():
-    modern_theme = {
-        'tHeading': {
-            'configure': {
-                'background': '#009B4D',
-                'foreground': '#FAF5E9',
-                'font': ('Serif', 15, 'bold'),
-                'padx': 8,
-                'pady': 8,
-                'borderwidth': 3,
-            }
-        },      
+    custom_theme = {
         'TLabel': {
             'configure': {
-                'background': '#009B4D', #green
-                'foreground': '#FAF5E9', #white
-                'font': ('Helvetica', 10, 'bold'),
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'padx': 5,
-                'pady': 5
-            }
+                'background': '#F6D9A6',
+                'foreground': '#403B3B',
+                'font': ('Roboto', 14, 'bold', 'italic', 'underline'),
+                'padx': 10,
+                'pady': 5,
+            },
         },
         'TButton': {
             'configure': {
-                'background': '#FFCC00',
-                'foreground': 'Black',
-                'font': ('Serif', 13, 'bold'),
-                'fontcolor': 'black',
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'activebackground': '#FFB300',
-                'activeforeground': '#FAF5E9',
-                'relief': 'flat',
-                'padx': 5,
+                'background': '#6AB5D6',
+                'foreground': '#F6D9A6',
+                'font': ('Open Sans', 12, 'bold'),
+                'padx': 10,
                 'pady': 5,
-                'width': 18,
-                'anchor': 'center'
-            }
+                'borderwidth': 0,
+                'relief': 'flat',
+            },
+            'map': {
+                'background': [('active', '#F6D9A6'), ('disabled', '#A9A9A9')],
+                'foreground': [('active', '#403B3B'), ('disabled', '#AFAFAF')],
+            },
         },
         'TEntry': {
             'configure': {
-                'background': '#FAF5E9',
-                'foreground': '#272727',
-                'font': ('Helvetica', 10),
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'padx': 5,
+                'background': '#F6D9A6',
+                'foreground': '#403B3B',
+                'font': ('Lato', 12),
+                'padx': 10,
                 'pady': 5,
-                'width': 30
-            }
+                'borderwidth': 0,
+                'highlightthickness': 1,
+                'highlightcolor': '#6AB5D6',
+            },
+            'map': {
+                'background': [('active', '#FFFFFF'), ('disabled', '#EFEFEF')],
+                'foreground': [('active', '#403B3B'), ('disabled', '#AFAFAF')],
+                'highlightcolor': [('focus', '#6AB5D6'), ('!focus', '#EFEFEF')],
+            },
         },
         'Treeview': {
             'configure': {
-                'background': '#FAF5E9',
-                'foreground': '#272727',
-                'font': ('Helvetica', 10),
+                'background': '#FFFFFF',
+                'foreground': '#403B3B',
+                'font': ('Roboto', 12),
+                'highlightthickness': 1,
+                'highlightcolor': '#6AB5D6',
+                'selectbackground': '#6AB5D6',
+                'selectforeground': '#FFFFFF',
                 'rowheight': 25,
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'selectbackground': '#FFCC00',
-                'selectforeground': '#272727'
-            }
+            },
+            'map': {
+                'background': [('active', '#F6D9A6'), ('disabled', '#EFEFEF')],
+                'foreground': [('active', '#FFFFFF'), ('disabled', '#AFAFAF')],
+            },
         },
         'Treeview.Heading': {
             'configure': {
-                'background': '#009B4D',
-                'foreground': '#FAF5E9',
-                'font': ('Helvetica', 10, 'bold'),
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'padx': 5,
-                'pady': 5,
-                'relief': 'raised'
-            }
-        },
-        'Tframe': {
-            'configure': {
-                'background': '#FAF5E9',
-                'foreground': '#272727',
-                'borderwidth': 5,
-                'relief': 'flat',
-                'highlightthickness': 0,
+                'background': '#6AB5D6',
+                'foreground': '#F6D9A6',
+                'font': ('Open Sans', 12, 'bold'),
                 'padx': 10,
-                'pady': 10
-            }
+                'pady': 5,
+            },
+        },
+        'TFrame': {
+            'configure': {
+                'background': '#FFFFFF',
+                'foreground': '#403B3B',
+                'font': ('Lato', 12),
+                'padx': 10,
+                'pady': 5,
+            },
         },
         'TNotebook': {
             'configure': {
-                'background': '#FAF5E9',
-                'foreground': '#272727',
-                'tabposition': 'n',
-                'borderwidth': 1,
-                'relief': 'flat',
-                'highlightthickness': 0,
-                'padx': 10,
-                'pady': 10
-            }
+                'background': '#F6D9A6',
+                'foreground': '#403B3B',
+                'tabmargins': [0, 0, 0, 0],
+                'font': ('Roboto', 12),
+            },
+            'map': {
+                'background': [('selected', '#6AB5D6'), ('background', '#FFFFFF')],
+                'foreground': [('selected', '#FFFFFF'), ('background', '#403B3B')],
+                'expand': [('selected', [1, 1, 1, 0]), ('!selected', [1, 1, 1, 0])],
+                'padding': [('selected', [10, 5]), ('!selected', [10, 5])],
+                },
         },
-        'TNotebook.Tab': {
-            'configure': {
-                'background': '#009B4D',
-                'foreground': '#FAF5E9',
-                'font': ('Helvetica', 10, 'bold'),
-                'borderwidth': 0,
-                'highlightthickness': 0,
-                'padx': 10,
-                'pady': 10,
-                'relief': 'raised'
-            }
-        },
-
     }
 
-    return modern_theme
+    return custom_theme
 
 def validateFile(file):
     if file.endswith('.csv'):
@@ -476,11 +455,12 @@ class ESapp(tk.Tk):
     #     frame.tkraise()
     
     def select_file(self):
-        global filename, allInferences, dataFrame, debt_list
+        global filename, allInferences, dataFrame, debt_list, statusDict
         filetypes = (
                     ('CSV files', '*.csv'),
                     # ('All files', '*.*')
         )
+
 
         filename = fd.askopenfilename(
             title='Open a file',
@@ -511,6 +491,31 @@ class ESapp(tk.Tk):
         # print('Rules: \n')
         # for i in self.expert_system.rules:
         #     print(i.type, i.premise, i.conclusion)
+
+        inferenceTypes = ["Spending", "Chronic Overspending", "Debt", "Savings", "Cashflow"]
+
+        for inferenceType in inferenceTypes:
+            #check if allinferencetypes has any inferences of that type
+            if not any(i.type == inferenceType for i in allInferences):
+                continue
+
+            most_severe = 0  # keep track of the most severe inference
+            for i in allInferences:
+                if i.type == inferenceType:
+                    if i.severity > most_severe:
+                        most_severe = i.severity
+        
+            # update the label based on the most severe inference
+            if most_severe == 1:
+                statusDict[inferenceType] = "Minor"
+            elif most_severe == 2:
+                statusDict[inferenceType] = "Moderate"
+            elif most_severe == 3:
+                statusDict[inferenceType] = "Alarming"
+            elif most_severe == 4:
+                statusDict[inferenceType] = "Critical"
+
+        # print(statusDict)
 
 class StartPage(tk.Frame):
 
@@ -1107,7 +1112,48 @@ class inferencesPage(tk.Frame):
         if hasattr(self, "summaryFrame"):
             # self.summaryFrame.destroy()
             return
+                #create summary frame
         
+        self.sumFrame = tk.Frame(self)
+        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
+        lbl.pack(pady=10,padx=10)
+        
+        # create the treeview
+        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
+        self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
+        self.sumTree.heading("Category", text="Category")
+        self.sumTree.heading("Status", text="Status")
+        self.sumTree.heading("# Inferences", text="# Inferences")
+        self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
+        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        
+        # sort the categories by status
+        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
+        
+        # populate the treeview with data for each category
+        for category in categories:
+            count = sum(i.type == category for i in allInferences)
+            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
+            
+            self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
+            self.sumTree.tag_configure("Optimal", background="light Green")
+            self.sumTree.tag_configure("Minor", background="light gray")
+            self.sumTree.tag_configure("Moderate", background="yellow")
+            self.sumTree.tag_configure("Alarming", background="orange")
+            self.sumTree.tag_configure("Critical", background="red")
+        
+        # make the table sortable by clicking on the column headers
+        for col in columns:
+            self.sumTree.heading(col, text=col, command=lambda c=col: operator.sortby(self.sumTree, c, 0))
+            
+        # set the default sort order to be by status
+        self.sumTree.set("", "Status")
+
+        self.sumTree.configure(height=len(self.sumTree.get_children()))
+
+
         # create the notebook
 
         lblInferences = ttk.Label(self, text=("Inferences"), font=LARGE_FONT)
@@ -1144,19 +1190,19 @@ class inferencesPage(tk.Frame):
                 label["text"] += "Optimal"
             elif most_severe == 1:
                 label["text"] += "Minor"
-                statusDict[inferenceType] = "Minor"
+                # statusDict[inferenceType] = "Minor"
                 label["background"] = "green"
             elif most_severe == 2:
                 label["text"] += "Moderate"
-                statusDict[inferenceType] = "Moderate"
+                # statusDict[inferenceType] = "Moderate"
                 label["background"] = "yellow"
             elif most_severe == 3:
                 label["text"] += "Alarming"
-                statusDict[inferenceType] = "Alarming"
+                # statusDict[inferenceType] = "Alarming"
                 label["background"] = "orange"
             elif most_severe == 4:
                 label["text"] += "Critical"
-                statusDict[inferenceType] = "Critical"
+                # statusDict[inferenceType] = "Critical"
                 label["background"] = "red"
 
             columns = ("Type", "Premise", "Recommendation")
@@ -1204,46 +1250,6 @@ class inferencesPage(tk.Frame):
             #q: where is the text for the tab coming from?
             #a: 
 
-        #create summary frame
-        self.sumFrame = tk.Frame(self)
-        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-
-        lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
-        lbl.pack(pady=10,padx=10)
-        
-        # create the treeview
-        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
-        self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
-        self.sumTree.heading("Category", text="Category")
-        self.sumTree.heading("Status", text="Status")
-        self.sumTree.heading("# Inferences", text="# Inferences")
-        self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
-        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-        
-        # sort the categories by status
-        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
-        
-        # populate the treeview with data for each category
-        for category in categories:
-            count = sum(i.type == category for i in allInferences)
-            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
-            
-            self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
-            self.sumTree.tag_configure("Optimal", background="light Green")
-            self.sumTree.tag_configure("Minor", background="light gray")
-            self.sumTree.tag_configure("Moderate", background="yellow")
-            self.sumTree.tag_configure("Alarming", background="orange")
-            self.sumTree.tag_configure("Critical", background="red")
-        
-        # make the table sortable by clicking on the column headers
-        for col in columns:
-            self.sumTree.heading(col, text=col, command=lambda c=col: operator.sortby(self.sumTree, c, 0))
-            
-        # set the default sort order to be by status
-        self.sumTree.set("", "Status")
-
-        self.sumTree.configure(height=len(self.sumTree.get_children()))
-
 class ExpertSystem:
     def __init__(self, df, debt_list):
         self.df = df
@@ -1263,9 +1269,13 @@ class ExpertSystem:
         self.inferences.append(Inference(type, premise, conclusion, severity))
 
     def evaluateDebt(self):
-        global monthly_income, Monthly_debt_payment
+        global monthly_income, Monthly_debt_payment, debt_list
         high_interest_debt = []
         Monthly_debt_payment = 0
+
+        self.debt_list = debt_list
+        print('Debt List: ')
+        print(self.debt_list)
 
         for debt in self.debt_list:
             Monthly_debt_payment += (debt['amount'] * debt['min_payment'] / 100) 
