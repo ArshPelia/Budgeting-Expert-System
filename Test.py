@@ -26,7 +26,12 @@ global savings_per_week, savings_per_month, total_deposited, total_spent, curren
 global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 global essential_spendingPercentages, nonessential_spendingPercentages, Monthly_debt_payment
-global debt_list, investment_list, statusDict, spending_thresholds
+global debt_list, investment_list, statusDict, spending_thresholds, default_debt_list
+
+default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 0.18, 'min_payment': 5}, 
+                     {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 0.05, 'min_payment': 7},
+                     {'id': 3, 'name': 'Car Loan', 'amount': 1000, 'interest_rate': 0.08, 'min_payment': 10},
+                     {'id': 4, 'name': 'Credit Card 2', 'amount': 500, 'interest_rate': 0.21, 'min_payment': 9}]
 
 debt_list = []
 # investment_list = []
@@ -606,6 +611,10 @@ class DebtPage(tk.Frame):
         self.min_payment_entry = tk.Entry(input_frame)
         self.min_payment_entry.grid(row=3, column=1, padx=10, pady=10)
 
+        #create a button to add use default_debt_list and populate the treeview
+        default_button = ttk.Button(input_frame, text="Load Preset Values", command=self.use_default_debt_list)
+        default_button.grid(row=2, column=2, columnspan=4, padx=10, pady=10)
+
         # Create a button to add a new debt to the list
         add_button = ttk.Button(input_frame, text="Add Debt", command=self.add_debt)
         add_button.grid(row=3, column=2, columnspan=2, padx=10, pady=10)
@@ -632,6 +641,12 @@ class DebtPage(tk.Frame):
         # Initialize the debt list
         self.debt_list = debt_list
         self.next_debt_id = 1
+    
+    def use_default_debt_list(self):
+        global default_debt_list, debt_list
+        debt_list = default_debt_list
+        self.debt_list = default_debt_list
+        self.update_debt_list()
 
     def add_debt(self):
         # Get the input values
@@ -680,7 +695,6 @@ class filePage(tk.Frame):
                             command=lambda: controller.show_frame(statsPage))
         button1.pack(padx=10, pady=5)
 
-
         # button1 = ttk.Button(self, text="Back to Home",
         #                     command=lambda: controller.show_frame(StartPage))
         # button1.pack(pady=10,padx=10)
@@ -718,8 +732,7 @@ class statsPage(tk.Frame):
 
 
         # label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
-        # label1.pack(pady=10,padx=5)
-    
+        # label1.pack(pady=10,padx=5)   
         
     def showFinancialStats(self):
         global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
@@ -1080,7 +1093,6 @@ class inferencesPage(tk.Frame):
                             command= lambda: self.showInferences())
         button3.pack(padx=10, pady=5)
 
-
     def showInferences(self):
         global allInferences, statusDict
         if len(allInferences) == 0:
@@ -1096,46 +1108,6 @@ class inferencesPage(tk.Frame):
             # self.summaryFrame.destroy()
             return
         
-        #create summary frame
-        self.sumFrame = tk.Frame(self)
-        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-
-        lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
-        lbl.pack(pady=10,padx=10)
-        
-        # create the treeview
-        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
-        self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
-        self.sumTree.heading("Category", text="Category")
-        self.sumTree.heading("Status", text="Status")
-        self.sumTree.heading("# Inferences", text="# Inferences")
-        self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
-        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-        
-        # sort the categories by status
-        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
-        
-        # populate the treeview with data for each category
-        for category in categories:
-            count = sum(i.type == category for i in allInferences)
-            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
-            
-            self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
-            self.sumTree.tag_configure("Optimal", background="light Green")
-            self.sumTree.tag_configure("Minor", background="light gray")
-            self.sumTree.tag_configure("Moderate", background="yellow")
-            self.sumTree.tag_configure("Alarming", background="orange")
-            self.sumTree.tag_configure("Critical", background="red")
-        
-        # make the table sortable by clicking on the column headers
-        for col in columns:
-            self.sumTree.heading(col, text=col, command=lambda c=col: operator.sortby(self.sumTree, c, 0))
-            
-        # set the default sort order to be by status
-        self.sumTree.set("", "Status")
-
-        self.sumTree.configure(height=len(self.sumTree.get_children()))
-
         # create the notebook
 
         lblInferences = ttk.Label(self, text=("Inferences"), font=LARGE_FONT)
@@ -1209,6 +1181,7 @@ class inferencesPage(tk.Frame):
             tree.tag_configure("Alarming", background="orange")
             tree.tag_configure("Moderate", background="yellow")
             tree.tag_configure("Minor", background="white")
+            tree.configure(height=len(tree.get_children()))
 
             def selectRecord(event):
                 # get the the active frame in the notebook
@@ -1228,7 +1201,46 @@ class inferencesPage(tk.Frame):
             # add the tab to the notebook
             self.inferenceNotebook.add(frame, text=inferenceType)
 
-                   
+        #create summary frame
+        self.sumFrame = tk.Frame(self)
+        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
+        lbl.pack(pady=10,padx=10)
+        
+        # create the treeview
+        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
+        self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
+        self.sumTree.heading("Category", text="Category")
+        self.sumTree.heading("Status", text="Status")
+        self.sumTree.heading("# Inferences", text="# Inferences")
+        self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
+        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        
+        # sort the categories by status
+        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
+        
+        # populate the treeview with data for each category
+        for category in categories:
+            count = sum(i.type == category for i in allInferences)
+            most_severe = max([i.severity for i in allInferences if i.type == category] + [0])
+            
+            self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
+            self.sumTree.tag_configure("Optimal", background="light Green")
+            self.sumTree.tag_configure("Minor", background="light gray")
+            self.sumTree.tag_configure("Moderate", background="yellow")
+            self.sumTree.tag_configure("Alarming", background="orange")
+            self.sumTree.tag_configure("Critical", background="red")
+        
+        # make the table sortable by clicking on the column headers
+        for col in columns:
+            self.sumTree.heading(col, text=col, command=lambda c=col: operator.sortby(self.sumTree, c, 0))
+            
+        # set the default sort order to be by status
+        self.sumTree.set("", "Status")
+
+        self.sumTree.configure(height=len(self.sumTree.get_children()))
+
 class ExpertSystem:
     def __init__(self, df, debt_list):
         self.df = df
@@ -1257,7 +1269,7 @@ class ExpertSystem:
             if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
                 high_interest_debt.append(debt)
 
-        # print('Monthly Debt Payment: ' + str(Monthly_debt_payment))
+        print('Monthly Debt Payment: ' + str(Monthly_debt_payment))
         
         dti = Monthly_debt_payment / monthly_income
         
