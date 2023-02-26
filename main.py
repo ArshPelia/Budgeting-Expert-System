@@ -453,7 +453,7 @@ class ESapp(tk.Tk):
     def show_frame(self, cont):
         global filename, allInferences
         if cont == DebtPage:
-            self.geometry("950x650")
+            self.geometry("800x500")
         elif cont == GraphPage:
             self.geometry("1100x850")
         elif cont == filePage:
@@ -623,9 +623,10 @@ class DebtPage(tk.Frame):
         self.debt_treeview.heading("min_payment", text="Minimum Payment (%)")
         #center all columns
         self.debt_treeview.column("#0", anchor="center", width=50)
-        self.debt_treeview.column("name", anchor="center", width=200)
-        self.debt_treeview.column("amount", anchor="center", width=200)
-        self.debt_treeview.column("interest_rate", anchor="center", width=200)
+        self.debt_treeview.column("name", anchor="center", width=100)
+        self.debt_treeview.column("amount", anchor="center", width=100)
+        self.debt_treeview.column("interest_rate", anchor="center", width=100)
+        self.debt_treeview.column("min_payment", anchor="center", width=100)
         self.debt_treeview.pack(fill="both", expand=True)
 
         # Initialize the debt list
