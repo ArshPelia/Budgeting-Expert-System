@@ -1199,7 +1199,10 @@ class inferencesPage(tk.Frame):
             tree["displaycolumns"] = ("Premise","Recommendation")
             
             # add the tab to the notebook
-            self.inferenceNotebook.add(frame, text=inferenceType)
+            self.inferenceNotebook.add(frame, text=' ' + inferenceType + ' ')
+
+            #q: where is the text for the tab coming from?
+            #a: 
 
         #create summary frame
         self.sumFrame = tk.Frame(self)
