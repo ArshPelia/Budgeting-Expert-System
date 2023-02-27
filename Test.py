@@ -10,9 +10,9 @@ import pandas as pd
 import numpy as np
 import random, os
 
-LARGE_FONT= ("Verdana", 12)
-NORM_FONT = ("Helvetica", 10)
-SMALL_FONT = ("Serif", 8)
+LARGE_FONT= ("Verdana", 14, 'bold', 'italic', 'underline')
+NORM_FONT = ("Helvetica", 12)
+SMALL_FONT = ("Serif", 10)
 
 headerlist = ['Date', 'Withdrawal', 'Deposit', 'Balance']
 spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
@@ -49,7 +49,7 @@ def getTheme():
             'configure': {
                 'background': '#F6D9A6',
                 'foreground': '#403B3B',
-                'font': ('Roboto', 14, 'bold', 'italic', 'underline'),
+                'font': ('Roboto', 14),
                 'padx': 10,
                 'pady': 5,
             },
@@ -58,11 +58,12 @@ def getTheme():
             'configure': {
                 'background': '#6AB5D6',
                 'foreground': '#F6D9A6',
-                'font': ('Open Sans', 12, 'bold'),
+                'font': ('Open Sans', 14, 'bold'),
                 'padx': 10,
                 'pady': 5,
                 'borderwidth': 0,
                 'relief': 'flat',
+                'cursor': 'hand2',
             },
             'map': {
                 'background': [('active', '#F6D9A6'), ('disabled', '#A9A9A9')],
@@ -99,7 +100,7 @@ def getTheme():
             },
             'map': {
                 'background': [('active', '#F6D9A6'), ('disabled', '#EFEFEF')],
-                'foreground': [('active', '#FFFFFF'), ('disabled', '#AFAFAF')],
+                'foreground': [('active', '#403B3B'), ('disabled', '#AFAFAF')],
             },
         },
         'Treeview.Heading': {
@@ -130,11 +131,12 @@ def getTheme():
             'map': {
                 'background': [('selected', '#6AB5D6'), ('background', '#FFFFFF')],
                 'foreground': [('selected', '#FFFFFF'), ('background', '#403B3B')],
-                'expand': [('selected', [1, 1, 1, 0]), ('!selected', [1, 1, 1, 0])],
-                'padding': [('selected', [10, 5]), ('!selected', [10, 5])],
-                },
-        },
-    }
+                    'expand': [('selected', [1, 1, 1, 0]), ('!selected', [1, 1, 1, 0])],
+                    'padding': [('selected', [10, 5]), ('!selected', [10, 5])],
+                    },
+            },
+        }
+
 
     return custom_theme
 
@@ -441,7 +443,7 @@ class ESapp(tk.Tk):
         elif cont == GraphPage:
             self.geometry("1100x850")
         elif cont == filePage:
-            self.geometry("400x200")
+            self.geometry("420x200")
         elif cont == statsPage:
             if allInferences == []:
                 self.select_file()
@@ -529,7 +531,7 @@ class StartPage(tk.Frame):
         label1.pack(pady=10,padx=10)
 
         input_frame = tk.Frame(self)
-        input_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        input_frame.pack(fill="both", expand=True, padx=5, pady=5, side=tk.TOP)
 
         label2 = tk.Label(input_frame, text=("Age:"), font=NORM_FONT)
         label2.grid(row=0, column=0, padx=10, pady=10)
@@ -549,15 +551,13 @@ class StartPage(tk.Frame):
         emergency_fund = tk.Entry(input_frame)
         emergency_fund.grid(row=2, column=1, padx=10, pady=10)
 
-        button = ttk.Button(input_frame, text="Continue",
+        button = ttk.Button(input_frame, text=" Continue ",
                             command=lambda: self.set_variables_and_show_frame(controller, DebtPage))
-        # button.pack()
-        button.grid(row=3, column=0, padx=10, pady=10)
+        button.grid(row=3, column=1, padx=10, pady=10)
 
-        button2 = ttk.Button(input_frame, text="Exit Program",
+        button2 = ttk.Button(input_frame, text=" Exit Program ",
                             command=quit)
-        # button2.pack(padx=10, pady=10)
-        button2.grid(row=3, column=1, padx=10, pady=10)
+        button2.grid(row=3, column=0, padx=10, pady=10)
 
     def set_variables_and_show_frame(self, controller, next_frame):
         global age, retirement_fund, emergency_fund 
@@ -583,13 +583,13 @@ class DebtPage(tk.Frame):
         label = ttk.Label(self, text="Debt List", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="Continue",
+        button = ttk.Button(self, text=" Continue ",
                             command=lambda: controller.show_frame(filePage))
         button.pack()
 
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack(pady=10,padx=10)
+        # button1 = ttk.Button(self, text="Back to Home",
+        #                     command=lambda: controller.show_frame(StartPage))
+        # button1.pack(pady=10,padx=10)
 
         input_frame = tk.Frame(self)
         input_frame.pack(fill="both", expand=True)
@@ -716,7 +716,7 @@ class statsPage(tk.Frame):
         global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
         self.controller = controller
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Blackboard", font=LARGE_FONT)
+        label = ttk.Label(self, text="Account Activity", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
         button2 = ttk.Button(self, text="Exit Program",
@@ -727,11 +727,11 @@ class statsPage(tk.Frame):
                             command= lambda: self.showFinancialStats())
         button3.pack(padx=10, pady=5)
 
-        button4 = ttk.Button(self, text="Graph Page",
+        button4 = ttk.Button(self, text="View Graphs",
                             command=lambda: controller.show_frame(GraphPage))
         button4.pack(padx=10, pady=5)
 
-        button5 = ttk.Button(self, text="View Inferences",
+        button5 = ttk.Button(self, text="View Analysis",
                             command=lambda: controller.show_frame(inferencesPage))
         button5.pack(padx=10, pady=5)
 
@@ -744,21 +744,23 @@ class statsPage(tk.Frame):
         global savings_per_week, savings_per_month, total_deposited, total_spent, Monthly_debt_payment
         global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 
-        if hasattr(self, 'statsFrame'):
+        if hasattr(self, 'statsFrame'): 
+            print("statsFrame already exists")
             return
         
         if hasattr(self, 'spendFrame'):
+            print("spendFrame already exists")
             return
         
         #create spending percentages frame
-        spendFrame = ttk.Frame(self)
-        spendFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self.spendFrame = ttk.Frame(self)
+        self.spendFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
 
-        lbl = ttk.Label(spendFrame, text=" Spending Percentages:")
+        lbl = ttk.Label(self.spendFrame, text="SPENDING OVERVIEW")
         lbl.pack(padx=10, pady=10)
 
         columns = ("Category", "Percentage", "Amount")
-        table = ttk.Treeview(spendFrame, columns=columns, show="headings")
+        table = ttk.Treeview(self.spendFrame, columns=columns, show="headings")
         table.heading("#1", text="Category")
         table.heading("#2", text="Percentage")
         table.heading("#3", text="Amount")
@@ -781,20 +783,20 @@ class statsPage(tk.Frame):
             table.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
         
         # create a scrollbar
-        scrollbar = ttk.Scrollbar(spendFrame, orient="vertical", command=table.yview)
-        scrollbar.pack(side="right", fill="y")
-        table.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = ttk.Scrollbar(self.spendFrame, orient="vertical", command=table.yview)
+        # scrollbar.pack(side="right", fill="y")
+        # table.configure(yscrollcommand=scrollbar.set)
 
 
         #create stats frame
-        statsFrame = ttk.Frame(self)
-        statsFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self.statsFrame = ttk.Frame(self)
+        self.statsFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
 
-        lbl = ttk.Label(statsFrame, text=" Financial Statistics:")
+        lbl = ttk.Label(self.statsFrame, text="ACCOUNT OVERVIEW")
         lbl.pack(padx=10, pady=10)
 
         # Create a treeview
-        tree = ttk.Treeview(statsFrame)
+        tree = ttk.Treeview(self.statsFrame)
         
         # Define columns for the treeview
         tree["columns"] = ("value")
@@ -823,9 +825,9 @@ class statsPage(tk.Frame):
         tree.insert("", tk.END, text="Minimum Monthly Debt Cost", values=('$%.2f' % Monthly_debt_payment,))
         
         # create a scrollbar
-        scrollbar = ttk.Scrollbar(statsFrame, orient="vertical", command=tree.yview)
-        scrollbar.pack(side="right", fill="y")
-        tree.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = ttk.Scrollbar(self.statsFrame, orient="vertical", command=tree.yview)
+        # scrollbar.pack(side="right", fill="y")
+        # tree.configure(yscrollcommand=scrollbar.set)
 
     def showInferences(self):
         global allInferences
@@ -875,39 +877,48 @@ class GraphPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
+        label = tk.Label(self, text="GRAPHS", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="View Stats",
+        # button1 = ttk.Button(self, text="Exit Program",
+        #                     command=quit)
+        # button1.pack(padx=10, pady=5)
+
+        button = ttk.Button(self, text="Account Activity Page",
                             command=lambda: controller.show_frame(statsPage))
-        button.pack(padx=10, pady=10)
+        button.pack(padx=10, pady=5)
 
-        # button1 = ttk.Button(self, text="Back to Home",
-        #                     command=lambda: controller.show_frame(StartPage))
-        # button1.pack(padx=10, pady=10)
-        button1 = ttk.Button(self, text="Exit Program",
-                            command=quit)
-        button1.pack(padx=10, pady=5)
+        btn = ttk.Button(self, text="Analysis Page",
+                            command=lambda: controller.show_frame(inferencesPage))
+        btn.pack(padx=10, pady=5)
 
-        button2 = ttk.Button(self, text="View Spending",
+        btnFrame = ttk.Frame(self)
+        btnFrame.pack(padx=10, pady=10, side=tk.TOP)
+
+        button2 = ttk.Button(btnFrame, text="View Spending",
                             command=lambda: self.viewSpending())
-        button2.pack(padx=10, pady=5)
+        # button2.pack(padx=10, pady=5)
+        button2.grid(row=0, column=0, padx=10, pady=5)
 
-        button3 = ttk.Button(self, text="View Income",
+        button3 = ttk.Button(btnFrame, text="View Income",
                             command=lambda: self.viewIncome())
-        button3.pack(padx=10, pady=5)
+        # button3.pack(padx=10, pady=5)
+        button3.grid(row=0, column=1, padx=10, pady=5)
 
-        button4 = ttk.Button(self, text="View Cashflow",
+        button4 = ttk.Button(btnFrame, text="View Cashflow",
                             command=lambda: self.viewCashflow())
-        button4.pack(padx=10, pady=5)
+        # button4.pack(padx=10, pady=5)
+        button4.grid(row=0, column=2, padx=10, pady=5)
 
-        button5 = ttk.Button(self, text="View Weekly Averages",
+        button5 = ttk.Button(btnFrame, text="View Weekly Averages",
                             command=lambda: self.weeklyAvg())
-        button5.pack(padx=10, pady=5)
+        # button5.pack(padx=10, pady=5)
+        button5.grid(row=0, column=3, padx=10, pady=5)
 
-        button6 = ttk.Button(self, text="View Monthly Averages",
+        button6 = ttk.Button(btnFrame, text="View Monthly Averages",
                             command=lambda: self.monthlyAvg())
-        button6.pack(padx=10, pady=5)
+        # button6.pack(padx=10, pady=5)
+        button6.grid(row=0, column=4, padx=10, pady=5)
 
         self.canvas = None
 
@@ -1115,19 +1126,23 @@ class inferencesPage(tk.Frame):
                 #create summary frame
         
         self.sumFrame = tk.Frame(self)
-        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        self.sumFrame.pack(expand=True, fill=tk.BOTH, padx=10, pady=5)
 
         lbl = ttk.Label(self.sumFrame, text=("Summary"), font=LARGE_FONT)
-        lbl.pack(pady=10,padx=10)
+        lbl.pack(pady=5,padx=10)
         
         # create the treeview
-        columns = ("Category", "Status", "# Inferences", "Most Severe Inference")
+        columns = ("Category", "Status", "Total Suggestions", "Most Severe Inference")
         self.sumTree = ttk.Treeview(self.sumFrame, columns=columns, show="headings")
         self.sumTree.heading("Category", text="Category")
         self.sumTree.heading("Status", text="Status")
-        self.sumTree.heading("# Inferences", text="# Inferences")
+        self.sumTree.heading("Total Suggestions", text="Total Suggestions")
         self.sumTree.heading("Most Severe Inference", text="Most Severe Inference")
-        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        self.sumTree.column("Category", width=100, anchor=tk.CENTER)
+        self.sumTree.column("Status", width=100, anchor=tk.CENTER)
+        self.sumTree.column("Total Suggestions", width=100, anchor=tk.CENTER)
+        self.sumTree.column("Most Severe Inference", width=100, anchor=tk.CENTER)
+        self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=5)
         
         # sort the categories by status
         categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
@@ -1139,7 +1154,7 @@ class inferencesPage(tk.Frame):
             
             self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
             self.sumTree.tag_configure("Optimal", background="light Green")
-            self.sumTree.tag_configure("Minor", background="light gray")
+            self.sumTree.tag_configure("Minor", background="light yellow")
             self.sumTree.tag_configure("Moderate", background="yellow")
             self.sumTree.tag_configure("Alarming", background="orange")
             self.sumTree.tag_configure("Critical", background="red")
@@ -1150,17 +1165,16 @@ class inferencesPage(tk.Frame):
             
         # set the default sort order to be by status
         self.sumTree.set("", "Status")
-
+        self.sumTree['displaycolumns'] = ["Category", "Status", "Total Suggestions",]
         self.sumTree.configure(height=len(self.sumTree.get_children()))
-
 
         # create the notebook
 
         lblInferences = ttk.Label(self, text=("Inferences"), font=LARGE_FONT)
-        lblInferences.pack(pady=10,padx=10)
+        lblInferences.pack(pady=5,padx=10)
         
         lbl1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
-        lbl1.pack(pady=10,padx=5)
+        lbl1.pack(pady=5,padx=5)
 
         self.inferenceNotebook = ttk.Notebook(self)
         self.inferenceNotebook.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
@@ -1176,8 +1190,9 @@ class inferencesPage(tk.Frame):
             frame = tk.Frame(self.inferenceNotebook)
             frame.pack(expand=True, fill=tk.BOTH)
 
-            label = ttk.Label(frame, text=(inferenceType + " Health: "), font=LARGE_FONT)
+            label = ttk.Label(frame, text=(inferenceType + " Status: "), font=LARGE_FONT)
             label.pack(pady=10,padx=10)
+
 
             most_severe = 0  # keep track of the most severe inference
             for i in allInferences:
@@ -1188,10 +1203,11 @@ class inferencesPage(tk.Frame):
             # update the label based on the most severe inference
             if most_severe == 0:
                 label["text"] += "Optimal"
+                label['background'] = "light Green"
             elif most_severe == 1:
                 label["text"] += "Minor"
                 # statusDict[inferenceType] = "Minor"
-                label["background"] = "green"
+                label["background"] = "light yellow"
             elif most_severe == 2:
                 label["text"] += "Moderate"
                 # statusDict[inferenceType] = "Moderate"
@@ -1210,7 +1226,7 @@ class inferencesPage(tk.Frame):
             tree.heading("Type", text="Type")
             tree.heading("Premise", text="Premise")
             tree.heading("Recommendation", text="Recommendation")
-            tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+            tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=5, side=tk.LEFT)
 
             for i in allInferences:
                 if i.type == inferenceType:
@@ -1247,8 +1263,11 @@ class inferencesPage(tk.Frame):
             # add the tab to the notebook
             self.inferenceNotebook.add(frame, text=' ' + inferenceType + ' ')
 
-            #q: where is the text for the tab coming from?
-            #a: 
+            # create a scrollbar for each table in each tab
+            scroll = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
+            scroll.pack(side=tk.RIGHT, fill=tk.Y)
+            tree.configure(yscrollcommand=scroll.set)
+
 
 class ExpertSystem:
     def __init__(self, df, debt_list):
@@ -1274,15 +1293,15 @@ class ExpertSystem:
         Monthly_debt_payment = 0
 
         self.debt_list = debt_list
-        print('Debt List: ')
-        print(self.debt_list)
+        # print('Debt List: ')
+        # print(self.debt_list)
 
         for debt in self.debt_list:
             Monthly_debt_payment += (debt['amount'] * debt['min_payment'] / 100) 
             if debt['interest_rate'] >= 8: # if interest rate is greater than or equal to 8%
                 high_interest_debt.append(debt)
 
-        print('Monthly Debt Payment: ' + str(Monthly_debt_payment))
+        # print('Monthly Debt Payment: ' + str(Monthly_debt_payment))
         
         dti = Monthly_debt_payment / monthly_income
         
@@ -1446,12 +1465,12 @@ class ExpertSystem:
             spikes = category_df[category_df['Above_Avg'] == True]
             spikes = spikes.reset_index(drop=True)
             if len(spikes) >= 5 and category != 'Loan Payment':
-                self.add_rule('Chronic Overspending', 'More than 5 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)
-                self.add_fact('Chronic Overspending', 'More than 5 monthly spikes over average amount spent on ' + category, True)
+                self.add_rule('Chronic Overspending', '5+ monthly spikes over average spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)
+                self.add_fact('Chronic Overspending', '5+ monthly spikes over average spent on ' + category, True)
                 # print('More than 3 monthly spikes in ' + category)
             elif len(spikes) >= 3 and category != 'Loan Payment' and len(spikes) < 5:
-                self.add_rule('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
-                self.add_fact('Chronic Overspending', 'More than 3 monthly spikes over average amount spent on ' + category, True)
+                self.add_rule('Chronic Overspending', '3+ monthly spikes over average spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+                self.add_fact('Chronic Overspending', '3+ monthly spikes over average spent on ' + category, True)
                 # print('More than 3 monthly spikes in ' + category)
             else:
                 # es.add_fact('Spike', 'More than 3 monthly spikes in ' + category, False)
