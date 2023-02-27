@@ -1098,14 +1098,14 @@ class inferencesPage(tk.Frame):
     def __init__(self, parent, controller):
 
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Recommendations", font=LARGE_FONT)
+        label = ttk.Label(self, text="Analysis Overview", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
         button = ttk.Button(self, text="Back to Stats",
                             command=lambda: controller.show_frame(statsPage))
         button.pack()
 
-        button3 = ttk.Button(self, text="Show Inferences",
+        button3 = ttk.Button(self, text="Show Analysis",
                             command= lambda: self.showInferences())
         button3.pack(padx=10, pady=5)
 
@@ -1170,10 +1170,10 @@ class inferencesPage(tk.Frame):
 
         # create the notebook
 
-        lblInferences = ttk.Label(self, text=("Inferences"), font=LARGE_FONT)
+        lblInferences = ttk.Label(self, text=("Recommendations"), font=LARGE_FONT)
         lblInferences.pack(pady=5,padx=10)
         
-        lbl1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
+        lbl1 = ttk.Label(self, text=("Double-Click on an recommendation to view explanation."), font=NORM_FONT)
         lbl1.pack(pady=5,padx=5)
 
         self.inferenceNotebook = ttk.Notebook(self)
@@ -1258,7 +1258,7 @@ class inferencesPage(tk.Frame):
 
 
             tree.bind("<Double-1>", selectRecord)
-            tree["displaycolumns"] = ("Premise","Recommendation")
+            tree["displaycolumns"] = ("Recommendation")
             
             # add the tab to the notebook
             self.inferenceNotebook.add(frame, text=' ' + inferenceType + ' ')
@@ -1267,7 +1267,6 @@ class inferencesPage(tk.Frame):
             scroll = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
             scroll.pack(side=tk.RIGHT, fill=tk.Y)
             tree.configure(yscrollcommand=scroll.set)
-
 
 class ExpertSystem:
     def __init__(self, df, debt_list):
