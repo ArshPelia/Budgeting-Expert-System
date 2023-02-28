@@ -42,7 +42,7 @@ Then users can create a list of their current debt or load in preset values. Thi
 debt will not be accounted for by the expert system. (Assumes that you have no debt.)
 
 Preset debt dictionary: 
-```json
+```bash
 default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 5,
                      'min_payment': 5}, 
                      {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 9, 'min_payment': 7},
