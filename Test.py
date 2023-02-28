@@ -154,7 +154,6 @@ def popupmsg(msg):
     B1.pack(padx=10, pady=10) # add the button to the popup window
     popup.mainloop() # run the popup window
 
-
 def viewInference(type, premise, conclusion):
     global dataFrame, savings_per_month, debt_list, essential_spendingPercentages, nonessential_spendingPercentages
     global monthly_income, Monthly_debt_payment, monthly_essentialSpend, monthly_nonessentialSpend, savings_per_month
@@ -193,7 +192,7 @@ def viewInference(type, premise, conclusion):
             canvas.draw()
             canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        elif premise == 'Monthly Cashflow is negative':
+        elif premise == 'Monthly Cashflow is negative' or premise == 'Monthly Cashflow is low':
             df = dataFrame
             avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
             avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
@@ -548,7 +547,7 @@ class ESapp(tk.Tk):
         elif cont == statsPage:
             if allInferences == []:
                 self.select_file()
-            self.geometry("950x650")        
+            self.geometry("1100x650")        
         frame = self.frames[cont]
         frame.tkraise()
     
@@ -568,6 +567,7 @@ class ESapp(tk.Tk):
         
         df = preprocess(filename)
         getSpendingPercentages(df)
+        getSavingPercentages(df)
         # print(spending_percentages)
         dataFrame = df
         self.expert_system = ExpertSystem(df, debt_list)
@@ -682,7 +682,6 @@ class DebtPage(tk.Frame):
         button = ttk.Button(self, text=" Continue ",
                             command=lambda: controller.show_frame(filePage))
         button.pack()
-
 
         input_frame = tk.Frame(self)
         input_frame.pack(fill="both", expand=True)
@@ -849,7 +848,7 @@ class statsPage(tk.Frame):
         global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
         global savings_per_week, savings_per_month, total_deposited, total_spent, Monthly_debt_payment
         global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
-
+        global saving_percentages
         if hasattr(self, 'statsFrame'): 
             print("statsFrame already exists")
             return
@@ -860,7 +859,7 @@ class statsPage(tk.Frame):
         
         #create spending percentages frame
         self.spendFrame = ttk.Frame(self)
-        self.spendFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self.spendFrame.pack(padx=5, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
 
         lbl = ttk.Label(self.spendFrame, text="SPENDING OVERVIEW")
         lbl.pack(padx=10, pady=10)
@@ -870,10 +869,10 @@ class statsPage(tk.Frame):
         table.heading("#1", text="Category")
         table.heading("#2", text="Percentage")
         table.heading("#3", text="Amount")
-        table.column("#1", width=100)
-        table.column("#2", width=100)
-        table.column("#3", width=100)
-        table.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
+        table.column("#1", width=100, anchor='center')
+        table.column("#2", width=80, anchor='center')
+        table.column("#3", width=80, anchor='center')
+        table.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=5, pady=10)
 
         essential_spending_percentages = essential_spendingPercentages.items()
         nonessential_spending_percentages = nonessential_spendingPercentages.items()
@@ -887,11 +886,10 @@ class statsPage(tk.Frame):
             percentage = values['percentage'] * 100
             amount = values['amount']
             table.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
-    
 
         #create stats frame
         self.statsFrame = ttk.Frame(self)
-        self.statsFrame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self.statsFrame.pack(padx=5, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
 
         lbl = ttk.Label(self.statsFrame, text="ACCOUNT OVERVIEW")
         lbl.pack(padx=10, pady=10)
@@ -901,7 +899,7 @@ class statsPage(tk.Frame):
         
         # Define columns for the treeview
         tree["columns"] = ("value")
-        tree.column("value", width=100, anchor="center")
+        tree.column("value", width=80, anchor="center")
         
         # Add headers to the columns
         tree.heading("#0", text="Variable")
@@ -924,6 +922,32 @@ class statsPage(tk.Frame):
         tree.insert("", tk.END, text="Monthly Essential Spending", values=('$%.2f' % monthly_essentialSpend,))
         tree.insert("", tk.END, text="Monthly Non-Essential Spending", values=('$%.2f' % monthly_nonessentialSpend,))
         tree.insert("", tk.END, text="Minimum Monthly Debt Cost", values=('$%.2f' % Monthly_debt_payment,))
+        
+        #create savings frame
+        self.savingsFrame = ttk.Frame(self)
+        self.savingsFrame.pack(padx=5, pady=10, fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        lbl = ttk.Label(self.savingsFrame, text="SAVING OVERVIEW")
+        lbl.pack(padx=10, pady=10)
+
+        # Create a treeview
+        columns = ("Category", "Percentage", "Amount")
+        tree = ttk.Treeview(self.savingsFrame, columns=columns, show="headings")
+        tree.heading("#1", text="Category")
+        tree.heading("#2", text="Percentage")
+        tree.heading("#3", text="Amount")
+        tree.column("#1", width=100, anchor="center")
+        tree.column("#2", width=80, anchor="center")
+        tree.column("#3", width=80, anchor="center")
+        tree.pack(expand=True, side=tk.LEFT, fill=tk.BOTH, padx=5, pady=10)
+
+        saving_percentages = saving_percentages.items()
+        # Add values to the treeview
+        for category, values in saving_percentages:
+            percentage = values['percentage'] * 100
+            amount = values['amount']
+            tree.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
+
         
 
     def showInferences(self):
@@ -1469,15 +1493,15 @@ class ExpertSystem:
             self.add_fact('Debt','high_interest_debt', True)
         
         if Monthly_debt_payment > 0.5 * monthly_income:
-            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str('$%.2f' % dti), 3)
+            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str('%.2f' % dti), 3)
             self.add_fact('Debt','High_DTI', True)
        
         elif Monthly_debt_payment > 0.3 * monthly_income and Monthly_debt_payment <= 0.5 * monthly_income:
-            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str('$%.2f' % dti), 2)
+            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str('%.2f' % dti), 2)
             self.add_fact('Debt','Moderate_DTI', True)
         
         elif Monthly_debt_payment <= 0.3 * monthly_income and Monthly_debt_payment > 0.1 * monthly_income:
-            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is moderate but it can be improved. DTI: ' + str('$%.2f' % dti), 1)
+            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is moderate but it can be improved. DTI: ' + str('%.2f' % dti), 1)
             self.add_fact('Debt','Low_DTI', True)
 
     def makeInferences(self):
@@ -1608,7 +1632,7 @@ class ExpertSystem:
         # else:
         #     self.add_fact('Cashflow','Total Net Cashflow is negative', False)
         if avg_monthly_deposits > avg_monthly_withdrawals:
-            if savings_per_month < avg_monthly_deposits * 0.2:
+            if savings_per_month < avg_monthly_deposits * 0.2 and savings_per_month > avg_monthly_deposits * 0.15:
                 self.add_rule('Cashflow','Monthly Cashflow is low', 'Saving less than 20% of monthly income, consider improving cashflow', 1)
                 self.add_fact('Cashflow','Monthly Cashflow is low', True)
 
@@ -1686,7 +1710,7 @@ def preprocess(filename):
         # if set(df.columns.tolist()) == set(expected_headers):
 
         if file == 'Randomize.csv' or file == 'userData.csv':
-            print('Randomizing data')
+            # print('Randomizing data')
             df = pd.read_csv(filename, names=headerlist) #assign column names 
             df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
 
@@ -1742,7 +1766,7 @@ def preprocess(filename):
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
         else:
-            print('File does not exist')
+            # print('File does not exist')
             initialheaderlist = ['Date', 'desc', 'Withdrawal', 'Deposit', 'Balance']
             data = pd.read_csv(filename, names=initialheaderlist)
             # display 
@@ -1840,15 +1864,33 @@ def getSpendingPercentages(df):
             'amount': category_spending
         }
 
-    # print('\nEssential Spending:')
-    # print(essential_spendingPercentages)
-    # print('Non-Essential Spending:')
-    # print(nonessential_spendingPercentages)
+    print('\nEssential Spending:')
+    print(essential_spendingPercentages)
+    print('Non-Essential Spending:')
+    print(nonessential_spendingPercentages)
+
+def getSavingPercentages(df):
+    global saving_percentages
+    saving_percentages = {}
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    df = df[df['Deposit'] != 0]
+    categories = df['Category'].unique()
+    for category in categories:
+        category_saving = df[df['Category'] == category]['Deposit'].sum()
+        saving_percentages[category] = {
+            'percentage': category_saving / total_deposited,
+            'amount': category_saving
+        }
+    print('\nSaving Percentages:')
+    print(saving_percentages)
 
 def main():
     global debt_list
     app = ESapp()
     app.mainloop()
+    # df = preprocess('Datasets/Randomize.csv')
+    # getSavingPercentages(df)
 
 if __name__ == '__main__':
     main()
