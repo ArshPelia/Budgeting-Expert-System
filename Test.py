@@ -612,7 +612,7 @@ class ESapp(tk.Tk):
         
             # update the label based on the most severe inference
             if most_severe == 1:
-                statusDict[inferenceType] = "Minor"
+                statusDict[inferenceType] = "Managable"
             elif most_severe == 2:
                 statusDict[inferenceType] = "Moderate"
             elif most_severe == 3:
@@ -664,14 +664,14 @@ class StartPage(tk.Frame):
 
     def set_variables_and_show_frame(self, controller, next_frame):
         global age, retirement_fund, emergency_fund 
-        if age.get() == '':
-            popupmsg("Please enter your age")
+        if age.get() == '' or age.get().isnumeric() == False:
+            popupmsg("Please enter a valid age.")
             return
-        elif retirement_fund.get() == '':
-            popupmsg("Please enter your retirement fund")
+        elif retirement_fund.get() == '' or retirement_fund.get().isnumeric() == False:
+            popupmsg("Please enter a valid retirement fund.")
             return
-        elif emergency_fund.get() == '':
-            popupmsg("Please enter your emergency fund")
+        elif emergency_fund.get() == '' or emergency_fund.get().isnumeric() == False:
+            popupmsg("Please enter a valid emergency fund.")
             return
         age = float(age.get())
         retirement_fund = float(retirement_fund.get() or 0)
@@ -761,14 +761,14 @@ class DebtPage(tk.Frame):
         if self.name_entry.get() == '':
             popupmsg("Please enter all fields.")
             return
-        elif self.amount_entry.get() == '':
-            popupmsg("Please enter all fields.")
+        elif self.amount_entry.get() == '' or self.amount_entry.get().isnumeric() == False:
+            popupmsg("Please enter a valid amount for debt.")
             return
-        elif self.interest_rate_entry.get() == '':
-            popupmsg("Please enter all fields.")
+        elif self.interest_rate_entry.get() == '' or self.interest_rate_entry.get().isnumeric() == False:
+            popupmsg("Please enter a valid rate for interest.")
             return
-        elif self.min_payment_entry.get() == '':
-            popupmsg("Please enter all fields.")
+        elif self.min_payment_entry.get() == '' or self.min_payment_entry.get().isnumeric() == False:
+            popupmsg("Please enter a valid amount for minimum payment.")
             return
         # Get the input values
         name = self.name_entry.get()
@@ -970,7 +970,7 @@ class statsPage(tk.Frame):
         
         for i in allInferences:
             if i.severity == 1:
-                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Minor",))
+                tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Managable",))
             elif i.severity == 2:
                 tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Moderate",))
             elif i.severity == 3:
@@ -981,7 +981,7 @@ class statsPage(tk.Frame):
         tree.tag_configure("Critical", background="red")
         tree.tag_configure("Alarming", background="orange")
         tree.tag_configure("Moderate", background="yellow")
-        tree.tag_configure("Minor", background="white")
+        tree.tag_configure("Managable", background="white")
 
         def selectRecord(event):
             item = tree.focus()
@@ -1343,7 +1343,7 @@ class inferencesPage(tk.Frame):
         self.sumTree.pack(expand=True, fill=tk.BOTH, padx=10, pady=5)
         
         # sort the categories by status
-        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Minor": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
+        categories = sorted(statusDict.keys(), key=lambda x: {"Optimal": 0, "Managable": 1, "Moderate": 2, "Alarming": 3, "Critical": 4}[statusDict[x]], reverse=True)
         
         # populate the treeview with data for each category
         for category in categories:
@@ -1352,7 +1352,7 @@ class inferencesPage(tk.Frame):
             
             self.sumTree.insert("", "end", values=(category, statusDict[category], count, most_severe), tags=(statusDict[category],))
             self.sumTree.tag_configure("Optimal", background="light Green")
-            self.sumTree.tag_configure("Minor", background="light yellow")
+            self.sumTree.tag_configure("Managable", background="light yellow")
             self.sumTree.tag_configure("Moderate", background="yellow")
             self.sumTree.tag_configure("Alarming", background="orange")
             self.sumTree.tag_configure("Critical", background="red")
@@ -1403,8 +1403,8 @@ class inferencesPage(tk.Frame):
                 label["text"] += "Optimal"
                 label['background'] = "light Green"
             elif most_severe == 1:
-                label["text"] += "Minor"
-                # statusDict[inferenceType] = "Minor"
+                label["text"] += "Managable"
+                # statusDict[inferenceType] = "Managable"
                 label["background"] = "light yellow"
             elif most_severe == 2:
                 label["text"] += "Moderate"
@@ -1429,7 +1429,7 @@ class inferencesPage(tk.Frame):
             for i in allInferences:
                 if i.type == inferenceType:
                     if i.severity == 1:
-                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Minor",))
+                        tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Managable",))
                     elif i.severity == 2:
                         tree.insert("", "end", values=(i.type, i.premise, i.conclusion), tags=("Moderate",))
                     elif i.severity == 3:
@@ -1440,7 +1440,7 @@ class inferencesPage(tk.Frame):
             tree.tag_configure("Critical", background="red")
             tree.tag_configure("Alarming", background="orange")
             tree.tag_configure("Moderate", background="yellow")
-            tree.tag_configure("Minor", background="white")
+            tree.tag_configure("Managable", background="white")
             tree.configure(height=len(tree.get_children()))
 
             def selectRecord(event):

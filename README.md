@@ -1,8 +1,12 @@
 # Budgeting Expert System 
 
-This expert system is designed to evaluate your income statements and analyze your financial
+This expert system is designed to evaluate chequeing account statements and analyze your financial
 health across the following categories: Debt, Savings, Spending, Chronic Overspending and Cashflow. 
-The expert system begins by evaluating account activity and provides recommendations based on current financial health. 
+The expert system begins by evaluating account activity and provides recommendations based on current financial health.
+
+```bash
+  Status Dictionary = [Optimal, Managable, Moderate, Alarming, Critical]
+```
 
 ## Run Locally
 
@@ -64,7 +68,7 @@ as an unprocessed file (Randomize.csv).
                 'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
     incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Trading']
 ```
-The User can also select their own income statement if their file has the following column order: (Data, Transaction Description, Withdrawal, Deposit, Balance) and DOES NOT contain any column HEADERS. If successfully processed, 'userData.csv' will be created in the Datasets folder for future user. 
+The User can also select their own chequeing account statement if their file has the following column order: (Data, Transaction Description, Withdrawal, Deposit, Balance) and DOES NOT contain any column HEADERS. If successfully processed, 'userData.csv' will be created in the Datasets folder for future user. 
 NOTE: Once again your spending/deposit categories will be randomized. 
 
 If the file is successfully processed then the Expert system will initialize and the user will be taken to the blackboard. Otherwise UserData.csv will be deleted. 
