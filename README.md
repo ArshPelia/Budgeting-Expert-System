@@ -1,12 +1,36 @@
 # Budgeting Expert System 
 
 This expert system is designed to evaluate chequeing account statements and analyze your financial
-health across the following categories: Debt, Savings, Spending, Chronic Overspending and Cashflow. 
+health across categories: 
 The expert system begins by evaluating account activity and provides recommendations based on current financial health.
 
-```bash
-  Status Dictionary = [Optimal, Managable, Moderate, Alarming, Critical]
-```
+The system consists of a forward-chaining model as it calculates the status of all categories based on the facts that are deduced from the user's financial activity and proposes recommendations if criteria for the predefined set of rules is met. Subsequently, each category is sorted by status from critical to optimal based on the highest severity of inferences and recommendations are provided.
+
+Inferences are created by searching for the existance of facts based on user information pertaining to debt and transactional history and providing a recommendation based on its corresponding rule. 
+
+Categories of Analysis: [Debt, Savings, Spending, Chronic Overspending,Cashflow]
+Status Dictionary = [Optimal, Managable, Moderate, Alarming, Critical]
+Severity of inferences = [1,2,3,4]
+
+## classes 
+class ESapp(tk.Tk): 
+  Primary GUI controller for the application. Initializes all pages in constructor and keeps list.
+
+class Page(tk.Frame):
+  Each page has a corresponding class which inherits the root frame from ESapp to build its own frame.
+
+class ExpertSystem:
+  Primary class for the system execution. Performs analysis on the processed data frame to create rules and facts in order to create inferences
+
+class Fact:
+  Consists of a type, name(premise) and value
+
+class Rule:
+  Consists of a type, premise, conclusion and severity
+
+class Inference:
+  Consists of a type, premise, conclusion and severity
+
 
 ## Run Locally
 

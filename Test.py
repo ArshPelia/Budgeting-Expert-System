@@ -34,7 +34,6 @@ default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'intere
                      {'id': 4, 'name': 'Credit Card 2', 'amount': 500, 'interest_rate': 12, 'min_payment': 9}]
 
 debt_list = []
-# investment_list = []
 allInferences = []
 statusDict= {'Spending': 'Optimal', 'Savings': 'Optimal', 'Debt': 'Optimal', 'Chronic Overspending': 'Optimal'}
 spending_thresholds = {'Housing': 0.4, 'Groceries': 0.1, 'Dining Out': 0.1, 
@@ -140,20 +139,21 @@ def getTheme():
     return custom_theme
 
 def popupmsg(msg):
-    popup = tk.Tk()
-    style = ttk.Style(popup)
-    style.theme_create('modern1', parent='default')
-    style.theme_settings('modern1', getTheme())
-    style.theme_use('modern1')
+    popup = tk.Tk() # create popup window
+    style = ttk.Style(popup) # create style for popup
+    style.theme_create('modern1', parent='default') # create theme 'modern1' with parent theme 'default'
+    style.theme_settings('modern1', getTheme()) # add the settings from the getTheme() function to 'modern1'
+    style.theme_use('modern1') # apply the theme 'modern1' to the popup window
 
-    popup.wm_title("!")
-    heading = ttk.Label(popup, text="Error", font=LARGE_FONT)
-    heading.pack(side="top", anchor="center", pady=10, padx=10)
-    label = ttk.Label(popup, text=msg, font=NORM_FONT)
-    label.pack(side="top", anchor="center", pady=10, padx=10 )
-    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
-    B1.pack(padx=10, pady=10)
-    popup.mainloop()
+    popup.wm_title("!") # set the title of the popup
+    heading = ttk.Label(popup, text="Error", font=LARGE_FONT) # create a label for the heading
+    heading.pack(side="top", anchor="center", pady=10, padx=10) # add the label to the popup window
+    label = ttk.Label(popup, text=msg, font=NORM_FONT) # create a label for the message
+    label.pack(side="top", anchor="center", pady=10, padx=10 ) # add the label to the popup window
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy) # create a button with the text 'Okay' and the command popup.destroy
+    B1.pack(padx=10, pady=10) # add the button to the popup window
+    popup.mainloop() # run the popup window
+
 
 def viewInference(type, premise, conclusion):
     global dataFrame, savings_per_month, debt_list, essential_spendingPercentages, nonessential_spendingPercentages
@@ -251,10 +251,10 @@ def viewInference(type, premise, conclusion):
     
     elif type == 'Debt':
 
-        lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+        lblIncome = ttk.Label(popup, text="Monthly Income: " + str('$%.2f' % monthly_income), font=NORM_FONT)
         lblIncome.pack(side="top", fill="x", pady=10, padx=10)
 
-        lblDebt = ttk.Label(popup, text="Minimium Monthly Payments: " + str(Monthly_debt_payment), font=NORM_FONT)
+        lblDebt = ttk.Label(popup, text="Minimium Monthly Payments: " + str('$%.2f' % Monthly_debt_payment), font=NORM_FONT)
         lblDebt.pack(side="top", fill="x", pady=10, padx=10)
 
         #insert table of debt list
@@ -288,10 +288,10 @@ def viewInference(type, premise, conclusion):
             # create a treeview widget
             tree = ttk.Treeview(popup)
 
-            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str('$%.2f' % monthly_income), font=NORM_FONT)
             lblIncome.pack(side="top", fill="x", pady=10, padx=10)
 
-            lblEssential = ttk.Label(popup, text="Monthly Essential Spending: " + str(monthly_essentialSpend), font=NORM_FONT)
+            lblEssential = ttk.Label(popup, text="Monthly Essential Spending: " + str('$%.2f' % monthly_essentialSpend), font=NORM_FONT)
             lblEssential.pack(side="top", fill="x", pady=10, padx=10)
 
             # define the columns of the treeview
@@ -313,10 +313,10 @@ def viewInference(type, premise, conclusion):
             # create a treeview widget
             tree = ttk.Treeview(popup)
 
-            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str('$%.2f' % monthly_income), font=NORM_FONT)
             lblIncome.pack(side="top", fill="x", pady=10, padx=10)
 
-            lblEssential = ttk.Label(popup, text="Monthly Non-Essential Spending: " + str(monthly_nonessentialSpend), font=NORM_FONT)
+            lblEssential = ttk.Label(popup, text="Monthly Non-Essential Spending: " + str('$%.2f' % monthly_nonessentialSpend), font=NORM_FONT)
             lblEssential.pack(side="top", fill="x", pady=10, padx=10)
 
             # define the columns of the treeview
@@ -456,10 +456,6 @@ def viewInference(type, premise, conclusion):
                     xy=(age, currAvgDeposit * (age - 25)),
                     xytext=(age + 2, currAvgDeposit * (age - 25) + 5000),
                     arrowprops=dict(facecolor='black', shrink=0.05))
-            # a.annotate('Current Retirement Fund',
-            #         xy=(age, retirement_fund),
-            #         xytext=(age + 2, retirement_fund + 5000),
-            #         arrowprops=dict(facecolor='black', shrink=0.05))
 
             # Add vertical lines for current age and retirement age
             a.axvline(age, color='gray', linestyle='--')
@@ -538,8 +534,6 @@ class ESapp(tk.Tk):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
-            #q: how can adjust the frame location from the class to be centered?
-            # frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         self.show_frame(StartPage)
 
@@ -577,7 +571,6 @@ class ESapp(tk.Tk):
         # print(spending_percentages)
         dataFrame = df
         self.expert_system = ExpertSystem(df, debt_list)
-        # self.expert_system.addRules()
         self.expert_system.checkBudget()
         self.expert_system.eval_Savings()
         self.expert_system.checkCashflow()
@@ -690,9 +683,6 @@ class DebtPage(tk.Frame):
                             command=lambda: controller.show_frame(filePage))
         button.pack()
 
-        # button1 = ttk.Button(self, text="Back to Home",
-        #                     command=lambda: controller.show_frame(StartPage))
-        # button1.pack(pady=10,padx=10)
 
         input_frame = tk.Frame(self)
         input_frame.pack(fill="both", expand=True)
@@ -855,10 +845,6 @@ class statsPage(tk.Frame):
                             command=quit)
         button2.pack(padx=10, pady=10)
 
-
-        # label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
-        # label1.pack(pady=10,padx=5)   
-        
     def showFinancialStats(self):
         global avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals
         global savings_per_week, savings_per_month, total_deposited, total_spent, Monthly_debt_payment
@@ -901,12 +887,7 @@ class statsPage(tk.Frame):
             percentage = values['percentage'] * 100
             amount = values['amount']
             table.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
-        
-        # create a scrollbar
-        # scrollbar = ttk.Scrollbar(self.spendFrame, orient="vertical", command=table.yview)
-        # scrollbar.pack(side="right", fill="y")
-        # table.configure(yscrollcommand=scrollbar.set)
-
+    
 
         #create stats frame
         self.statsFrame = ttk.Frame(self)
@@ -944,10 +925,6 @@ class statsPage(tk.Frame):
         tree.insert("", tk.END, text="Monthly Non-Essential Spending", values=('$%.2f' % monthly_nonessentialSpend,))
         tree.insert("", tk.END, text="Minimum Monthly Debt Cost", values=('$%.2f' % Monthly_debt_payment,))
         
-        # create a scrollbar
-        # scrollbar = ttk.Scrollbar(self.statsFrame, orient="vertical", command=tree.yview)
-        # scrollbar.pack(side="right", fill="y")
-        # tree.configure(yscrollcommand=scrollbar.set)
 
     def showInferences(self):
         global allInferences
@@ -1000,10 +977,6 @@ class GraphPage(tk.Frame):
         label = tk.Label(self, text="GRAPHS", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        # button1 = ttk.Button(self, text="Exit Program",
-        #                     command=quit)
-        # button1.pack(padx=10, pady=5)
-
         button = ttk.Button(self, text="Account Activity Page",
                             command=lambda: controller.show_frame(statsPage))
         button.pack(padx=10, pady=5)
@@ -1045,17 +1018,6 @@ class GraphPage(tk.Frame):
 
         self.canvas = None
 
-        # f = Figure(figsize=(5,5), dpi=100)
-        # a = f.add_subplot(111)
-        # a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
-
-        # canvas = FigureCanvasTkAgg(f, self)
-        # canvas.draw()
-        # canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def viewRetirement(self):
         if age < 25:
@@ -1507,15 +1469,15 @@ class ExpertSystem:
             self.add_fact('Debt','high_interest_debt', True)
         
         if Monthly_debt_payment > 0.5 * monthly_income:
-            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str(dti), 3)
+            self.add_rule('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str('$%.2f' % dti), 3)
             self.add_fact('Debt','High_DTI', True)
        
         elif Monthly_debt_payment > 0.3 * monthly_income and Monthly_debt_payment <= 0.5 * monthly_income:
-            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str(dti), 2)
+            self.add_rule('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str('$%.2f' % dti), 2)
             self.add_fact('Debt','Moderate_DTI', True)
         
         elif Monthly_debt_payment <= 0.3 * monthly_income and Monthly_debt_payment > 0.1 * monthly_income:
-            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is moderate but it can be improved. DTI: ' + str(dti), 1)
+            self.add_rule('Debt','Low_DTI', 'Your debt-to-income ratio is moderate but it can be improved. DTI: ' + str('$%.2f' % dti), 1)
             self.add_fact('Debt','Low_DTI', True)
 
     def makeInferences(self):
