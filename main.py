@@ -1086,9 +1086,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(self.canvas, self)
-        # toolbar.update()
-        # self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
 
     def viewSpending(self):
@@ -1113,9 +1110,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         
     def viewIncome(self):
         global dataFrame
@@ -1138,12 +1132,6 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-        # self.canvas.get_tk_widget().pack(side=tk.BOTTOM)
-
-
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def viewCashflow(self):
         global dataFrame
@@ -1170,9 +1158,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
     def weeklyAvg(self):
         global dataFrame, savings_per_week
@@ -1207,9 +1192,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
     def monthlyAvg(self):
         global dataFrame, savings_per_month
@@ -1243,10 +1225,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
     def viewBalance(self):
         global dataFrame
 
@@ -1273,9 +1251,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
 class inferencesPage(tk.Frame):
     
@@ -1541,29 +1516,15 @@ class ExpertSystem:
         spending_dict.append({'Category': 'Essential Costs', 'Amount': df[df['Category'].isin(essentialList)]['Amount'].sum()})
         # spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(['Entertainment', 'Dining Out', 'Shopping', 'Loan Repayment'])]['Amount'].sum()})
         spending_dict.append({'Category': 'Non-Essential Costs', 'Amount': df[df['Category'].isin(nonessentialList)]['Amount'].sum()})
+        
         essentialSpend = spending_dict[-2]['Amount']
         nonessentialSpend = spending_dict[-1]['Amount']
         Weekly_essentialSpend = essentialSpend / dfCopy['Week'].nunique()
         Weekly_nonessentialSpend = nonessentialSpend / dfCopy['Week'].nunique()
         monthly_essentialSpend = essentialSpend / dfCopy['Month'].nunique()
         monthly_nonessentialSpend = nonessentialSpend / dfCopy['Month'].nunique()
-        # print('Essential Costs: ', essentialSpend)
-        # print('Non-Essential Costs: ', nonessentialSpend)
-        # print('Weekly Essential Costs: ', Weekly_essentialSpend)
-        # print('Weekly Non-Essential Costs: ', Weekly_nonessentialSpend)
-        # print('Monthly Essential Costs: ', monthly_essentialSpend)
-        # print('Monthly Non-Essential Costs: ', monthly_nonessentialSpend)
-
-
-        # print list of categories and amount spent
-        # for i in range(len(spending_dict)):
-        #     print(spending_dict[i]['Category'], ': ', spending_dict[i]['Amount'])
         
         spending_percentages = {row['Category']: row['Amount'] / total_deposited for row in spending_dict} # calculate the percentage of spending for each category
-
-        # print list of categories and percentage of spending
-        # for key, value in spending_percentages.items():
-        #     print(key, ': ', value)
 
         # #evaluate each category against its threshold and add fact if it does not meet the threshold
         for category in spending_percentages:
@@ -1738,9 +1699,6 @@ def preprocess(filename):
             avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
             savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
 
-            # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-            # avg_monthly_income = monthly_income / df['Month'].nunique()
-            # monthly_income = avg_monthly_income
             monthly_income = avg_monthly_deposits
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
         
@@ -1758,9 +1716,6 @@ def preprocess(filename):
             avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
             savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
             
-            # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-            # avg_monthly_income = monthly_income / df['Month'].nunique()
-            # monthly_income = avg_monthly_income
             monthly_income = avg_monthly_deposits
 
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
@@ -1769,14 +1724,7 @@ def preprocess(filename):
             # print('File does not exist')
             initialheaderlist = ['Date', 'desc', 'Withdrawal', 'Deposit', 'Balance']
             data = pd.read_csv(filename, names=initialheaderlist)
-            # display 
-            # print("Original 'input.csv' CSV Data: \n")
-            # print(data)
-            # drop function which is used in removing or deleting rows or columns from the CSV files
             data.drop('desc', inplace=True, axis=1)
-            # display 
-            # print("\nCSV Data after deleting the column 'year':\n")
-            # print(data)
             if os.path.exists('Datasets/userData.csv'):
                 os.remove('Datasets/userData.csv')
             data.to_csv('Datasets/userData.csv', index=False, header=False) 
@@ -1809,9 +1757,6 @@ def preprocess(filename):
             avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
             savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
 
-            # monthly_income = df[df['Category'] == 'Salary']['Deposit'].sum()
-            # avg_monthly_income = monthly_income / df['Month'].nunique()
-            # monthly_income = avg_monthly_income
             monthly_income = avg_monthly_deposits
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
     except Exception as e:
@@ -1889,8 +1834,6 @@ def main():
     global debt_list
     app = ESapp()
     app.mainloop()
-    # df = preprocess('Datasets/Randomize.csv')
-    # getSavingPercentages(df)
 
 if __name__ == '__main__':
     main()
