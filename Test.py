@@ -958,11 +958,9 @@ class GraphPage(tk.Frame):
 
         f = Figure(figsize=(10,7), dpi=100) #dpi = dots per inch
         a = f.add_subplot(111)
-        a.bar(df['Category'], df['Withdrawal'])
+        a.barh(df['Category'], df['Withdrawal'])
         a.set_xlabel('Category')
         a.set_ylabel('Spending')
-        # a.xticks(rotation=90) 
-        # a.set_xticklabels(df['Category'], rotation=90)
 
         if self.canvas is not None:
             self.canvas.get_tk_widget().forget()
@@ -970,7 +968,7 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        # self.canvas.get_tk_widget().pack(side=tk.BOTTOM)
+
 
         # toolbar = NavigationToolbar2Tk(canvas, self)
         # toolbar.update()
@@ -1052,10 +1050,10 @@ class GraphPage(tk.Frame):
         a = f.add_subplot(111)
         # a.plot(week_avgs['Deposit'], label='Income')    
         # a.plot(week_avgs['Withdrawal'], label='Spending')
-        a.bar(week_avgs.index, week_avgs['Deposit'], label='Income')
-        a.bar(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
-        a.set_xlabel('Category')
-        a.set_ylabel('Amount')
+        a.barh(week_avgs.index, week_avgs['Deposit'], label='Income')
+        a.barh(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
+        a.set_ylabel('Category')
+        a.set_xlabel('Amount')
         a.set_title('Average Weekly Cashflow')
         a.legend()
 
@@ -1088,10 +1086,10 @@ class GraphPage(tk.Frame):
         a = f.add_subplot(111)
         # a.plot(month_avgs['Deposit'], label='Income')
         # a.plot(month_avgs['Withdrawal'], label='Spending')
-        a.bar(month_avgs.index, month_avgs['Deposit'], label='Income')
-        a.bar(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
-        a.set_xlabel('Category')
-        a.set_ylabel('Amount')
+        a.barh(month_avgs.index, month_avgs['Deposit'], label='Income')
+        a.barh(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
+        a.set_ylabel('Category')
+        a.set_xlabel('Amount')
         a.set_title('Average Monthly Cashflow')
         a.legend()
 
