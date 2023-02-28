@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import random, os
 
-LARGE_FONT= ("Verdana", 14, 'bold', 'italic', 'underline')
+LARGE_FONT= ("Verdana", 14, 'bold', 'underline')
 NORM_FONT = ("Helvetica", 12)
 SMALL_FONT = ("Serif", 10)
 
@@ -137,14 +137,7 @@ def getTheme():
             },
         }
 
-
     return custom_theme
-
-def validateFile(file):
-    if file.endswith('.csv'):
-        return True
-    else:
-        return False
 
 def popupmsg(msg):
     popup = tk.Tk()
@@ -167,9 +160,13 @@ def viewInference(type, premise, conclusion):
     global monthly_income, Monthly_debt_payment, monthly_essentialSpend, monthly_nonessentialSpend, savings_per_month
     global avg_monthly_withdrawals
     popup = tk.Tk()
+    style = ttk.Style(popup)
+    style.theme_create('modern1', parent='default')
+    style.theme_settings('modern1', getTheme())
+    style.theme_use('modern1')
     popup.wm_title("Inference")
-    label = ttk.Label(popup, text=("Inference Type: " + type), font=NORM_FONT)
-    label.pack(side="top", fill="x", pady=10, padx=10)
+    label = ttk.Label(popup, text=("Inference Type: " + type), font=LARGE_FONT, anchor="center", justify="center")
+    label.pack(side="top", pady=13, padx=10)
     label1 = ttk.Label(popup, text=("Premise: " + premise), font=NORM_FONT)
     label1.pack(side="top", fill="x", pady=10, padx=10)
     label2 = ttk.Label(popup, text=("Conclusion: " + conclusion), font=NORM_FONT)
@@ -213,10 +210,10 @@ def viewInference(type, premise, conclusion):
             a = f.add_subplot(111)
             # a.plot(month_avgs['Deposit'], label='Income')
             # a.plot(month_avgs['Withdrawal'], label='Spending')
-            a.bar(month_avgs.index, month_avgs['Deposit'], label='Income')
-            a.bar(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
-            a.set_xlabel('Category')
-            a.set_ylabel('Amount')
+            a.barh(month_avgs.index, month_avgs['Deposit'], label='Income')
+            a.barh(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
+            a.set_ylabel('Category')
+            a.set_xlabel('Amount')
             a.set_title('Average Monthly Cashflow')
             a.legend()
 
@@ -241,10 +238,10 @@ def viewInference(type, premise, conclusion):
             a = f.add_subplot(111)
             # a.plot(week_avgs['Deposit'], label='Income')    
             # a.plot(week_avgs['Withdrawal'], label='Spending')
-            a.bar(week_avgs.index, week_avgs['Deposit'], label='Income')
-            a.bar(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
-            a.set_xlabel('Category')
-            a.set_ylabel('Amount')
+            a.barh(week_avgs.index, week_avgs['Deposit'], label='Income')
+            a.barh(week_avgs.index, week_avgs['Withdrawal'], label='Spending')
+            a.set_ylabel('Category')
+            a.set_xlabel('Amount')
             a.set_title('Average Weekly Cashflow')
             a.legend()
 
@@ -262,17 +259,17 @@ def viewInference(type, premise, conclusion):
 
         #insert table of debt list
         debt_tree = ttk.Treeview(popup, columns=("name", "amount", "interest_rate", "min_payment"))
-        debt_tree.heading("#0", text="ID", anchor=tk.W)
-        debt_tree.heading("name", text="Name", anchor=tk.W)
-        debt_tree.heading("amount", text="Amount", anchor=tk.W)
-        debt_tree.heading("interest_rate", text="Interest Rate", anchor=tk.W)
-        debt_tree.heading("min_payment", text="Minimum Payment (%)", anchor=tk.W)
+        debt_tree.heading("#0", text="ID")
+        debt_tree.heading("name", text="Name")
+        debt_tree.heading("amount", text="Amount")
+        debt_tree.heading("interest_rate", text="Interest Rate")
+        debt_tree.heading("min_payment", text="Minimum Payment (%)")
 
-        debt_tree.column("#0", minwidth=0, width=50, stretch=tk.NO)
-        debt_tree.column("name", minwidth=0, width=100, stretch=tk.NO)
-        debt_tree.column("amount", minwidth=0, width=100, stretch=tk.NO)
-        debt_tree.column("interest_rate", minwidth=0, width=100, stretch=tk.NO)
-        debt_tree.column("min_payment", minwidth=0, width=100, stretch=tk.NO)
+        debt_tree.column("#0", minwidth=50, anchor=tk.CENTER)
+        debt_tree.column("name", minwidth=100, anchor=tk.CENTER)
+        debt_tree.column("amount", minwidth=100, anchor=tk.CENTER)
+        debt_tree.column("interest_rate", minwidth=100, anchor=tk.CENTER)
+        debt_tree.column("min_payment", minwidth=100, anchor=tk.CENTER)
 
         debt_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -370,39 +367,149 @@ def viewInference(type, premise, conclusion):
 
     elif type == 'Savings':
         if 'Monthly Savings' in premise:           
-            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
-            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str('$%.2f' % monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", pady=10, padx=10)       
 
-            lblSavings = ttk.Label(popup, text="Monthly Savings: " + str(savings_per_month), font=NORM_FONT)
-            lblSavings.pack(side="top", fill="x", pady=10, padx=10)
+            lblSavings = ttk.Label(popup, text="Monthly Savings: " + str('$%.2f' % savings_per_month), font=NORM_FONT)
+            lblSavings.pack(side="top", pady=10, padx=10)
+
+            df = dataFrame
+            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+            # calculate the sum of deposits and withdrawals for each month
+            month_sums = df.groupby(['Month', 'Category']).agg({'Deposit': 'sum', 'Withdrawal': 'sum'}).reset_index()
+            # calculate the number of months
+            num_months = month_sums['Month'].nunique()
+                # calculate the average deposits and withdrawals per month
+            month_avgs = month_sums.groupby('Category').agg({'Deposit': 'mean', 'Withdrawal': 'mean'})
+            month_avgs['Deposit'] = month_avgs['Deposit'] / num_months
+            month_avgs['Withdrawal'] = month_avgs['Withdrawal'] / num_months
+
+            f = Figure(figsize=(12,5), dpi=100)
+            a = f.add_subplot(111)
+            # a.plot(month_avgs['Deposit'], label='Income')
+            # a.plot(month_avgs['Withdrawal'], label='Spending')
+            a.barh(month_avgs.index, month_avgs['Deposit'], label='Income')
+            a.barh(month_avgs.index, month_avgs['Withdrawal'], label='Spending')
+            a.set_ylabel('Category')
+            a.set_xlabel('Amount')
+            a.set_title('Average Monthly Cashflow')
+            a.legend()
+
+            canvas = FigureCanvasTkAgg(f, popup)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         elif 'Emergency' in premise:
-            lblIncome = ttk.Label(popup, text="Monthly Income: " + str(monthly_income), font=NORM_FONT)
-            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+            lblIncome = ttk.Label(popup, text="Monthly Income: " + str('$%.2f' % monthly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", pady=10, padx=10)       
 
-            lblSavings = ttk.Label(popup, text="Monthly Spendature: " + str(avg_monthly_withdrawals), font=NORM_FONT)
-            lblSavings.pack(side="top", fill="x", pady=10, padx=10)
+            lblSavings = ttk.Label(popup, text="Monthly Spendature: " + str('$%.2f' % avg_monthly_withdrawals), font=NORM_FONT)
+            lblSavings.pack(side="top", pady=10, padx=10)
 
-            lblEmergency = ttk.Label(popup, text="Emergency Fund: " + str(emergency_fund), font=NORM_FONT)
-            lblEmergency.pack(side="top", fill="x", pady=10, padx=10)
+            lblEmergency = ttk.Label(popup, text="Emergency Fund: " + str('$%.2f' % emergency_fund), font=NORM_FONT)
+            lblEmergency.pack(side="top", pady=10, padx=10)
+
+            coverage = emergency_fund / avg_monthly_withdrawals
+            lblCoverage = ttk.Label(popup, text="Max Coverage by current fund: " + str('$%.2f' % coverage) + ' Months.', font=NORM_FONT)
+            lblCoverage.pack(side="top", pady=10, padx=10)
 
         elif 'Retirement' in premise:
             yearly_income = monthly_income * 12
             optimal_retirement_fund = (yearly_income * 0.15) * (age - 25)
-            lblIncome = ttk.Label(popup, text="Yearly Income: " + str(yearly_income), font=NORM_FONT)
-            lblIncome.pack(side="top", fill="x", pady=10, padx=10)       
+            currAvgDeposit = retirement_fund / (age - 25)
+            lblIncome = ttk.Label(popup, text="Yearly Income: " + str('$%.2f' % yearly_income), font=NORM_FONT)
+            lblIncome.pack(side="top", pady=10, padx=10) 
 
-            lblRetirement = ttk.Label(popup, text="Current Retirement Fund: " + str(retirement_fund), font=NORM_FONT)
-            lblRetirement.pack(side="top", fill="x", pady=10, padx=10)
+            lblavg = ttk.Label(popup, text="Current Average yearly Deposit: " + str('$%.2f' % currAvgDeposit), font=NORM_FONT)
+            lblavg.pack(side="top", pady=10, padx=10)
 
-            lblOptimal = ttk.Label(popup, text="Optimal Retirement Fund: " + str(optimal_retirement_fund), font=NORM_FONT)
-            lblOptimal.pack(side="top", fill="x", pady=10, padx=10)
+            lblRetirement = ttk.Label(popup, text="Current Retirement Fund: " + str('$%.2f' % retirement_fund), font=NORM_FONT)
+            lblRetirement.pack(side="top", pady=10, padx=10)
 
-            lblnote = ttk.Label(popup, text="Note: Optimal retirement fund is calculated assuming a 15% allocation of yearly income beginning at the age of 25.", font=NORM_FONT)
+            lblOptimal = ttk.Label(popup, text="Optimal Retirement Fund: " + str('$%.2f' % optimal_retirement_fund), font=NORM_FONT)
+            lblOptimal.pack(side="top", pady=10, padx=10)
+
+            frame = tk.Frame(popup)
+            frame.pack(side="top", pady=10, padx=10)
+
+            lblnote = ttk.Label(frame, text="Note: Optimal retirement fund is calculated assuming a 15% allocation of yearly income beginning at the age of 25.", font=NORM_FONT)
             lblnote.pack(side="top", fill="x", pady=10, padx=10)
+
+            f = Figure(figsize=(12,5), dpi=100)
+            a = f.add_subplot(111)
+
+            optimalProjections= [(yearly_income * 0.15) * (age - 25) for age in range(25, 65)]
+            currPojections = [currAvgDeposit * (age - 25) for age in range(25, 65)]
+            # Create x-axis values
+            years = [year for year in range(25, 65)]
+
+            a.plot(years, currPojections, label='Current Projections')
+            a.plot(years, optimalProjections, label='Optimal Retirement Fund')
+            a.set_title('Projections over Years for Current Average Deposit and Optimal Retirement Fund')
+            a.set_xlabel('Age')
+            a.set_ylabel('Dollars')
+            a.legend()
+
+            # Add annotations for current age and retirement fund
+            a.annotate('Current Age',
+                    xy=(age, currAvgDeposit * (age - 25)),
+                    xytext=(age + 2, currAvgDeposit * (age - 25) + 5000),
+                    arrowprops=dict(facecolor='black', shrink=0.05))
+            # a.annotate('Current Retirement Fund',
+            #         xy=(age, retirement_fund),
+            #         xytext=(age + 2, retirement_fund + 5000),
+            #         arrowprops=dict(facecolor='black', shrink=0.05))
+
+            # Add vertical lines for current age and retirement age
+            a.axvline(age, color='gray', linestyle='--')
+            # a.axvline(age_retirement, color='gray', linestyle='--')
+
+            canvas = FigureCanvasTkAgg(f, frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack(padx=10, pady=10)
+    popup.mainloop()
+
+def viewFileSpecs():
+    popup = tk.Tk()
+    style = ttk.Style(popup)
+    style.theme_create('modern1', parent='default')
+    style.theme_settings('modern1', getTheme())
+    style.theme_use('modern1')
+    popup.wm_title("File Requirements")
+
+    lbl = ttk.Label(popup, text='File Requirements: ', font=LARGE_FONT, anchor='center', justify='center')
+    lbl.pack(side="top", fill="x", pady=10, padx=10)
+
+    fileSpecs = """
+        Users must upload a csv file containing account activity. (Commonly found on bank websites). 
+        
+        The Datasets folder contains 4 preprocessed data sets (Data-1, Data-2, Data-3, Data-4) as well
+        as an unprocessed file (Randomize.csv). 
+            NOTE: if Randomize.csv is selected, the program will randomly assign categories for withdrawals and deposits. 
+
+        Predefined Categories:
+            spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
+                        'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
+            incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Trading']
+
+        The User can also select their own income statement if their file has the following column order: (Data, Transaction Description, Withdrawal, Deposit, Balance) and DOES NOT contain any column HEADERS. 
+        
+        If successfully processed, 'userData.csv' will be created in the Datasets folder for future user. 
+            NOTE: Once again your spending/deposit categories will be randomized. 
+
+        If the file is successfully processed then the Expert system will initialize and the user will be taken to the blackboard. Otherwise UserData.csv will be deleted. 
+    """
+
+    label = tk.Label(popup, text=fileSpecs, justify="left")
+    label.pack(pady=10, padx=10)
+
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1.pack(padx=10, pady=10)
+
     popup.mainloop()
 
 class ESapp(tk.Tk):
@@ -443,14 +550,13 @@ class ESapp(tk.Tk):
         elif cont == GraphPage:
             self.geometry("1100x850")
         elif cont == filePage:
-            self.geometry("420x200")
+            self.geometry("420x270")
         elif cont == statsPage:
             if allInferences == []:
                 self.select_file()
             self.geometry("950x650")        
         frame = self.frames[cont]
         frame.tkraise()
-
     
     def select_file(self):
         global filename, allInferences, dataFrame, debt_list, statusDict
@@ -458,10 +564,12 @@ class ESapp(tk.Tk):
                     ('CSV files', '*.csv'),
                     # ('All files', '*.*')
         )
+        #open at path to datasets folder
+        path = os.path.join(os.getcwd(), 'Datasets')
 
         filename = fd.askopenfilename(
             title='Open a file',
-            initialdir='/',
+            initialdir=path,
             filetypes=filetypes)
         
         df = preprocess(filename)
@@ -703,10 +811,14 @@ class filePage(tk.Frame):
         lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
         lbl_selectFile.pack(pady=10,padx=10)
 
+        
         button1 = ttk.Button(self, text="Open a File",
                             # command=lambda: controller.startup(InferencesPage))
                             command=lambda: controller.show_frame(statsPage))
-        button1.pack(padx=10, pady=5)
+        button1.pack(padx=10, pady=15)
+
+        btn = ttk.Button(self, text="View File Specifications", command=viewFileSpecs)
+        btn.pack(pady=10,padx=10)
 
         # button1 = ttk.Button(self, text="Back to Home",
         #                     command=lambda: controller.show_frame(StartPage))
@@ -727,11 +839,7 @@ class statsPage(tk.Frame):
         label = ttk.Label(self, text="Account Activity", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button2 = ttk.Button(self, text="Exit Program",
-                            command=quit)
-        button2.pack(padx=10, pady=5)
-
-        button3 = ttk.Button(self, text="Show Financial Stats",
+        button3 = ttk.Button(self, text="Show System Facts",
                             command= lambda: self.showFinancialStats())
         button3.pack(padx=10, pady=5)
 
@@ -742,6 +850,10 @@ class statsPage(tk.Frame):
         button5 = ttk.Button(self, text="View Analysis",
                             command=lambda: controller.show_frame(inferencesPage))
         button5.pack(padx=10, pady=5)
+
+        button2 = ttk.Button(self, text="Exit Program",
+                            command=quit)
+        button2.pack(padx=10, pady=10)
 
 
         # label1 = ttk.Label(self, text=("Double-Click on an inference to view explanation."), font=NORM_FONT)
@@ -905,33 +1017,31 @@ class GraphPage(tk.Frame):
 
         button2 = ttk.Button(btnFrame, text="View Spending",
                             command=lambda: self.viewSpending())
-        # button2.pack(padx=10, pady=5)
-        button2.grid(row=0, column=0, padx=10, pady=5)
+        button2.grid(row=0, column=0, padx=15, pady=8)
 
         button3 = ttk.Button(btnFrame, text="View Income",
                             command=lambda: self.viewIncome())
-        # button3.pack(padx=10, pady=5)
-        button3.grid(row=0, column=1, padx=10, pady=5)
+        button3.grid(row=0, column=1, padx=15, pady=8)
 
         button4 = ttk.Button(btnFrame, text="View Cashflow",
                             command=lambda: self.viewCashflow())
-        # button4.pack(padx=10, pady=5)
-        button4.grid(row=0, column=2, padx=10, pady=5)
+        button4.grid(row=0, column=2, padx=15, pady=8)
 
         button5 = ttk.Button(btnFrame, text="View Weekly Averages",
                             command=lambda: self.weeklyAvg())
-        # button5.pack(padx=10, pady=5)
-        button5.grid(row=0, column=3, padx=10, pady=5)
+        button5.grid(row=1, column=0, padx=15, pady=8)
 
         button6 = ttk.Button(btnFrame, text="View Monthly Averages",
                             command=lambda: self.monthlyAvg())
-        # button6.pack(padx=10, pady=5)
-        button6.grid(row=0, column=4, padx=10, pady=5)
+        button6.grid(row=1, column=1, padx=15, pady=8)
 
         button7 = ttk.Button(btnFrame, text="View Balance",
                             command=lambda: self.viewBalance())
-        # button7.pack(padx=10, pady=5)
-        button7.grid(row=0, column=5, padx=10, pady=5)
+        button7.grid(row=1, column=2, padx=15, pady=8)
+
+        button8 = ttk.Button(btnFrame, text="View Retirement Projection",
+                            command=lambda: self.viewRetirement())
+        button8.grid(row=3, column=1, padx=15, pady=8)
 
         self.canvas = None
 
@@ -946,7 +1056,55 @@ class GraphPage(tk.Frame):
         # toolbar = NavigationToolbar2Tk(canvas, self)
         # toolbar.update()
         # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-    
+
+    def viewRetirement(self):
+        if age < 25:
+            popupmsg("You must be at least 25 years old to project your retirement fund.")
+            return
+        
+        yearly_income = monthly_income * 12
+        optimal_retirement_fund = (yearly_income * 0.15) * (age - 25)
+        currAvgDeposit = retirement_fund / (age - 25)
+
+        # lblnote = ttk.Label(frame, text="Note: Optimal retirement fund is calculated assuming a 15% allocation of yearly income beginning at the age of 25.", font=NORM_FONT)
+        # lblnote.pack(side="top", fill="x", pady=10, padx=10)
+
+        f = Figure(figsize=(12,5), dpi=100)
+        a = f.add_subplot(111)
+
+        optimalProjections= [(yearly_income * 0.15) * (age - 25) for age in range(25, 65)]
+        currPojections = [currAvgDeposit * (age - 25) for age in range(25, 65)]
+        # Create x-axis values
+        years = [year for year in range(25, 65)]
+
+        a.plot(years, currPojections, label='Current Projections')
+        a.plot(years, optimalProjections, label='Optimal Retirement Fund')
+        a.set_title('Projections over Years for Current Average Deposit and Optimal Retirement Fund')
+        a.set_xlabel('Age')
+        a.set_ylabel('Dollars')
+        a.legend()
+
+        # Add annotations for current age and retirement fund
+        a.annotate('Current Age',
+                xy=(age, currAvgDeposit * (age - 25)),
+                xytext=(age + 2, currAvgDeposit * (age - 25) + 5000),
+                arrowprops=dict(facecolor='black', shrink=0.05))
+
+        # Add vertical lines for current age and retirement age
+        a.axvline(age, color='gray', linestyle='--')
+
+        if self.canvas is not None:
+            self.canvas.get_tk_widget().forget()
+            # canvas._tkcanvas.forget()
+        self.canvas = FigureCanvasTkAgg(f, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        # toolbar = NavigationToolbar2Tk(self.canvas, self)
+        # toolbar.update()
+        # self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+
     def viewSpending(self):
         global dataFrame
 
@@ -968,7 +1126,6 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
 
         # toolbar = NavigationToolbar2Tk(canvas, self)
         # toolbar.update()

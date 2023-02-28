@@ -58,7 +58,6 @@ The Datasets folder contains 4 preprocessed data sets (Data-1, Data-2, Data-3, D
 as an unprocessed file (Randomize.csv). 
     NOTE: if Randomize.csv is selected, the program will randomly assign categories for withdrawals and deposits. 
 
-
 #### Predefined Categories:
 ```bash
     spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
@@ -101,7 +100,7 @@ By double-clicking each individual inference, the user can view the premise and 
 
 7. ('Savings','Low Monthly Savings', 'Saving less than 10% of monthly income, you MUST decreasing your spendature.', 3)
 8. ('Savings','Moderate Monthly Savings', 'Saving less than 15% of monthly income, consider decreasing your spendature.', 1)
-9. ('Savings','Moderate Emergency Fund', 'Your emergency fund can support you for 3-5 months based on current spending', 1
+9. ('Savings','Moderate Emergency Fund', 'Your emergency fund can support you for 3-5 months based on current spending', 1)
 10. ('Savings','Low Emergency Fund', 'Your emergency fund can support you for 1-3 months based on current spending', 2)
 11. ('Savings','Insufficient Emergency Fund', 'Your emergency fund can support you for less than 1 month based on current spending', 4)               
 12. ('Savings','Moderate Retirement Fund', 'Your retirement fund is moderate but not optimal assuming 15% of yearly income from age 25.', 1)          
