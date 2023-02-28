@@ -41,7 +41,7 @@ Predefined Categories:
 The User can also select their own income statement if their file has the following column order: (Data, Transaction Description, Withdrawal, Deposit, Balance) and DOES NOT contain any column HEADERS. If successfully processed, 'userData.csv' will be created in the Datasets folder for future user. 
     NOTE: Once again your spending/deposit categories will be randomized. 
 
-If the file is successfully processed then the Expert system will initialize and the user will be taken to the blackboard. 
+If the file is successfully processed then the Expert system will initialize and the user will be taken to the blackboard. Otherwise UserData.csv will be deleted. 
 
 4. Blackboard
 
