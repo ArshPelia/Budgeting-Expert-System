@@ -1,7 +1,8 @@
 Budgeting Expert System 
 
 This expert system is designed to evaluate your income statements and analyze your financial
-health across the following categories: Debt, Savings, Spending, Chronic Overspending and Cashflow. The expert system begins by evaluating account activity and provides recommendations based on current financial health. 
+health across the following categories: Debt, Savings, Spending, Chronic Overspending and Cashflow. 
+The expert system begins by evaluating account activity and provides recommendations based on current financial health. 
 
 RUN: Main.py to start program.
 
