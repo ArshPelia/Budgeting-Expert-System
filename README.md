@@ -59,7 +59,7 @@ as an unprocessed file (Randomize.csv).
     NOTE: if Randomize.csv is selected, the program will randomly assign categories for withdrawals and deposits. 
 
 
-Predefined Categories:
+#### Predefined Categories:
 ```bash
     spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
                 'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
@@ -88,7 +88,7 @@ Users will also be given the inferences it has made in each category below the s
 
 By double-clicking each individual inference, the user can view the premise and conclusion of the inference as well as related information. 
 
-Predefined Rules: format = (Type, Premise, Conclusion, Severity)
+#### Predefined Rules: format = (Type, Premise, Conclusion, Severity)
 
 ```bash
 1. ('Debt','high_interest_debt', 'High-interest debt detected, prioritize paying off debts with an interest rate greater than 8%.', 2)         
