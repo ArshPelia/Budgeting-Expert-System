@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 import matplotlib, operator, calendar
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg 
 from matplotlib.figure import Figure
 # from matplotlib import pyplot as plt
 import pandas as pd
@@ -26,7 +26,7 @@ global savings_per_week, savings_per_month, total_deposited, total_spent, curren
 global allInferences, dataFrame, age, retirement_fund, emergency_fund, spending_percentages
 global Weekly_essentialSpend, Weekly_nonessentialSpend, monthly_essentialSpend, monthly_nonessentialSpend
 global essential_spendingPercentages, nonessential_spendingPercentages, Monthly_debt_payment
-global debt_list, investment_list, statusDict, spending_thresholds, default_debt_list
+global debt_list, statusDict, spending_thresholds, default_debt_list
 
 default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 5, 'min_payment': 5}, 
                      {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 9, 'min_payment': 7},
@@ -506,6 +506,169 @@ def viewFileSpecs():
     B1.pack(padx=10, pady=10)
 
     popup.mainloop()
+
+def preprocess(filename):
+    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
+    file = filename.split('/')[-1]
+    print('filename: ', file)
+    df = pd.read_csv(filename)
+    expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
+    
+    try:
+        # if set(df.columns.tolist()) == set(expected_headers):
+
+        if file == 'Randomize.csv' or file == 'userData.csv':
+            # print('Randomizing data')
+            df = pd.read_csv(filename, names=headerlist) #assign column names 
+            df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
+
+            # convert the date column to a datetime format
+            df['Date'] = pd.to_datetime(df['Date'])
+            df['Week'] = df['Date'].dt.week
+            df['Month'] = df['Date'].dt.month
+            df['Year'] = df['Date'].dt.year
+
+            for i in range(len(df)): # iterate through the dataframe
+                if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
+                    df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
+                else:
+                    df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
+
+            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+
+            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+
+            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+
+            monthly_income = avg_monthly_deposits
+            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+        
+        elif os.path.exists('Datasets/' + file):
+            print('File already exists')
+            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+            
+            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+            
+            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+            
+            monthly_income = avg_monthly_deposits
+
+            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+
+        else:
+            # print('File does not exist')
+            initialheaderlist = ['Date', 'desc', 'Withdrawal', 'Deposit', 'Balance']
+            data = pd.read_csv(filename, names=initialheaderlist)
+            data.drop('desc', inplace=True, axis=1)
+            if os.path.exists('Datasets/userData.csv'):
+                os.remove('Datasets/userData.csv')
+            data.to_csv('Datasets/userData.csv', index=False, header=False) 
+            
+            print('Randomizing data')
+            df = pd.read_csv('Datasets/userData.csv', names=headerlist) #assign column names 
+            df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
+
+            # convert the date column to a datetime format
+            df['Date'] = pd.to_datetime(df['Date'])
+            df['Week'] = df['Date'].dt.week
+            df['Month'] = df['Date'].dt.month
+            df['Year'] = df['Date'].dt.year
+
+            for i in range(len(df)): # iterate through the dataframe
+                if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
+                    df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
+                else:
+                    df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
+
+            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
+            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+
+            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
+            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
+            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
+
+            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
+            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
+            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
+
+            monthly_income = avg_monthly_deposits
+            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
+    except Exception as e:
+        popupmsg('File Processing Error. Please try again. Errortype: \n' +str(e))
+        os.remove('Datasets/userData.csv')
+        return
+    return df
+
+def getSpendingPercentages(df):
+    global essential_spendingPercentages, nonessential_spendingPercentages, essentialList, nonessentialList
+    spending_percentages = {}
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    df = df[df['Withdrawal'] != 0]
+    categories = df['Category'].unique()
+    for category in categories:
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        spending_percentages[category] = {
+            'percentage': category_spending / total_deposited,
+            'amount': category_spending
+        }
+
+    df_Essential = df[df['Category'].isin(essentialList)]
+    df_Nonessential = df[df['Category'].isin(nonessentialList)]
+    essential_spending = df_Essential['Withdrawal'].sum()
+    nonessential_spending = df_Nonessential['Withdrawal'].sum()
+
+    spending_percentages['Essential Costs'] = {
+        'percentage': essential_spending / total_spent,
+        'amount': essential_spending
+    }
+    spending_percentages['Non-Essential Costs'] = {
+        'percentage': nonessential_spending / total_spent,
+        'amount': nonessential_spending
+    }
+
+    # create a dictionary for essential and nonessential spending percentages
+    essential_spendingPercentages = {}
+    nonessential_spendingPercentages = {}
+    for category in essentialList:
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        essential_spendingPercentages[category] = {
+            'percentage': category_spending / essential_spending,
+            'amount': category_spending
+        }
+    for category in nonessentialList:
+        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
+        nonessential_spendingPercentages[category] = {
+            'percentage': category_spending / nonessential_spending,
+            'amount': category_spending
+        }
+
+def getSavingPercentages(df):
+    global saving_percentages
+    saving_percentages = {}
+    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
+    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
+    df = df[df['Deposit'] != 0]
+    categories = df['Category'].unique()
+    for category in categories:
+        category_saving = df[df['Category'] == category]['Deposit'].sum()
+        saving_percentages[category] = {
+            'percentage': category_saving / total_deposited,
+            'amount': category_saving
+        }
 
 class ESapp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -1251,7 +1414,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-
 class inferencesPage(tk.Frame):
     
     def __init__(self, parent, controller):
@@ -1659,176 +1821,6 @@ class Inference:
     
     def getPremises(self):
         return self.premise
-
-def preprocess(filename):
-    global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
-    file = filename.split('/')[-1]
-    print('filename: ', file)
-    df = pd.read_csv(filename)
-    expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
-    
-    try:
-        # if set(df.columns.tolist()) == set(expected_headers):
-
-        if file == 'Randomize.csv' or file == 'userData.csv':
-            # print('Randomizing data')
-            df = pd.read_csv(filename, names=headerlist) #assign column names 
-            df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
-
-            # convert the date column to a datetime format
-            df['Date'] = pd.to_datetime(df['Date'])
-            df['Week'] = df['Date'].dt.week
-            df['Month'] = df['Date'].dt.month
-            df['Year'] = df['Date'].dt.year
-
-            for i in range(len(df)): # iterate through the dataframe
-                if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
-                    df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
-                else:
-                    df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
-
-            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-
-            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-
-            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-
-            monthly_income = avg_monthly_deposits
-            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
-        
-        elif os.path.exists('Datasets/' + file):
-            print('File already exists')
-            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-            
-            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-            
-            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-            
-            monthly_income = avg_monthly_deposits
-
-            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
-
-        else:
-            # print('File does not exist')
-            initialheaderlist = ['Date', 'desc', 'Withdrawal', 'Deposit', 'Balance']
-            data = pd.read_csv(filename, names=initialheaderlist)
-            data.drop('desc', inplace=True, axis=1)
-            if os.path.exists('Datasets/userData.csv'):
-                os.remove('Datasets/userData.csv')
-            data.to_csv('Datasets/userData.csv', index=False, header=False) 
-            
-            print('Randomizing data')
-            df = pd.read_csv('Datasets/userData.csv', names=headerlist) #assign column names 
-            df.replace(np.nan, 0, inplace=True) # replace NaN with 0, inplace=True means it will change the original dataframe
-
-            # convert the date column to a datetime format
-            df['Date'] = pd.to_datetime(df['Date'])
-            df['Week'] = df['Date'].dt.week
-            df['Month'] = df['Date'].dt.month
-            df['Year'] = df['Date'].dt.year
-
-            for i in range(len(df)): # iterate through the dataframe
-                if df.at[i, 'Deposit'] == 0: # if the Deposit column is 0
-                    df.at[i, 'Category'] = random.choice(spendList) # assign a random spend category to each row
-                else:
-                    df.at[i, 'Category'] = random.choice(incomeList) # assign a random income category to each row
-
-            current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
-            total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-            total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-
-            avg_weekly_deposits = df['Deposit'].sum() / df['Week'].nunique()
-            avg_weekly_withdrawals = df['Withdrawal'].sum() / df['Week'].nunique()
-            savings_per_week = avg_weekly_deposits - avg_weekly_withdrawals
-
-            avg_monthly_deposits = df['Deposit'].sum() / df['Month'].nunique()
-            avg_monthly_withdrawals = df['Withdrawal'].sum() / df['Month'].nunique()
-            savings_per_month = avg_monthly_deposits - avg_monthly_withdrawals
-
-            monthly_income = avg_monthly_deposits
-            total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
-    except Exception as e:
-        popupmsg('File Processing Error. Please try again. Errortype: \n' +str(e))
-        os.remove('Datasets/userData.csv')
-        return
-    return df
-
-def getSpendingPercentages(df):
-    global essential_spendingPercentages, nonessential_spendingPercentages, essentialList, nonessentialList
-    spending_percentages = {}
-    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-    df = df[df['Withdrawal'] != 0]
-    categories = df['Category'].unique()
-    for category in categories:
-        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
-        spending_percentages[category] = {
-            'percentage': category_spending / total_deposited,
-            'amount': category_spending
-        }
-
-    df_Essential = df[df['Category'].isin(essentialList)]
-    df_Nonessential = df[df['Category'].isin(nonessentialList)]
-    essential_spending = df_Essential['Withdrawal'].sum()
-    nonessential_spending = df_Nonessential['Withdrawal'].sum()
-
-    spending_percentages['Essential Costs'] = {
-        'percentage': essential_spending / total_spent,
-        'amount': essential_spending
-    }
-    spending_percentages['Non-Essential Costs'] = {
-        'percentage': nonessential_spending / total_spent,
-        'amount': nonessential_spending
-    }
-
-    # create a dictionary for essential and nonessential spending percentages
-    essential_spendingPercentages = {}
-    nonessential_spendingPercentages = {}
-    for category in essentialList:
-        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
-        essential_spendingPercentages[category] = {
-            'percentage': category_spending / essential_spending,
-            'amount': category_spending
-        }
-    for category in nonessentialList:
-        category_spending = df[df['Category'] == category]['Withdrawal'].sum()
-        nonessential_spendingPercentages[category] = {
-            'percentage': category_spending / nonessential_spending,
-            'amount': category_spending
-        }
-
-    print('\nEssential Spending:')
-    print(essential_spendingPercentages)
-    print('Non-Essential Spending:')
-    print(nonessential_spendingPercentages)
-
-def getSavingPercentages(df):
-    global saving_percentages
-    saving_percentages = {}
-    total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
-    total_deposited = df[df['Deposit'] != 0]['Deposit'].sum()
-    df = df[df['Deposit'] != 0]
-    categories = df['Category'].unique()
-    for category in categories:
-        category_saving = df[df['Category'] == category]['Deposit'].sum()
-        saving_percentages[category] = {
-            'percentage': category_saving / total_deposited,
-            'amount': category_saving
-        }
-    print('\nSaving Percentages:')
-    print(saving_percentages)
 
 def main():
     global debt_list
