@@ -41,7 +41,7 @@ funds. These fields are REQUIRED.
 Then users can create a list of their current debt or load in preset values. This is OPTIONAL but 
 debt will not be accounted for by the expert system. (Assumes that you have no debt.)
 
-Preset debt dictionary: 
+#### Preset debt dictionary: 
 ```bash
 default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 5,
                      'min_payment': 5}, 
