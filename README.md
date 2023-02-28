@@ -1,30 +1,56 @@
-Budgeting Expert System 
+# Budgeting Expert System 
 
 This expert system is designed to evaluate your income statements and analyze your financial
 health across the following categories: Debt, Savings, Spending, Chronic Overspending and Cashflow. 
 The expert system begins by evaluating account activity and provides recommendations based on current financial health. 
 
-RUN: Main.py to start program.
+## Run Locally
 
-1. Start Page
+Clone the project
+
+Go to the project directory
+
+```bash
+  cd Budgeting-Expert-System
+```
+
+Install dependencies
+
+```bash
+    cd setup
+    conda create --name BudgetExpert --file requirements.txt
+```
+
+Start the app
+
+```bash
+  cd .. # Not needed if dependencies were previously installed
+  python main.py
+```
+
+
+## Documentation
+
+### Start Page
 
 At startup, the user is prompted for their age and current amounts in their emergency and retirement
-funds. These fields are REQUIRED. 
+funds. These fields are REQUIRED.
 
-2. Debt Page
+### Debt Page
 
 Then users can create a list of their current debt or load in preset values. This is OPTIONAL but 
 debt will not be accounted for by the expert system. (Assumes that you have no debt.)
 
 Preset debt dictionary: 
-
+```json
 default_debt_list = [ {'id': 1, 'name': 'Credit Card 1', 'amount': 5000, 'interest_rate': 5,
                      'min_payment': 5}, 
                      {'id': 2, 'name': 'Student Loan', 'amount': 2000, 'interest_rate': 9, 'min_payment': 7},
                      {'id': 3, 'name': 'Car Loan', 'amount': 1000, 'interest_rate': 4, 'min_payment': 10},
                      {'id': 4, 'name': 'Credit Card 2', 'amount': 500, 'interest_rate': 12, 'min_payment': 9}]
+```
 
-3. File Select Page
+### File Select Page
 
 Upon hitting the Continue button on the debt page, users will be asked to upload a csv file containing their account activity. (Commonly found on bank websites). 
 
@@ -34,26 +60,27 @@ as an unprocessed file (Randomize.csv).
 
 
 Predefined Categories:
+```bash
     spendList = ['Dining Out', 'Groceries', 'Shopping', 'Transportation', 'Housing', 
                 'Entertainment', 'Personal Care', 'Loan Payment', 'Healthcare', 'Bills']
     incomeList = ['Salary', 'Bonus', 'Investment Income', 'Capital Gains', 'Trading']
-
+```
 The User can also select their own income statement if their file has the following column order: (Data, Transaction Description, Withdrawal, Deposit, Balance) and DOES NOT contain any column HEADERS. If successfully processed, 'userData.csv' will be created in the Datasets folder for future user. 
-    NOTE: Once again your spending/deposit categories will be randomized. 
+NOTE: Once again your spending/deposit categories will be randomized. 
 
 If the file is successfully processed then the Expert system will initialize and the user will be taken to the blackboard. Otherwise UserData.csv will be deleted. 
 
-4. Blackboard
+### Blackboard
 
-4a. Statistics Page
+#### Statistics Page
 
 By executing the 'Show Stats', the user can view the facts that the expert system has extracted by analysing the account activity. 
 
-4b. Graphs Page
+#### Graphs Page
 
 Likewise, the Graphs page provides multiple option to visualize your account activity. 
 
-5. Inference Engine (Analysis Page)
+### Inference Engine (Analysis Page)
 
 Based on the facts deduced from your account activity and the predefined rules, the expert system will show a summary status of each category: Debt, Savings, Spending, Chronic Overspending and Cashflow. 
 
@@ -63,6 +90,7 @@ By double-clicking each individual inference, the user can view the premise and 
 
 Predefined Rules: format = (Type, Premise, Conclusion, Severity)
 
+```bash
 1. ('Debt','high_interest_debt', 'High-interest debt detected, prioritize paying off debts with an interest rate greater than 8%.', 2)         
 2. ('Debt','High_DTI', 'Your debt-to-income ratio is greater than 50% of monthly income, you must reduce this ratio for optmal financial health. DTI: ' + str(dti), 3)         
 3. ('Debt','Moderate_DTI', 'Your debt-to-income ratio is sustainable but leaves little to invest. DTI:' + str(dti), 2)             
@@ -87,3 +115,6 @@ Predefined Rules: format = (Type, Premise, Conclusion, Severity)
 
 19. ('Chronic Overspending', '5+ monthly spikes over average spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 3)               
 20. ('Chronic Overspending', '3+ monthly spikes over average spent on ' + category, 'Consider creating a strict Monthly budget for ' + category, 1)
+```
+
+
