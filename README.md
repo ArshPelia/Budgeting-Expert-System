@@ -1,16 +1,23 @@
 # Budgeting Expert System 
 
+Authors: Arsh Pelia (0374870), Greg Hempel (0385199)
+
+## Overview
+
 This expert system is designed to evaluate chequeing account statements and analyze your financial
 health across categories: 
+
 The expert system begins by evaluating account activity and provides recommendations based on current financial health.
 
 The system consists of a forward-chaining model as it calculates the status of all categories based on the facts that are deduced from the user's financial activity and proposes recommendations if criteria for the predefined set of rules is met. Subsequently, each category is sorted by status from critical to optimal based on the highest severity of inferences and recommendations are provided.
 
 Inferences are created by searching for the existance of facts based on user information pertaining to debt and transactional history and providing a recommendation based on its corresponding rule. 
 
+``` bash
 Categories of Analysis: [Debt, Savings, Spending, Chronic Overspending,Cashflow]
-Status Dictionary = [Optimal, Managable, Moderate, Alarming, Critical]
+Status Options = [Optimal, Managable, Moderate, Alarming, Critical]
 Severity of inferences = [1,2,3,4]
+```
 
 ## classes 
 class ESapp(tk.Tk): 
@@ -30,7 +37,6 @@ class Rule:
 
 class Inference:
   Consists of a type, premise, conclusion and severity
-
 
 ## Run Locally
 
@@ -55,7 +61,6 @@ Start the app
   cd .. # Not needed if dependencies were previously installed
   python main.py
 ```
-
 
 ## Documentation
 
