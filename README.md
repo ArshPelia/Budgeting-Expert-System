@@ -2,7 +2,7 @@
 
 Authors: Arsh Pelia (0374870), Greg Hempel (0385199)
 
-NOTE: Ensure the Budgeting-Expert-System folder is not nested within another folder named 'Budgeting-Expert-System' after importing/uncompressing.
+NOTE: Ensure the Budgeting-Expert-System folder is not opened within another folder after importing/uncompressing in your IDE.
 
 ## Overview
 

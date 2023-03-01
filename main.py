@@ -514,7 +514,10 @@ def preprocess(filename):
     df = pd.read_csv(filename)
     expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
     path = os.path.join(os.getcwd(), 'Datasets')
-    # print('path: ', path)
+    if 'Budgeting-Expert-System' not in path:
+        popupmsg('Please restart the program after opening the Budgeting-Expert-System folder in your IDE')
+        return
+    print('path: ', path)
     try:
         # if set(df.columns.tolist()) == set(expected_headers):
 
@@ -723,6 +726,7 @@ class ESapp(tk.Tk):
         )
         #open at path to datasets folder
         path = os.path.join(os.getcwd(), 'Datasets')
+        print('path: ', path)
 
         filename = fd.askopenfilename(
             title='Open a file',
@@ -964,7 +968,7 @@ class filePage(tk.Frame):
         lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
         lbl_selectFile.pack(pady=10,padx=10)
 
-        lbl_warn = ttk.Label(self, text="NOTE: Ensure the Budgeting-Expert-System folder is not nested within another folder named 'Budgeting-Expert-System'.")
+        lbl_warn = ttk.Label(self, text="NOTE: Ensure the Budgeting-Expert-System folder is not opened within another folder after importing/uncompressing in your IDE.")
         lbl_warn.pack(pady=10,padx=10)
         
         button1 = ttk.Button(self, text="Open a File",
