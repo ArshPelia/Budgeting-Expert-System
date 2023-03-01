@@ -609,8 +609,8 @@ def preprocess(filename):
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
     except Exception as e:
         popupmsg('File Processing Error. Please try again. Errortype: \n' +str(e))
-        os.remove('Datasets/userData.csv')
-        return
+        if os.path.exists(path +'/userData.csv'):
+            os.remove(path +'/userData.csv')
     return df
 
 def getSpendingPercentages(df):
@@ -707,7 +707,7 @@ class ESapp(tk.Tk):
         elif cont == GraphPage:
             self.geometry("1100x850")
         elif cont == filePage:
-            self.geometry("420x270")
+            self.geometry("1050x300")
         elif cont == statsPage:
             if allInferences == []:
                 self.select_file()
@@ -964,6 +964,8 @@ class filePage(tk.Frame):
         lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
         lbl_selectFile.pack(pady=10,padx=10)
 
+        lbl_warn = ttk.Label(self, text="NOTE: Ensure the Budgeting-Expert-System folder is not nested within another folder named 'Budgeting-Expert-System'.")
+        lbl_warn.pack(pady=10,padx=10)
         
         button1 = ttk.Button(self, text="Open a File",
                             # command=lambda: controller.startup(InferencesPage))
