@@ -513,7 +513,8 @@ def preprocess(filename):
     print('filename: ', file)
     df = pd.read_csv(filename)
     expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
-    
+    path = os.path.join(os.getcwd(), 'Datasets')
+    print('path: ', path)
     try:
         # if set(df.columns.tolist()) == set(expected_headers):
 
@@ -549,7 +550,7 @@ def preprocess(filename):
             monthly_income = avg_monthly_deposits
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
         
-        elif os.path.exists('Datasets/' + file):
+        elif os.path.exists(path + '/' + file):
             print('File already exists')
             current_savings = df[df['Withdrawal'] != 0]['Withdrawal'].sum() - df[df['Deposit'] != 0]['Deposit'].sum()
             total_spent = df[df['Withdrawal'] != 0]['Withdrawal'].sum()
@@ -568,13 +569,13 @@ def preprocess(filename):
             total_invested = df[df['Category'] == 'Investment']['Deposit'].sum()
 
         else:
-            # print('File does not exist')
+            print('File does not exist')
             initialheaderlist = ['Date', 'desc', 'Withdrawal', 'Deposit', 'Balance']
             data = pd.read_csv(filename, names=initialheaderlist)
             data.drop('desc', inplace=True, axis=1)
-            if os.path.exists('Datasets/userData.csv'):
-                os.remove('Datasets/userData.csv')
-            data.to_csv('Datasets/userData.csv', index=False, header=False) 
+            if os.path.exists(path + '/userData.csv'):
+                os.remove(path + '/userData.csv')
+            data.to_csv(path + '/userData.csv', index=False, header=False) 
             
             print('Randomizing data')
             df = pd.read_csv('Datasets/userData.csv', names=headerlist) #assign column names 
