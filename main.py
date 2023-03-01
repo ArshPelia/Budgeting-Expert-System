@@ -282,7 +282,7 @@ def viewInference(type, premise, conclusion):
         debt_tree.tag_configure('high_interest', foreground='red')
     
     elif type == 'Spending':
-        print('Spending')
+        # print('Spending')
         if premise == 'Essential Costs accounts for more than 0.5% of your income.':
             # create a treeview widget
             tree = ttk.Treeview(popup)
@@ -410,7 +410,7 @@ def viewInference(type, premise, conclusion):
             lblEmergency.pack(side="top", pady=10, padx=10)
 
             coverage = emergency_fund / avg_monthly_withdrawals
-            lblCoverage = ttk.Label(popup, text="Max Coverage by current fund: " + str('$%.2f' % coverage) + ' Months.', font=NORM_FONT)
+            lblCoverage = ttk.Label(popup, text="Max Coverage by current fund: " + str('%.2f' % coverage) + ' Months.', font=NORM_FONT)
             lblCoverage.pack(side="top", pady=10, padx=10)
 
         elif 'Retirement' in premise:
@@ -510,11 +510,11 @@ def viewFileSpecs():
 def preprocess(filename):
     global total_invested, avg_weekly_deposits, avg_weekly_withdrawals, avg_monthly_deposits, avg_monthly_withdrawals, savings_per_week, savings_per_month, total_deposited, total_spent, current_savings, monthly_income
     file = filename.split('/')[-1]
-    print('filename: ', file)
+    # print('filename: ', file)
     df = pd.read_csv(filename)
     expected_headers = ['Date', 'Withdrawal', 'Deposit', 'Balance', 'Week', 'Month', 'Year', 'Category']
     path = os.path.join(os.getcwd(), 'Datasets')
-    print('path: ', path)
+    # print('path: ', path)
     try:
         # if set(df.columns.tolist()) == set(expected_headers):
 
