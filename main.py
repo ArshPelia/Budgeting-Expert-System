@@ -968,7 +968,7 @@ class filePage(tk.Frame):
         lbl_selectFile = ttk.Label(self, text="Select a file to initialize the Expert system:")
         lbl_selectFile.pack(pady=10,padx=10)
 
-        lbl_warn = ttk.Label(self, text="NOTE: Ensure the Budgeting-Expert-System folder is not within another folder in your IDE.")
+        lbl_warn = ttk.Label(self, text="NOTE: Ensure the 'Budgeting-Expert-System' folder is not contained within another folder in your IDE.")
         lbl_warn.pack(pady=10,padx=10)
         
         button1 = ttk.Button(self, text="Open a File",
