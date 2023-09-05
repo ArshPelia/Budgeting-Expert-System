@@ -1118,8 +1118,6 @@ class statsPage(tk.Frame):
             amount = values['amount']
             tree.insert('', tk.END, text=category, values=(category, '%.2f %%' % percentage, '$%.2f' % amount))
 
-        
-
     def showInferences(self):
         global allInferences
         if len(allInferences) == 0:
@@ -1212,7 +1210,6 @@ class GraphPage(tk.Frame):
 
         self.canvas = None
 
-
     def viewRetirement(self):
         if age < 25:
             popupmsg("You must be at least 25 years old to project your retirement fund.")
@@ -1256,8 +1253,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-
-
     def viewSpending(self):
         global dataFrame
 
@@ -1279,7 +1274,6 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
         
     def viewIncome(self):
         global dataFrame
@@ -1328,7 +1322,6 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-
     def weeklyAvg(self):
         global dataFrame, savings_per_week
 
@@ -1361,7 +1354,6 @@ class GraphPage(tk.Frame):
         self.canvas = FigureCanvasTkAgg(f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
 
     def monthlyAvg(self):
         global dataFrame, savings_per_month
